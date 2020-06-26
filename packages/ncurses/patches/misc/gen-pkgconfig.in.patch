@@ -1,0 +1,10 @@
+--- ncurses-6.2/misc/gen-pkgconfig.in	2020-02-12 09:09:26.000000000 +0900
++++ patches/misc/gen-pkgconfig.in	2020-06-25 18:39:39.000000000 +0900
+@@ -93,7 +93,6 @@
+ 		continue
+ 		;;
+ 	-L*)
+-		[ -d ${opt##-L} ] || continue
+ 		case ${opt##-L} in
+ 		@LD_SEARCHPATH@) # skip standard libdir
+ 			continue

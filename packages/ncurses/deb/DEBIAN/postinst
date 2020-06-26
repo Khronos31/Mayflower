@@ -1,0 +1,9 @@
+#!/bin/sh
+
+find /usr/local/lib/ncurses -maxdepth 1 |
+while read lib; do
+  file="${lib##*/}"
+  if [ ! -e "/usr/local/lib/${file}" ]; then
+    ln -s "ncurses/${file}" "/usr/local/lib/${file}"
+  fi
+done
