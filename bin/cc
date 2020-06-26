@@ -1,0 +1,26 @@
+#!/bin/bash
+
+output="a.out"
+next=false
+for arg in "$@"; do
+  if [ "${next}" = "true" ]; then
+    output="${arg}"
+    next="false"
+  elif [ "_${arg::2}" = "_-o" ]; then
+    if [ "_${arg}" = "_-o" ]; then
+      next="true"
+    else
+      output="${arg:2}"
+    fi
+  elif [ "_${arg::8}" = "_--output" ]; then
+    if [ "_${arg}" = "_--output" ]; then
+      next="true"
+    else
+      output="${arg:9}"
+    fi
+  fi
+done
+
+/usr/bin/clang "$@" &&
+
+if test -x "${output}"; then ldid -S/usr/share/SDKs/entitlements.xml "${output}"; fi
