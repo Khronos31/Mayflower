@@ -1,0 +1,10 @@
+--- openssl-1.1.1g/Configurations/15-ios.conf	2020-04-21 21:22:39.000000000 +0900
++++ patches/openssl-1.1.1g/Configurations/15-ios.conf	2020-07-02 19:19:10.000000000 +0900
+@@ -10,7 +10,6 @@
+         template         => 1,
+         inherit_from     => [ "darwin-common" ],
+         sys_id           => "iOS",
+-        disable          => [ "engine", "async" ],
+     },
+     "ios-xcrun" => {
+         inherit_from     => [ "ios-common", asm("armv4_asm") ],
