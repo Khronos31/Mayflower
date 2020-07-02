@@ -1,0 +1,11 @@
+Package: com.khronos.ncurses
+Priority: optional
+Name: New Curses
+Version: @VERSION@
+Section: System
+Architecture: iphoneos-arm
+Depends: firmware (@FIRMWARE_VERSION@)
+Maintainer: Khronos
+Homepage: https://invisible-island.net/ncurses/ncurses.html
+Tag: purpose::library
+Description: System V Release 4.0 curses emulation library

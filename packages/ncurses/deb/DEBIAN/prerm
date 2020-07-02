@@ -1,0 +1,9 @@
+#!/bin/sh
+
+find /usr/local/lib -type l -maxdepth 1 |
+while read l; do
+  file="$(readlink "$l")"
+  if [ "_${file%%/*}" = _ncurses ]; then
+    unlink "$l"
+  fi
+done
