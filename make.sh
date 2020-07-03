@@ -40,7 +40,9 @@ export LDFLAGS="${LDFLAGS} $(COMMON_FLAGS)"
 
 cd "${PROJECTROOT}"
 clean
-download
+if [ "x${source}" != "x" ]; then
+  download
+fi
 applyPatch
 
 cd "${BUILDROOT}"
