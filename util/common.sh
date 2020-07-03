@@ -9,10 +9,6 @@ DEFAULT_CXX() {
   echo "${ROOTDIR}/bin/c++"
 }
 
-COMMON_FLAGS() {
-  echo "-isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=7.0 -arch ${ARCH}"
-}
-
 clean() {
   if [ -e "${BUILDROOT}" ]; then
     rm -rf "${BUILDROOT}"
