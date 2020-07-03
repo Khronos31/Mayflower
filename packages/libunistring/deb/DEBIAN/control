@@ -1,0 +1,11 @@
+Package: com.khronos.libunistring
+Priority: optional
+Name: libunistring
+Version: @VERSION@
+Section: Development
+Architecture: iphoneos-arm
+Depends: firmware (@FIRMWARE_VERSION@)
+Maintainer: Khronos
+Homepage: https://www.gnu.org/software/libunistring/
+Tag: purpose::library
+Description: C string library for manipulating Unicode strings
