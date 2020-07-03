@@ -1,5 +1,6 @@
 export staticlibs=n
 export zipman=n
+export resign=n
 
 check_option() {
   if [ $# -lt 2 ]; then
