@@ -1,6 +1,6 @@
 pkgname=libidn2
 pkgver=2.3.0
-pkgrel=1
+pkgrel=2
 
 # URL of source archive
 source="https://ftp.gnu.org/gnu/libidn/${pkgname}-${pkgver}.tar.gz"
@@ -10,6 +10,7 @@ ARCH="${ARCH-$(arch)}"
 build() {
   cd "${pkgname}-${pkgver}"
 
+  CC_FOR_BUILD="${CC}" \
   ./configure \
     --build=aarch64-apple-darwin \
     --prefix=/usr/local \
@@ -17,8 +18,7 @@ build() {
     --disable-silent-rules \
     --disable-static \
     --with-libunistring-prefix=/usr/local \
-    --with-libintl-prefix=/usr/local \
-    --with-packager=Khronos
+    --with-libintl-prefix=/usr/local 
   make
 }
 
