@@ -33,10 +33,10 @@ tidy_resign() {
     while read x; do
       if ldid -e "$x" >"${ROOTDIR}/tmp.xml" 2>/dev/null && [ -s "${ROOTDIR}/tmp.xml" ]; then
         ldid -S"${ROOTDIR}/tmp.xml" "$x"
-        rm "${ROOTDIR}/tmp.xml"
       else
         ldid -S"${ROOTDIR}/entitlements.xml" "$x" 2>/dev/null || true
       fi
+      rm -f "${ROOTDIR}/tmp.xml"
     done
   fi
 }
