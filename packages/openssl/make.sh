@@ -1,11 +1,12 @@
 pkgname=openssl
 pkgver=1.1.1g
-pkgrel=2
+pkgrel=3
 
 # URL of source archive
 source="https://www.openssl.org/source/openssl-1.1.1g.tar.gz"
 
 ARCH="${ARCH-$(arch)}"
+COMMON_FLAGS=""
 
 build() {
   cd "${pkgname}-${pkgver}"
@@ -38,6 +39,6 @@ package() {
 
   cd "${pkgdir}/usr/local/ssl"
   rm -rf certs cert.pem
-  ln -s /etc/certs certs
+  ln -s /etc/ssl/certs certs
   ln -s certs/cacert.pem cert.pem
 }
