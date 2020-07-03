@@ -4,8 +4,8 @@ Name: OpenSSL
 Version: @VERSION@
 Section: Security
 Architecture: iphoneos-arm
-Depends: firmware (@FIRMWARE_VERSION@)
+Depends: firmware (@FIRMWARE_VERSION@), ca-certificates
 Maintainer: Khronos
 Homepage: https://www.openssl.org
 Tag: purpose::library
-Description: The Open Source toolkit for Secure Sockets Layer and Transport Layer Security
+Description: Cryptograpy and SSL/TLS Toolkit

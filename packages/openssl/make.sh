@@ -1,6 +1,6 @@
 pkgname=openssl
 pkgver=1.1.1g
-pkgrel=1
+pkgrel=2
 
 # URL of source archive
 source="https://www.openssl.org/source/openssl-1.1.1g.tar.gz"
@@ -31,6 +31,13 @@ build() {
 
 package() {
   cd "${pkgname}-${pkgver}"
+
   make DESTDIR="${pkgdir}" MANDIR=/usr/local/share/man MANSUFFIX=ssl install_sw install_ssldirs install_man_docs
+
   install -D -m644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+
+  cd "${pkgdir}/usr/local/ssl"
+  rm -rf certs cert.pem
+  ln -s /etc/certs certs
+  ln -s certs/cacert.pem cert.pem
 }
