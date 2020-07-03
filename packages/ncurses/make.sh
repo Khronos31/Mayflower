@@ -1,6 +1,6 @@
 pkgname=ncurses
 pkgver=6.2
-pkgrel=1
+pkgrel=2
 
 source="https://ftp.gnu.org/gnu/ncurses/${pkgname}-${pkgver}.tar.gz"
 
