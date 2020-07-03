@@ -1,0 +1,11 @@
+Package: com.khronos.libidn2
+Priority: optional
+Name: libidn2
+Version: @VERSION@
+Section: Development
+Architecture: iphoneos-arm
+Depends: firmware (@FIRMWARE_VERSION@), com.khronos.libunistring, com.khronos.gettext
+Maintainer: Khronos
+Homepage: https://www.gnu.org/software/libidn/#libidn2
+Tag: purpose::library
+Description: International domain name library (IDNA2008, Punycode and TR46)
