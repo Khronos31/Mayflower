@@ -1,4 +1,4 @@
-tidy_options=("staticlibs" "zipman")
+tidy_options=("staticlibs" "zipman" "resign")
 
 tidy_staticlibs() {
   if check_option "staticlibs" "n"; then
@@ -21,6 +21,21 @@ tidy_zipman() {
       elif [ -h "${file}" ]; then
         ln -s "$(readlink "${file}").gz" "${file}.gz"
         rm "${file}"
+      fi
+    done
+  fi
+}
+
+tidy_resign() {
+  if check_option "resign" "y"; then
+    local x
+    find "${pkgdir}" -type f |
+    while read x; do
+      if ldid -e "$x" >"${ROOTDIR}/tmp.xml" 2>/dev/null && [ -s "${ROOTDIR}/tmp.xml" ]; then
+        ldid -S"${ROOTDIR}/tmp.xml" "$x"
+        rm "${ROOTDIR}/tmp.xml"
+      else
+        ldid -S"${ROOTDIR}/entitlements.xml" "$x" 2>/dev/null || true
       fi
     done
   fi

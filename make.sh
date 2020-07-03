@@ -28,15 +28,16 @@ esac
 export BUILDROOT="${PROJECTROOT}/${ARCH}"
 export pkgdir="${BUILDROOT}/build"
 
-export CC="${CC-$(DEFAULT_CC)}"
-export CXX="${CXX-$(DEFAULT_CXX)}"
-export AR="${AR-llvm-ar}"
-export RANLIB="${RANLIB-llvm-ranlib}"
+export CC="${CC:-$(DEFAULT_CC)}"
+export CXX="${CXX:-$(DEFAULT_CXX)}"
+export AR="${AR:-llvm-ar}"
+export RANLIB="${RANLIB:-llvm-ranlib}"
 
-export CFLAGS="${CFLAGS} $(COMMON_FLAGS)"
-export CXXFLAGS="${CXXFLAGS} $(COMMON_FLAGS)"
-export CPPFLAGS="${CPPFLAGS} $(COMMON_FLAGS)"
-export LDFLAGS="${LDFLAGS} $(COMMON_FLAGS)"
+export COMMON_FLAGS="${COMMON_FLAGS--isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=7.0 -arch ${ARCH}}"
+export CFLAGS="${CFLAGS} ${COMMON_FLAGS}"
+export CXXFLAGS="${CXXFLAGS} ${COMMON_FLAGS}"
+export CPPFLAGS="${CPPFLAGS} ${COMMON_FLAGS}"
+export LDFLAGS="${LDFLAGS} ${COMMON_FLAGS}"
 
 cd "${PROJECTROOT}"
 clean
