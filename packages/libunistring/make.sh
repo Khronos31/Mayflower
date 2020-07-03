@@ -12,7 +12,7 @@ build() {
 
   ./configure \
     --build=aarch64-apple-darwin \
-    --prefix=/usr \
+    --prefix=/usr/local \
     --disable-dependency-tracking \
     --disable-silent-rules
   make
