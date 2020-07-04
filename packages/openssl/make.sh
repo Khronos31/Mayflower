@@ -1,6 +1,6 @@
 pkgname=openssl
 pkgver=1.1.1g
-pkgrel=4
+pkgrel=5
 
 # URL of source archive
 source="https://www.openssl.org/source/openssl-1.1.1g.tar.gz"
@@ -26,9 +26,10 @@ build() {
     shared \
     no-ssl3 \
     no-ssl3-method \
+    enable-egd \
     "${arch_args[@]}"
   make
-  make test || true
+  make test || echo "test failed!!"
 }
 
 package() {
