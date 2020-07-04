@@ -1,6 +1,6 @@
 pkgname=curl
 pkgver=7.71.1
-pkgrel=2
+pkgrel=1
 
 # URL of source archive
 source="https://curl.haxx.se/download/${pkgname}-${pkgver}.tar.gz"
@@ -17,10 +17,10 @@ build() {
     --disable-dependency-tracking \
     --disable-silent-rules \
     --with-secure-transport \
-    --with-ssl="${ROOTDIR}/packages/openssl/build/${ARCH}/usr/local" \
-    --with-libssh2="${ROOTDIR}/packages/libssh2/${ARCH}/build/usr" \
-    --with-libidn2="${ROOTDIR}/packages/libidn2/${ARCH}/build/usr/local" \
-    --with-nghttp2="${ROOTDIR}/packages/libnghttp2/${ARCH}/build/usr" \
+    --with-ssl=/usr/local \
+    --with-libssh2=/usr \
+    --with-libidn2=/usr/local \
+    --with-nghttp2=/usr \
     --with-ca-bundle=/usr/local/ssl/cert.pem \
     --with-ca-path=/usr/local/ssl/certs
 
