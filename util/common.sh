@@ -20,7 +20,7 @@ download() {
   local tarball
   tarball="$(basename "${source}")"
   if [ ! -r "${PROJECTROOT}/${tarball}" ]; then
-    curl -o "${PROJECTROOT}/${tarball}" "${source}"
+    curl -sSL -o "${PROJECTROOT}/${tarball}" "${source}"
   fi
   tar xvf "${tarball}" -C "${BUILDROOT}"
 }
