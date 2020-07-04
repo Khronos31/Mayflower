@@ -2,7 +2,7 @@ Package: com.khronos.curl
 Priority: optional
 Name: cURL
 Version: @VERSION@
-Section: Development
+Section: Networking
 Architecture: iphoneos-arm
 Depends: firmware (@FIRMWARE_VERSION@), ca-certificates, com.khronos.libssh2, com.khronos.openssl, com.khronos.libnghttp2, com.khronos.libidn2
 Conflicts: curl
@@ -10,5 +10,5 @@ Replaces: curl
 Provides: curl
 Maintainer: Khronos
 Homepage: https://curl.haxx.se/
-Tag: purpose::library
+Tag: purpose::console
 Description: Get a file from an HTTP, HTTPS or FTP server
