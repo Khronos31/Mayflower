@@ -1,6 +1,6 @@
 pkgname=libssh2
 pkgver=1.9.0
-pkgrel=1
+pkgrel=2
 
 # URL of source archive
 source="https://www.libssh2.org/download/${pkgname}-${pkgver}.tar.gz"
@@ -12,7 +12,7 @@ build() {
 
   ./configure \
     --build=aarch64-apple-darwin \
-    --prefix=/usr \
+    --prefix=/usr/local \
     --disable-debug \
     --disable-dependency-tracking \
     --disable-silent-rules \
