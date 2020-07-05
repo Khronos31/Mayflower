@@ -37,7 +37,7 @@ export COMMON_FLAGS="${COMMON_FLAGS--isysroot /usr/share/SDKs/iPhoneOS.sdk -miph
 export CFLAGS="${CFLAGS} ${COMMON_FLAGS}"
 export CXXFLAGS="${CXXFLAGS} ${COMMON_FLAGS}"
 export CPPFLAGS="${CPPFLAGS} ${COMMON_FLAGS}"
-export LDFLAGS="${LDFLAGS} -L${ROOTDIR}/.SYSROOT/usr/lib ${COMMON_FLAGS}" # very dirty hack
+export LDFLAGS="${LDFLAGS} ${COMMON_FLAGS}"
 
 cd "${PROJECTROOT}"
 clean
