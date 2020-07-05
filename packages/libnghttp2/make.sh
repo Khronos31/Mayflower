@@ -1,6 +1,6 @@
 pkgname=libnghttp2
 pkgver=1.41.0
-pkgrel=1
+pkgrel=2
 
 # URL of source archive
 source="https://github.com/nghttp2/nghttp2/releases/download/v${pkgver}/nghttp2-${pkgver}.tar.gz"
@@ -12,7 +12,7 @@ build() {
 
   ./configure \
     --build=aarch64-apple-darwin \
-    --prefix=/usr \
+    --prefix=/usr/local \
     --disable-silent-rules \
     --disable-python-bindings \
     --enable-lib-only

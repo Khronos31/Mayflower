@@ -5,9 +5,6 @@ Version: @VERSION@
 Section: Development
 Architecture: iphoneos-arm
 Depends: firmware (@FIRMWARE_VERSION@)
-Conflicts: nghttp2, libnghttp2-14, libnghttp2-dev
-Replaces: nghttp2, libnghttp2-14, libnghttp2-dev
-Provides: nghttp2, libnghttp2-14, libnghttp2-dev
 Maintainer: Khronos
 Homepage: https://nghttp2.org/
 Tag: purpose::library
