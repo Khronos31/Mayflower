@@ -5,9 +5,6 @@ Version: @VERSION@
 Section: Networking
 Architecture: iphoneos-arm
 Depends: firmware (@FIRMWARE_VERSION@), ca-certificates, com.khronos.libssh2, com.khronos.openssl, com.khronos.libnghttp2, com.khronos.libidn2
-Conflicts: curl
-Replaces: curl
-Provides: curl
 Maintainer: Khronos
 Homepage: https://curl.haxx.se/
 Tag: purpose::console
