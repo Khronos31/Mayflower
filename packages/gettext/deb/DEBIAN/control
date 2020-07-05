@@ -1,0 +1,11 @@
+Package: com.khronos.gettext
+Priority: optional
+Name: gettext
+Version: @VERSION@
+Section: Development
+Architecture: iphoneos-arm
+Depends: firmware (@FIRMWARE_VERSION@)
+Maintainer: Khronos
+Homepage: https://www.gnu.org/software/gettext/
+Tag: purpose::library
+Description: GNU internationalization (i18n) and localization (l10n) library

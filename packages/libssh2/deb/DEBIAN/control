@@ -1,0 +1,11 @@
+Package: com.khronos.libssh2
+Priority: optional
+Name: libssh2
+Version: @VERSION@
+Section: Development
+Architecture: iphoneos-arm
+Depends: firmware (@FIRMWARE_VERSION@), com.khronos.openssl
+Maintainer: Khronos
+Homepage: https://libssh2.org/
+Tag: purpose::library
+Description: C library implementing the SSH2 protocol

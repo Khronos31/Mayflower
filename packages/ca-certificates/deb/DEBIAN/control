@@ -1,0 +1,13 @@
+Package: ca-certificates
+Priority: optional
+Name: CA Certs
+Version: 0-@VERSION@
+Section: Utilities
+Architecture: iphoneos-arm
+Conflicts: org.thebigboss.cacerts
+Replaces: org.thebigboss.cacerts
+Provides: org.thebigboss.cacerts
+Maintainer: Khronos
+Homepage: https://curl.haxx.se/docs/caextract.html
+Tag: purpose::console
+Description: Common CA certificates
