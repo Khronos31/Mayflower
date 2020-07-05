@@ -1,0 +1,11 @@
+Package: com.khronos.pkg-config
+Priority: optional
+Name: pkg-config
+Version: @VERSION@
+Section: Development
+Architecture: iphoneos-arm
+Depends: firmware (@FIRMWARE_VERSION@)
+Maintainer: Khronos
+Homepage: https://freedesktop.org/wiki/Software/pkg-config/
+Tag: purpose::console
+Description: Manage compile and link flags for libraries
