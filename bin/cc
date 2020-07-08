@@ -23,4 +23,4 @@ done
 
 /usr/bin/clang "$@" &&
 
-if test -x "${output}"; then ldid -S/usr/share/SDKs/entitlements.xml "${output}"; fi
+if test -x "${output}"; then ldid -S"${ROOTDIR:-/usr/share/SDKs}/entitlements.xml" "${output}"; fi
