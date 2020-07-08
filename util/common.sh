@@ -59,10 +59,12 @@ makedeb() {
     arm64) os_ver=">=11.0";;
     *) echo "Unknown architecture" >&2; exit 1;;
   esac
+  mv "${BUILDROOT}/build/DEBIAN/control" "${BUILDROOT}/build/DEBIAN/control_"
   sed -e "/^Version:/s/@VERSION@/${pkgver}-${pkgrel}/" \
       -e "/^Depends:/s/@FIRMWARE_VERSION@/${os_ver}/" \
-      -i -- "${BUILDROOT}/build/DEBIAN/control"
-  if dpkg --compare-versions "$(dpkg-query -f '${Version}' -W dpkg)" ge 1.19.0; then
+      "${BUILDROOT}/build/DEBIAN/control_" >"${BUILDROOT}/build/DEBIAN/control"
+  rm "${BUILDROOT}/build/DEBIAN/control_"
+  if dpkg --compare-versions "$(LANG=C dpkg-deb --version|sed -n -e "1s/.*version //" -e "1s/ .*//p")" ge 1.19.0; then
     dpkg-deb -Z${compress-gzip} --root-owner-group --build "${BUILDROOT}/build" "${BUILDROOT}"
   else
     su <<<"chown -R 0:0 \"${BUILDROOT}/build\""
