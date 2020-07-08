@@ -1,0 +1,11 @@
+--- rustc-1.44.1-src/src/tools/cargo/src/cargo/util/paths.rs	2020-06-18 05:17:31.000000000 +0900
++++ patches/rustc-1.44.1-src/src/tools/cargo/src/cargo/util/paths.rs	2020-07-06 08:57:03.000000000 +0900
+@@ -28,7 +28,7 @@
+ pub fn dylib_path_envvar() -> &'static str {
+     if cfg!(windows) {
+         "PATH"
+-    } else if cfg!(target_os = "macos") {
++    } else if cfg!(any(target_os = "macos", target_os = "ios")) {
+         // When loading and linking a dynamic library or bundle, dlopen
+         // searches in LD_LIBRARY_PATH, DYLD_LIBRARY_PATH, PWD, and
+         // DYLD_FALLBACK_LIBRARY_PATH.
