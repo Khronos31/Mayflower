@@ -1,0 +1,25 @@
+--- rustc-1.44.1-src/src/librustc_codegen_ssa/back/link.rs	2020-06-18 05:17:05.000000000 +0900
++++ patches/rustc-1.44.1-src/src/librustc_codegen_ssa/back/link.rs	2020-07-01 23:28:13.000000000 +0900
+@@ -667,6 +667,22 @@
+         }
+     }
+ 
++    // On iOS, need to sign with ldid after linking.
++    if sess.target.target.target_os == "ios" {
++        let ent = env::var("ENTFILE")
++                      .unwrap_or("/usr/share/entitlements/com.khronos.rust.xml".to_string());
++        let ent = format!("{}{}", "-S", ent);
++        let output = Command::new("ldid")
++                             .arg(ent)
++                             .arg(out_filename)
++                             .output()
++                             .expect("failed to execute ldid");
++        if !output.status.success() {
++            let error = String::from_utf8_lossy(&output.stderr);
++            sess.fatal(&format!("failed to run ldid: {}", error));
++        }
++    }
++
+     // On macOS, debuggers need this utility to get run to do some munging of
+     // the symbols. Note, though, that if the object files are being preserved
+     // for their debug information there's no need for us to run dsymutil.
