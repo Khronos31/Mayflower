@@ -67,8 +67,8 @@ rpath = true
 [dist]
 END
 
-  export ${target_cpu^^}_APPLE_IOS_OPENSSL_LIB_DIR="${PROJECTROOT}/openssl/${ARCH}/lib"
-  export ${target_cpu^^}_APPLE_IOS_OPENSSL_INCLUDE_DIR="${PROJECTROOT}/openssl/${ARCH}/include"
+  export ${target_cpu^^}_APPLE_IOS_OPENSSL_LIB_DIR="${PROJECTROOT}/openssl/lib/${ARCH}"
+  export ${target_cpu^^}_APPLE_IOS_OPENSSL_INCLUDE_DIR="${PROJECTROOT}/openssl/include"
 
   python ./x.py dist \
     --stage 1 -j "$(nproc)" \
