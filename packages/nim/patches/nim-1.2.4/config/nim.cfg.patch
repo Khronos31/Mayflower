@@ -1,0 +1,16 @@
+--- nim-1.2.4/config/nim.cfg	2020-06-26 19:17:33.000000000 +0900
++++ patches/nim-1.2.4/config/nim.cfg	2020-07-10 21:08:12.000000000 +0900
+@@ -317,3 +317,13 @@
+   --define:nimOldCaseObjects
+   --define:nimOldShiftRight
+ @end
++
++@if macosx:
++  @if arm:
++    clang.options.always = "-w -isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=7.0 -arch armv7 -I/usr/local/include"
++    clang.options.linker = "-isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=7.0 -arch armv7 -L/usr/local/lib"
++  @elif arm64:
++    clang.options.always = "-w -isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=7.0 -arch arm64 -I/usr/local/include"
++    clang.options.linker = "-isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=7.0 -arch arm64 -L/usr/local/lib"
++  @end
++@end
