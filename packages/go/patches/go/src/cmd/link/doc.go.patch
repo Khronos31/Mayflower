@@ -1,0 +1,11 @@
+--- go/src/cmd/link/doc.go	2020-06-02 04:44:34.000000000 +0900
++++ patches/go/src/cmd/link/doc.go	2020-06-02 04:44:34.000000000 +0900
+@@ -67,7 +67,7 @@
+ 	-dumpdep
+ 		Dump symbol dependency graph.
+ 	-extar ar
+-		Set the external archive program (default "ar").
++		Set the external archive program (default "ar" or "llvm-ar").
+ 		Used only for -buildmode=c-archive.
+ 	-extld linker
+ 		Set the external linker (default "clang" or "gcc").

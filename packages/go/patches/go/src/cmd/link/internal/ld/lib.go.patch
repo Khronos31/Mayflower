@@ -1,0 +1,37 @@
+--- go/src/cmd/link/internal/ld/lib.go	2020-06-02 04:44:34.000000000 +0900
++++ patches/go/src/cmd/link/internal/ld/lib.go	2020-06-02 04:44:34.000000000 +0900
+@@ -1148,7 +1148,11 @@
+ 	exitIfErrors()
+ 
+ 	if *flagExtar == "" {
+-		*flagExtar = "ar"
++		if runtime.GOOS == "darwin" && (runtime.GOARCH == "arm" || runtime.GOARCH == "arm64") {
++			*flagExtar = "llvm-ar"
++		} else {
++			*flagExtar = "ar"
++		}
+ 	}
+ 
+ 	mayberemoveoutfile()
+@@ -1161,7 +1165,7 @@
+ 	}
+ 	ctxt.Out.f = nil
+ 
+-	argv := []string{*flagExtar, "-q", "-c", "-s"}
++	argv := []string{*flagExtar, "qcs"}
+ 	if ctxt.HeadType == objabi.Haix {
+ 		argv = append(argv, "-X64")
+ 	}
+@@ -1542,7 +1546,11 @@
+ 
+ 	if !*FlagS && !*FlagW && !debug_s && ctxt.HeadType == objabi.Hdarwin {
+ 		dsym := filepath.Join(*flagTmpdir, "go.dwarf")
+-		if out, err := exec.Command("dsymutil", "-f", *flagOutfile, "-o", dsym).CombinedOutput(); err != nil {
++		dsymutil := "dsymutil"
++		if runtime.GOARCH == "arm64" {
++			dsymutil = "llvm-dsymutil"
++		}
++		if out, err := exec.Command(dsymutil, "-f", *flagOutfile, "-o", dsym).CombinedOutput(); err != nil {
+ 			Exitf("%s: running dsymutil failed: %v\n%s", os.Args[0], err, out)
+ 		}
+ 		// Skip combining if `dsymutil` didn't generate a file. See #11994.

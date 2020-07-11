@@ -1,0 +1,82 @@
+--- nim-1.2.4/compiler/extccomp.nim	2020-06-26 19:17:36.000000000 +0900
++++ patches/nim-1.2.4/compiler/extccomp.nim	2020-07-11 01:59:18.000000000 +0900
+@@ -125,8 +125,11 @@
+   result.compilerExe = "llvm-gcc"
+   result.cppCompiler = "llvm-g++"
+   when defined(macosx):
+-    # OS X has no 'llvm-ar' tool:
+-    result.buildLib = "ar rcs $libfile $objfiles"
++    when defined(arm) or defined(arm64):
++      result.buildLib = "llvm-ar rcs $libfile $objfiles"
++    else:
++      # OS X has no 'llvm-ar' tool:
++      result.buildLib = "ar rcs $libfile $objfiles"
+   else:
+     result.buildLib = "llvm-ar rcs $libfile $objfiles"
+ 
+@@ -858,19 +861,21 @@
+         (ose.msg & " " & $ose.errorCode))
+     raise
+ 
++proc getExtraCmds(conf: ConfigRef; output: AbsoluteFile): seq[string] =
++  when defined(macosx):
++    if optCDebug in conf.globalOptions and optGenStaticLib notin conf.globalOptions:
++      # if needed, add an option to skip or override location
++      when defined(arm64):
++        result.add "llvm-dsymutil " & $(output).quoteShell
++      else:
++        result.add "dsymutil " & $(output).quoteShell
++    if conf.target.targetOS == osMacosx and (conf.target.targetCPU in {cpuArm, cpuArm64}):
++      result.add "ldid -S/usr/share/entitlements/com.khronos.nim.xml " & $(output).quoteShell
++
+ proc execLinkCmd(conf: ConfigRef; linkCmd: string) =
+   tryExceptOSErrorMessage(conf, "invocation of external linker program failed."):
+     execExternalProgram(conf, linkCmd, hintLinking)
+ 
+-proc maybeRunDsymutil(conf: ConfigRef; exe: AbsoluteFile) =
+-  when defined(osx):
+-    if optCDebug in conf.globalOptions and optGenStaticLib notin conf.globalOptions:
+-      # if needed, add an option to skip or override location
+-      let cmd = "dsymutil " & $(exe).quoteShell
+-      conf.extraCmds.add cmd
+-      tryExceptOSErrorMessage(conf, "invocation of dsymutil failed."):
+-        execExternalProgram(conf, cmd, hintExecuting)
+-
+ proc execCmdsInParallel(conf: ConfigRef; cmds: seq[string]; prettyCb: proc (idx: int)) =
+   let runCb = proc (idx: int, p: Process) =
+     let exitCode = p.peekExitCode
+@@ -941,6 +946,7 @@
+ proc callCCompiler*(conf: ConfigRef) =
+   var
+     linkCmd: string
++    extraCmds: seq[string]
+   if conf.globalOptions * {optCompileOnly, optGenScript} == {optCompileOnly}:
+     return # speed up that call if only compiling and no script shall be
+            # generated
+@@ -1011,6 +1017,7 @@
+       let mainOutput = if optGenScript notin conf.globalOptions: conf.prepareToWriteOutput
+                        else: AbsoluteFile(conf.projectName)
+       linkCmd = getLinkCmd(conf, mainOutput, objfiles)
++      extraCmds = getExtraCmds(conf, mainOutput)
+       if optCompileOnly notin conf.globalOptions:
+         const MaxCmdLen = when defined(windows): 8_000 else: 32_000
+         if linkCmd.len > MaxCmdLen:
+@@ -1020,7 +1027,8 @@
+           linkViaResponseFile(conf, linkCmd)
+         else:
+           execLinkCmd(conf, linkCmd)
+-        maybeRunDsymutil(conf, mainOutput)
++        for cmd in extraCmds:
++          execExternalProgram(conf, cmd, hintExecuting)
+   else:
+     linkCmd = ""
+   if optGenScript in conf.globalOptions:
+@@ -1108,7 +1116,7 @@
+     str getLinkCmd(conf, conf.absOutFile, objfiles)
+ 
+     lit ",\L\"extraCmds\": "
+-    lit $(%* conf.extraCmds)
++    lit $(%* getExtraCmds(conf, conf.absOutFile))
+ 
+     lit ",\L\"stdinInput\": "
+     lit $(%* conf.projectIsStdin)

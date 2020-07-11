@@ -1,0 +1,15 @@
+--- nim-1.2.4/lib/posix/posix_other.nim	2020-06-26 19:17:33.000000000 +0900
++++ patches/nim-1.2.4/lib/posix/posix_other.nim	2020-07-11 01:44:31.000000000 +0900
+@@ -230,7 +230,11 @@
+                           ## For a typed memory object, the length in bytes.
+                           ## For other file types, the use of this field is
+                           ## unspecified.
+-    when StatHasNanoseconds:
++    when defined(osx):
++      st_atim* {.importc:"st_atimespec".}: Timespec  ## Time of last access.
++      st_mtim* {.importc:"st_mtimespec".}: Timespec  ## Time of last data modification.
++      st_ctim* {.importc:"st_ctimespec".}: Timespec  ## Time of last status change.
++    elif StatHasNanoseconds:
+       st_atim*: Timespec  ## Time of last access.
+       st_mtim*: Timespec  ## Time of last data modification.
+       st_ctim*: Timespec  ## Time of last status change.
