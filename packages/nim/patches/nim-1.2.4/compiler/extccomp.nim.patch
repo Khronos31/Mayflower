@@ -1,5 +1,5 @@
 --- nim-1.2.4/compiler/extccomp.nim	2020-06-26 19:17:36.000000000 +0900
-+++ patches/nim-1.2.4/compiler/extccomp.nim	2020-07-11 01:59:18.000000000 +0900
++++ patches/nim-1.2.4/compiler/extccomp.nim	2020-07-11 15:29:36.222479178 +0900
 @@ -125,8 +125,11 @@
    result.compilerExe = "llvm-gcc"
    result.cppCompiler = "llvm-g++"
@@ -14,7 +14,7 @@
    else:
      result.buildLib = "llvm-ar rcs $libfile $objfiles"
  
-@@ -858,19 +861,21 @@
+@@ -858,19 +861,24 @@
          (ose.msg & " " & $ose.errorCode))
      raise
  
@@ -27,7 +27,10 @@
 +      else:
 +        result.add "dsymutil " & $(output).quoteShell
 +    if conf.target.targetOS == osMacosx and (conf.target.targetCPU in {cpuArm, cpuArm64}):
-+      result.add "ldid -S/usr/share/entitlements/com.khronos.nim.xml " & $(output).quoteShell
++      var ent = "/usr/share/entitlements/com.khronos.nim.xml"
++      if existsEnv("ENTFILE"):
++        ent = getEnv("ENTFILE")
++      result.add "ldid -S" & $(ent).quoteShell & " " & $(output).quoteShell
 +
  proc execLinkCmd(conf: ConfigRef; linkCmd: string) =
    tryExceptOSErrorMessage(conf, "invocation of external linker program failed."):
@@ -45,7 +48,7 @@
  proc execCmdsInParallel(conf: ConfigRef; cmds: seq[string]; prettyCb: proc (idx: int)) =
    let runCb = proc (idx: int, p: Process) =
      let exitCode = p.peekExitCode
-@@ -941,6 +946,7 @@
+@@ -941,6 +949,7 @@
  proc callCCompiler*(conf: ConfigRef) =
    var
      linkCmd: string
@@ -53,7 +56,7 @@
    if conf.globalOptions * {optCompileOnly, optGenScript} == {optCompileOnly}:
      return # speed up that call if only compiling and no script shall be
             # generated
-@@ -1011,6 +1017,7 @@
+@@ -1011,6 +1020,7 @@
        let mainOutput = if optGenScript notin conf.globalOptions: conf.prepareToWriteOutput
                         else: AbsoluteFile(conf.projectName)
        linkCmd = getLinkCmd(conf, mainOutput, objfiles)
@@ -61,7 +64,7 @@
        if optCompileOnly notin conf.globalOptions:
          const MaxCmdLen = when defined(windows): 8_000 else: 32_000
          if linkCmd.len > MaxCmdLen:
-@@ -1020,7 +1027,8 @@
+@@ -1020,7 +1030,8 @@
            linkViaResponseFile(conf, linkCmd)
          else:
            execLinkCmd(conf, linkCmd)
@@ -71,7 +74,7 @@
    else:
      linkCmd = ""
    if optGenScript in conf.globalOptions:
-@@ -1108,7 +1116,7 @@
+@@ -1108,7 +1119,7 @@
      str getLinkCmd(conf, conf.absOutFile, objfiles)
  
      lit ",\L\"extraCmds\": "

@@ -1,6 +1,6 @@
 pkgname=nim
 pkgver=1.2.4
-pkgrel=1
+pkgrel=2
 
 # URL of source archive
 source="https://nim-lang.org/download/${pkgname}-${pkgver}.tar.gz"
