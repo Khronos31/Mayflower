@@ -1,0 +1,13 @@
+--- go/src/plugin/plugin_dlopen.go	2020-06-02 04:44:34.000000000 +0900
++++ patches/go/src/plugin/plugin_dlopen.go	2020-06-02 04:44:34.000000000 +0900
+@@ -8,6 +8,10 @@
+ 
+ /*
+ #cgo linux LDFLAGS: -ldl
++#cgo darwin,arm LDFLAGS: -framework CoreFoundation -isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=7.0 -arch armv7
++#cgo darwin,arm CFLAGS: -isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=7.0 -arch armv7
++#cgo darwin,arm64 LDFLAGS: -framework CoreFoundation -isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=7.0 -arch arm64
++#cgo darwin,arm64 CFLAGS: -isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=7.0 -arch arm64
+ #include <dlfcn.h>
+ #include <limits.h>
+ #include <stdlib.h>

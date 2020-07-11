@@ -1,0 +1,11 @@
+Package: com.khronos.go
+Priority: optional
+Name: Go
+Version: @VERSION@
+Section: Development
+Architecture: iphoneos-arm
+Depends: firmware (@FIRMWARE_VERSION@)
+Maintainer: Khronos
+Homepage: https://golang.org
+Tag: purpose::console
+Description: Open source programming language to build simple/reliable/efficient software

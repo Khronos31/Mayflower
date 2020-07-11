@@ -1,0 +1,20 @@
+--- go/src/cmd/link/internal/ld/config.go	2020-06-02 04:44:34.000000000 +0900
++++ patches/go/src/cmd/link/internal/ld/config.go	2020-06-02 04:44:34.000000000 +0900
+@@ -41,7 +41,7 @@
+ 		case "aix", "android", "linux":
+ 		case "darwin", "freebsd":
+ 			switch objabi.GOARCH {
+-			case "amd64":
++			case "amd64", "arm", "arm64":
+ 			default:
+ 				return badmode()
+ 			}
+@@ -97,7 +97,7 @@
+ 			}
+ 		case "darwin", "freebsd":
+ 			switch objabi.GOARCH {
+-			case "amd64":
++			case "amd64", "arm", "arm64":
+ 			default:
+ 				return badmode()
+ 			}

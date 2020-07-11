@@ -1,0 +1,15 @@
+--- go/src/runtime/cgo/cgo.go	2020-06-02 04:44:34.000000000 +0900
++++ patches/go/src/runtime/cgo/cgo.go	2020-06-02 04:44:34.000000000 +0900
+@@ -12,8 +12,10 @@
+ /*
+ 
+ #cgo darwin,!arm,!arm64 LDFLAGS: -lpthread
+-#cgo darwin,arm LDFLAGS: -framework CoreFoundation
+-#cgo darwin,arm64 LDFLAGS: -framework CoreFoundation
++#cgo darwin,arm LDFLAGS: -framework CoreFoundation -isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=7.0 -arch armv7
++#cgo darwin,arm CFLAGS: -isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=7.0 -arch armv7
++#cgo darwin,arm64 LDFLAGS: -framework CoreFoundation -isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=7.0 -arch arm64
++#cgo darwin,arm64 CFLAGS: -isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=7.0 -arch arm64
+ #cgo dragonfly LDFLAGS: -lpthread
+ #cgo freebsd LDFLAGS: -lpthread
+ #cgo android LDFLAGS: -llog

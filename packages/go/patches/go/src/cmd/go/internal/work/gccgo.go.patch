@@ -1,0 +1,20 @@
+--- go/src/cmd/go/internal/work/gccgo.go	2020-06-02 04:44:34.000000000 +0900
++++ patches/go/src/cmd/go/internal/work/gccgo.go	2020-06-02 04:44:34.000000000 +0900
+@@ -10,6 +10,7 @@
+ 	"os"
+ 	"os/exec"
+ 	"path/filepath"
++	"runtime"
+ 	"strings"
+ 
+ 	"cmd/go/internal/base"
+@@ -47,6 +48,9 @@
+ 	ar := cfg.Getenv("AR")
+ 	if ar == "" {
+ 		ar = "ar"
++		if runtime.GOOS == "darwin" && (runtime.GOARCH == "arm" || runtime.GOARCH == "arm64") {
++			ar = "llvm-ar"
++		}
+ 	}
+ 	return ar
+ }
