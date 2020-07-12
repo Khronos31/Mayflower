@@ -1,0 +1,11 @@
+Package: com.khronos.libffi
+Priority: optional
+Name: libffi
+Version: @VERSION@
+Section: Development
+Architecture: iphoneos-arm
+Depends: firmware (@FIRMWARE_VERSION@) 
+Maintainer: Khronos
+Homepage: https://sourceware.org/libffi/
+Tag: purpose::library
+Description: Portable Foreign Function Interface library
