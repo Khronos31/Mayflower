@@ -1,0 +1,11 @@
+Package: com.khronos.gmp
+Priority: optional
+Name: GNU MP
+Version: @VERSION@
+Section: Development
+Architecture: iphoneos-arm
+Depends: firmware (@FIRMWARE_VERSION@)
+Maintainer: Khronos
+Homepage: https://gmplib.org/
+Tag: purpose::library
+Description: GNU multiple precision arithmetic library
