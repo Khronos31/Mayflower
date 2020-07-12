@@ -1,0 +1,11 @@
+Package: com.khronos.llvm
+Priority: optional
+Name: LLVM
+Version: @VERSION@
+Section: Development
+Architecture: iphoneos-arm
+Depends: firmware (@FIRMWARE_VERSION@), com.khronos.libffi
+Maintainer: Khronos
+Homepage: https://llvm.org/
+Tag: purpose::console
+Description: Next-gen compiler infrastructure
