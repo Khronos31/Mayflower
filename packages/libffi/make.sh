@@ -1,6 +1,6 @@
 pkgname=libffi
 pkgver=3.3
-pkgrel=1
+pkgrel=2
 
 # URL of source archive
 source="https://sourceware.org/pub/libffi/libffi-${pkgver}.tar.gz"
@@ -10,8 +10,19 @@ ARCH="${ARCH-$(arch)}"
 build() {
   cd "${pkgname}-${pkgver}"
 
+  local build_arch host_arch
+  case "$(arch)" in
+    arm64*) build_arch=aarch64;;
+    arm) build_arch=arm;;
+  esac
+  case "${ARCH}" in
+    arm64) host_arch=aarch64;;
+    armv7) host_arch=arm;;
+  esac
+
   ./configure \
-    --build=aarch64-apple-darwin \
+    --build=${build_arch}-apple-darwin \
+    --host=${host_arch}-apple-darwin \
     --prefix=/usr/local \
     --disable-debug \
     --disable-dependency-tracking \
