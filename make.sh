@@ -44,6 +44,11 @@ clean
 if [ "x${source}" != "x" ]; then
   download
 fi
+
+cd "${BUILDROOT}"
+prepare
+
+cd "${PROJECTROOT}"
 applyPatch
 
 cd "${BUILDROOT}"
