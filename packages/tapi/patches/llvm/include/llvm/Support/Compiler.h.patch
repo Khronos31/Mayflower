@@ -1,0 +1,13 @@
+--- llvm/include/llvm/Support/Compiler.h	2020-07-17 02:26:47.000000000 +0900
++++ patches/llvm/include/llvm/Support/Compiler.h	2020-07-17 02:29:38.000000000 +0900
+@@ -492,6 +492,10 @@
+ // a normal global variable.
+ #define LLVM_THREAD_LOCAL
+ #endif
++#if defined(__APPLE__) && (defined(__arm__) || defined(__aarch64__))
++#undef LLVM_THREAD_LOCAL
++#define LLVM_THREAD_LOCAL
++#endif
+ 
+ /// \macro LLVM_ENABLE_EXCEPTIONS
+ /// \brief Whether LLVM is built with exception support.

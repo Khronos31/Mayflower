@@ -1,0 +1,11 @@
+Package: com.khronos.tapi
+Priority: optional
+Name: tapi
+Version: @VERSION@
+Section: Development
+Architecture: iphoneos-arm
+Depends: firmware (@FIRMWARE_VERSION@)
+Maintainer: Khronos
+Homepage: https://opensource.apple.com/source/tapi/
+Tag: purpose::console
+Description: Text-based Application Programming Interface
