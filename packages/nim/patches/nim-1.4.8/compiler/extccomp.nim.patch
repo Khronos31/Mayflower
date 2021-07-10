@@ -1,0 +1,28 @@
+--- nim-1.4.8/compiler/extccomp.nim	1625885222.163793712
++++ patches/nim-1.4.8/compiler/extccomp.nim	1625885094.931195901
+@@ -124,7 +124,7 @@
+   result.name = "llvm_gcc"
+   result.compilerExe = "llvm-gcc"
+   result.cppCompiler = "llvm-g++"
+-  when defined(macosx):
++  when defined(macosx) or defined(ios):
+     # OS X has no 'llvm-ar' tool:
+     result.buildLib = "ar rcs $libfile $objfiles"
+   else:
+@@ -760,10 +760,15 @@
+     raise
+ 
+ proc getExtraCmds(conf: ConfigRef; output: AbsoluteFile): seq[string] =
+-  when defined(macosx):
++  when defined(macosx) or defined(ios):
+     if optCDebug in conf.globalOptions and optGenStaticLib notin conf.globalOptions:
+       # if needed, add an option to skip or override location
+       result.add "dsymutil " & $(output).quoteShell
++  if conf.target.targetOS == osIos:
++    var ent = "/usr/share/entitlements/nim.xml"
++    if existsEnv("ENTFILE"):
++      ent = getEnv("ENTFILE")
++    result.add "ldid -S" & $(ent).quoteShell & " " & $(output).quoteShell
+ 
+ proc execLinkCmd(conf: ConfigRef; linkCmd: string) =
+   tryExceptOSErrorMessage(conf, "invocation of external linker program failed."):

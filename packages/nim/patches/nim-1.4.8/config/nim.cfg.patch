@@ -1,0 +1,20 @@
+--- nim-1.4.8/config/nim.cfg	1621903187.000000000
++++ patches/nim-1.4.8/config/nim.cfg	1625879610.166584065
+@@ -171,7 +171,7 @@
+ 
+ gcc.maxerrorsimpl = "-fmax-errors=3"
+ 
+-@if macosx or freebsd or openbsd:
++@if macosx or ios or freebsd or openbsd:
+   cc = clang
+   tlsEmulation:on
+   gcc.options.always %= "-w ${gcc.maxerrorsimpl}"
+@@ -194,7 +194,7 @@
+ 
+ # Options for Mac OS X. Mac OS X uses its own Objective-C stack that is
+ # totally different from GNUStep.
+-@if macosx:
++@if macosx or ios:
+   gcc.objc.options.linker = "-framework Foundation"
+   llvm_gcc.objc.options.linker = "-framework Foundation"
+   clang.objc.options.linker = "-framework Foundation"
