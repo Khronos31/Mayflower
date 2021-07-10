@@ -17,13 +17,7 @@ readonly PROJECTROOT
 
 export pkgname
 export source
-export ARCH
-
-case "${ARCH}" in
-  arm|armv7|armv7s) ARCH=armv7;;
-  arm64|arm64e) ARCH=arm64;;
-  *) printf "%s\n" "Invalid architecture" >&2; exit 1;;
-esac
+export ARCH=arm64
 
 export BUILDROOT="${PROJECTROOT}/${ARCH}"
 export pkgdir="${BUILDROOT}/build"
@@ -33,7 +27,7 @@ export CXX="${CXX:-$(DEFAULT_CXX)}"
 export AR="${AR:-llvm-ar}"
 export RANLIB="${RANLIB:-llvm-ranlib}"
 
-export COMMON_FLAGS="${COMMON_FLAGS--isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=7.0 -arch ${ARCH}}"
+export COMMON_FLAGS="${COMMON_FLAGS--isysroot /usr/share/SDKs/iPhoneOS.sdk -miphoneos-version-min=11.0 -arch ${ARCH}}"
 export CFLAGS="${CFLAGS} ${COMMON_FLAGS}"
 export CXXFLAGS="${CXXFLAGS} ${COMMON_FLAGS}"
 export CPPFLAGS="${CPPFLAGS} ${COMMON_FLAGS}"
