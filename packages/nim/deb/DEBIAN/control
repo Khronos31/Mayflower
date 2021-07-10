@@ -1,10 +1,9 @@
-Package: com.khronos.nim
+Package: nim
 Priority: optional
 Name: Nim
 Version: @VERSION@
 Section: Development
 Architecture: iphoneos-arm
-Depends: firmware (@FIRMWARE_VERSION@)
 Maintainer: Khronos
 Homepage: https://nim-lang.org/
 Tag: purpose::console

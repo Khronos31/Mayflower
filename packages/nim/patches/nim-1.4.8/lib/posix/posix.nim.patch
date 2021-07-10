@@ -1,0 +1,11 @@
+--- nim-1.4.8/lib/posix/posix.nim	1621903187.000000000
++++ patches/nim-1.4.8/lib/posix/posix.nim	1625880399.760063561
+@@ -88,7 +88,7 @@
+ type Sighandler = proc (a: cint) {.noconv.}
+ 
+ const StatHasNanoseconds* = defined(linux) or defined(freebsd) or
+-    defined(osx) or defined(openbsd) or defined(dragonfly) or defined(haiku) ## \
++    defined(osx) or defined(ios) or defined(openbsd) or defined(dragonfly) or defined(haiku) ## \
+   ## Boolean flag that indicates if the system supports nanosecond time
+   ## resolution in the fields of ``Stat``. Note that the nanosecond based fields
+   ## (``Stat.st_atim``, ``Stat.st_mtim`` and ``Stat.st_ctim``) can be accessed

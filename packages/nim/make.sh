@@ -1,11 +1,16 @@
 pkgname=nim
-pkgver=1.2.4
-pkgrel=2
+pkgver=1.4.8
+pkgrel=1
 
 # URL of source archive
-source="https://nim-lang.org/download/${pkgname}-${pkgver}.tar.gz"
+source="https://nim-lang.org/download/${pkgname}-${pkgver}.tar.xz"
 
 ARCH="${ARCH-$(arch)}"
+
+prepare() {
+  cd "${pkgname}-${pkgver}"
+  cp $(which nim) ./bin/nim
+}
 
 build() {
   cd "${pkgname}-${pkgver}"
@@ -17,10 +22,12 @@ build() {
     cpu="${ARCH}"
   fi
 
-  nim compile --os:macosx --cpu:"${cpu}" -d:release --opt:size koch
-  ./koch boot --os:macosx --cpu:"${cpu}" -d:release --opt:size -d:useLinenoise
-  ./bin/nim compile --os:macosx --cpu:"${cpu}" -d:release --opt:size koch
-  ./koch tools --os:macosx --cpu:"${cpu}" -d:release --opt:size
+  cp $(which nim) ./bin/nim
+
+  ./bin/nim compile --os:ios --cpu:"${cpu}" -d:release --opt:size koch
+  ./koch boot --os:ios --cpu:"${cpu}" -d:release --opt:size -d:useLinenoise
+  ./bin/nim compile --os:ios --cpu:"${cpu}" -d:release --opt:size koch
+  ./koch tools --os:ios --cpu:"${cpu}" -d:release --opt:size
 }
 
 package() {
