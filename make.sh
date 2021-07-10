@@ -18,6 +18,7 @@ readonly PROJECTROOT
 export pkgname
 export source
 export ARCH=arm64
+export ENTFILE="${ROOTDIR}/entitlements.xml"
 
 export BUILDROOT="${PROJECTROOT}/${ARCH}"
 export pkgdir="${BUILDROOT}/build"
