@@ -5,8 +5,6 @@ pkgrel=1
 # URL of source archive
 source="https://nim-lang.org/download/${pkgname}-${pkgver}.tar.xz"
 
-ARCH="${ARCH-$(arch)}"
-
 prepare() {
   cd "${pkgname}-${pkgver}"
   cp $(which nim) ./bin/nim
@@ -15,14 +13,7 @@ prepare() {
 build() {
   cd "${pkgname}-${pkgver}"
 
-  local cpu
-  if [ "${ARCH}" = armv7 ]; then
-    cpu=arm
-  else
-    cpu="${ARCH}"
-  fi
-
-  cp $(which nim) ./bin/nim
+  local cpu="${ARCH}"
 
   ./bin/nim compile --os:ios --cpu:"${cpu}" -d:release --opt:size koch
   ./koch boot --os:ios --cpu:"${cpu}" -d:release --opt:size -d:useLinenoise
