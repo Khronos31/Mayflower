@@ -176,9 +176,8 @@ gh api 'repos/ProcursusTeam/Procursus/git/trees/main?recursive=1' \
 MIT なので MIT と衝突しない。今後 GPL の処理系を足す場合、そのパッチは
 GPL になる。
 
-`entitlements.plist` は Theos の `vendor/templates/ios/tool/` のテンプレートと
-同じ内容だが、Theos の LICENSE が「同梱テンプレートは license-free であり、
-使ってもプロジェクトにライセンスを及ぼさない」と明記している。
+`entitlements.plist` は Apple が公開している entitlement キー2つを plist の
+定型に入れただけのもので、他に書きようがない。
 
 各パッケージのソースそのものは、それぞれのライセンスに従う（`.deb` には
 `/var/jb/usr/share/licenses/` に同梱する）。
