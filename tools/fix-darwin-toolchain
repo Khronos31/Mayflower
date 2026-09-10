@@ -1,0 +1,20 @@
+#!/var/jb/bin/bash
+# クロスビルドした darwin/arm64 ツールチェインを iOS で動くようにする。
+# macOS のフレームワークパス(Versions/A)は iOS には無いので平坦な形に直し、
+# 書き換えで無効になる署名を entitlements つきで付け直す。
+set -e
+root="${1:?ツリーのパス}"
+ent="${2:?entitlements のパス}"
+n=0
+while IFS= read -r f; do
+  file "$f" | grep -q "Mach-O" || continue
+  install_name_tool \
+    -change /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation \
+            /System/Library/Frameworks/CoreFoundation.framework/CoreFoundation \
+    -change /System/Library/Frameworks/Security.framework/Versions/A/Security \
+            /System/Library/Frameworks/Security.framework/Security \
+    "$f" 2>/dev/null || true
+  ldid -S"$ent" "$f"
+  n=$((n+1))
+done < <(find "$root" -type f -perm -u+x)
+echo "直した Mach-O: $n"

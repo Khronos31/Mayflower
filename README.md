@@ -112,6 +112,41 @@ packages/<名前>/
 Nim は端末に nim が入っていればそれを種にし、無ければ同梱の C ソースから
 立ち上げる。どちらでも `koch boot` の自己再生成まで通る。
 
+## Go の bootstrap を用意する
+
+Go は自分自身でしかビルドできないので、先に動く Go が要る。**端末に入っている
+Procursus の go は使えない**。無署名の実行ファイルしか吐けず、`make.bash` の
+途中で実行される中間バイナリが起動できずに死ぬ。
+
+かといって `GOOS=ios` のクロスビルドもできない。`ios/arm64` は必ず外部リンクを
+使う決まりで、ターゲット用の C ツールチェインが要るためである。
+
+**`GOOS=darwin GOARCH=arm64` でクロスビルドして、iOS 用に直す。** これは純 Go の
+内部リンクなので、Xcode も iOS SDK も要らない。Linux でも構わない。
+
+```sh
+# 1. 適当な機械で（要 Go 1.24.6 以降）
+cd <goのソース>/src
+GOOS=darwin GOARCH=arm64 ./bootstrap.bash     # ../../go-darwin-arm64-bootstrap ができる
+
+# 2. 端末へ運ぶ
+tar cf - -C ../../go-darwin-arm64-bootstrap . | ssh <端末> 'mkdir -p ~/dev/go-bootstrap && tar xf - -C ~/dev/go-bootstrap'
+
+# 3. 端末で iOS 用に直す（フレームワークのパスと署名）
+~/dev/Mayflower/tools/fix-darwin-toolchain ~/dev/go-bootstrap ~/dev/Mayflower/entitlements.plist
+~/dev/go-bootstrap/bin/go version     # go1.27.1 darwin/arm64 と出れば通っている
+```
+
+手順3が要るのは、macOS のフレームワークが `CoreFoundation.framework/Versions/A/…`
+という階層を持つのに対し、**iOS は平坦**（`CoreFoundation.framework/CoreFoundation`）
+だから。`install_name_tool` で書き換えると署名が壊れるので、`ldid` で付け直す。
+
+あとは bootstrap の位置を渡してビルドする。
+
+```sh
+GOROOT_BOOTSTRAP=~/dev/go-bootstrap ./make.sh go
+```
+
 ## 追加予定
 
 移植する値打ちがあるのは次の3種類。いずれも「Procursus（`apt.procurs.us` の
