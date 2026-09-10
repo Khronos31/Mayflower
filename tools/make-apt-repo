@@ -1,0 +1,90 @@
+#!/var/jb/bin/bash
+#
+# Mayflower | tools/make-apt-repo
+#
+#   make-apt-repo <出力ディレクトリ> <deb>...
+#
+# Sileo / Cydia / apt がそのまま読める flat なリポジトリを作る。出力は
+#
+#   <出力>/Release  Packages  Packages.gz  Packages.xz  debs/*.deb
+#
+# 購読側は `deb <URL> ./` の形になる。署名はしない（脱獄リポジトリは無署名が
+# 通例で、Sileo も警告を出さない）。
+#
+# apt-ftparchive や dpkg-scanpackages は使わない。母艦の HAOS ではアドオンを
+# 再起動すると apt で入れたものが消えるため、publish のたびに入れ直す前提に
+# したくない。必要なのは dpkg-deb と coreutils だけ。
+
+set -eu
+
+ORIGIN="${ORIGIN:-Mayflower}"
+LABEL="${LABEL:-Khronos31}"
+SUITE="${SUITE:-stable}"
+CODENAME="${CODENAME:-stable}"
+COMPONENTS="${COMPONENTS:-main}"
+DESCRIPTION="${DESCRIPTION:-Packages built on-device for rootless jailbroken iOS.}"
+
+if [ $# -lt 2 ]; then
+  echo "Usage: ${0##*/} <outdir> <deb>..." >&2
+  exit 1
+fi
+
+out="$1"; shift
+rm -rf "$out"
+mkdir -p "$out/debs"
+
+for deb in "$@"; do
+  [ -r "$deb" ] || { echo "${0##*/}: 読めない: $deb" >&2; exit 1; }
+  cp "$deb" "$out/debs/${deb##*/}"
+done
+
+cd "$out"
+
+# Packages。各 deb の control に、取得側が要る4項目を足す。
+: > Packages
+first=1
+for deb in debs/*.deb; do
+  [ "$first" = 1 ] || printf '\n' >> Packages
+  first=0
+  # control の末尾の空行は落とす（スタンザ区切りは自分で入れる）
+  dpkg-deb -f "$deb" | sed -e '/^$/d' >> Packages
+  {
+    printf 'Filename: %s\n' "$deb"
+    printf 'Size: %s\n' "$(stat -c %s "$deb" 2>/dev/null || stat -f %z "$deb")"
+    printf 'MD5sum: %s\n' "$(md5sum "$deb" | cut -d' ' -f1)"
+    printf 'SHA1: %s\n' "$(sha1sum "$deb" | cut -d' ' -f1)"
+    printf 'SHA256: %s\n' "$(sha256sum "$deb" | cut -d' ' -f1)"
+  } >> Packages
+done
+printf '\n' >> Packages
+
+gzip -9kf Packages
+xz -9kf Packages
+
+# Release。Architectures は収録した deb から拾う（all は購読側の判定に使われない）。
+archs="$(awk '/^Architecture: /{print $2}' Packages | grep -v '^all$' | sort -u | tr '\n' ' ')"
+archs="${archs% }"
+
+{
+  printf 'Origin: %s\n' "$ORIGIN"
+  printf 'Label: %s\n' "$LABEL"
+  printf 'Suite: %s\n' "$SUITE"
+  printf 'Codename: %s\n' "$CODENAME"
+  printf 'Architectures: %s\n' "$archs"
+  printf 'Components: %s\n' "$COMPONENTS"
+  printf 'Description: %s\n' "$DESCRIPTION"
+  printf 'Date: %s\n' "$(LC_ALL=C date -u '+%a, %d %b %Y %H:%M:%S UTC')"
+  for algo in MD5Sum:md5sum SHA256:sha256sum; do
+    printf '%s:\n' "${algo%%:*}"
+    for f in Packages Packages.gz Packages.xz; do
+      printf ' %s %s %s\n' \
+        "$("${algo##*:}" "$f" | cut -d' ' -f1)" \
+        "$(stat -c %s "$f" 2>/dev/null || stat -f %z "$f")" \
+        "$f"
+    done
+  done
+} > Release
+
+echo "==> $out"
+awk '/^Package: /{p=$2} /^Version: /{v=$2} /^Architecture: /{printf "    %-22s %-12s %s\n", p, v, $2}' Packages
+printf '    合計 %s\n' "$(du -sh . | cut -f1)"

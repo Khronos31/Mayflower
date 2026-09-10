@@ -31,10 +31,15 @@ if [ ! -f "${PROJECTROOT}/make.sh" ]; then
 fi
 
 . "${ROOTDIR}/util/common.sh"
+
+# パッケージ側が上書きする。ここで空配列にしておかないと、未定義のまま
+# 参照したときに空文字列1要素の配列になり、分割しないパッケージで
+# package_ という名前のない関数を呼んでしまう。
+subpkgs=()
+
 . "${PROJECTROOT}/make.sh"
 
 export pkgname pkgver pkgrel source srcname
-subpkgs=("${subpkgs[@]-}")
 
 # 脱獄の接頭辞。rootless(palera1n / Dopamine 等の Procursus)は /var/jb 固定。
 export JB="${JB:-/var/jb}"
