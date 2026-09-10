@@ -1,0 +1,16 @@
+--- a/src/cmd/dist/main.go
++++ b/src/cmd/dist/main.go
+@@ -55,6 +55,13 @@
+ 	}
+ 
+ 	gohostos = runtime.GOOS
++	// A bootstrap toolchain for a jailbroken iOS device has to be
++	// cross-built as darwin/arm64: ios/arm64 always links externally, which
++	// a cross-compile without a C toolchain for the target cannot do. The
++	// machine running this really is iOS, so let the host be named.
++	if v := os.Getenv("GOHOSTOS"); v != "" {
++		gohostos = v
++	}
+ 	switch gohostos {
+ 	case "aix":
+ 		// uname -m doesn't work under AIX

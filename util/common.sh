@@ -47,8 +47,9 @@ applyPatch() {
   done
 }
 
+# makedeb [deb ディレクトリ]  （既定は deb）
 makedeb() {
-  cp -R "${PROJECTROOT}/deb/." "${pkgdir}"
+  cp -R "${PROJECTROOT}/${1:-deb}/." "${pkgdir}"
 
   find "${pkgdir}" -type d -exec chmod 755 {} +
   find "${pkgdir}/DEBIAN" -type f -exec chmod 755 {} +

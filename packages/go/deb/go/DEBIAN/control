@@ -1,0 +1,17 @@
+Package: golang-1.27-go
+Name: Go 1.27
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: clang, ldid, libiosexec1 (>= 1.3.1)
+Suggests: golang-1.27-src
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://go.dev/
+Tag: purpose::console
+Description: Go programming language compiler, linker, compiled stdlib
+ Built on-device for rootless jailbreaks. The linker signs every executable
+ it produces with ldid, using the entitlements plist in GOROOT, because
+ jailbroken iOS kills unsigned binaries. GOROOT is baked in, so it does not
+ have to be set in the environment.

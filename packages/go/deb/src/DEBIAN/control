@@ -1,0 +1,13 @@
+Package: golang-1.27-src
+Name: Go 1.27 source
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: golang-1.27-go (>= @VERSION@)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://go.dev/
+Tag: purpose::console
+Description: Go programming language source files
+ The src tree that go build reads to compile the standard library.

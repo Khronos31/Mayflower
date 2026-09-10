@@ -33,7 +33,8 @@ fi
 . "${ROOTDIR}/util/common.sh"
 . "${PROJECTROOT}/make.sh"
 
-export pkgname pkgver pkgrel source
+export pkgname pkgver pkgrel source srcname
+subpkgs=("${subpkgs[@]-}")
 
 # 脱獄の接頭辞。rootless(palera1n / Dopamine 等の Procursus)は /var/jb 固定。
 export JB="${JB:-/var/jb}"
@@ -42,7 +43,9 @@ export DEB_ARCH=iphoneos-arm64
 export ENTFILE="${ROOTDIR}/entitlements.plist"
 
 export BUILDROOT="${PROJECTROOT}/${ARCH}"
-export srcdir="${BUILDROOT}/${pkgname}-${pkgver}"
+# 展開されたディレクトリ名が <name>-<ver> でない場合は、パッケージ側で
+# srcname を定義する（Go の書庫は go/ に展開される、など）。
+export srcdir="${BUILDROOT}/${srcname:-${pkgname}-${pkgver}}"
 export pkgdir="${BUILDROOT}/build"
 
 export CC="${CC:-$(DEFAULT_CC)}"
@@ -78,9 +81,26 @@ if declare -F check >/dev/null; then
   check
 fi
 
-cd "${BUILDROOT}"
-package
-tidy
+# subpkgs を定義してあれば、その数だけ package_<名前> を呼んで .deb を作る。
+# control は deb/<名前>/DEBIAN/control を使う。定義が無ければ package() を
+# 一度呼び、control は deb/DEBIAN/control を使う。
+if [ "${#subpkgs[@]}" -gt 0 ]; then
+  for sub in "${subpkgs[@]}"; do
+    echo "==> パッケージ: ${sub}"
+    pkgdir="${BUILDROOT}/pkg-${sub}"
+    rm -rf "${pkgdir}"
+    mkdir -p "${pkgdir}"
+    cd "${BUILDROOT}"
+    "package_${sub}"
+    tidy
+    makedeb "deb/${sub}"
+  done
+else
+  cd "${BUILDROOT}"
+  package
+  tidy
+  makedeb
+fi
 
-makedeb
-echo "==> できあがり: $(echo "${BUILDROOT}"/*.deb)"
+echo "==> できあがり:"
+find "${BUILDROOT}" -maxdepth 1 -name '*.deb' -exec echo "    {}" \;

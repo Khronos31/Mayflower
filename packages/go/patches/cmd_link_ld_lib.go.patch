@@ -1,0 +1,44 @@
+--- a/src/cmd/link/internal/ld/lib.go
++++ b/src/cmd/link/internal/ld/lib.go
+@@ -2161,6 +2161,41 @@
+ 			Exitf("%s: code signing failed: %v", os.Args[0], err)
+ 		}
+ 	}
++
++	// Jailbroken iOS kills an executable whose signature carries no
++	// entitlements. The output cannot be signed from a wrapper around the
++	// external linker, because everything above rewrites the Mach-O after
++	// that linker has run: dsymutil, dwarf combining, the uuid rewrite and
++	// the ad-hoc signature all replace the file.
++	//
++	// Signing is driven by the presence of the plist, so a toolchain built
++	// for a real macOS keeps its stock behaviour.
++	if ctxt.IsDarwin() {
++		if ent := ldidEntitlements(); ent != "" {
++			cmd := exec.Command("ldid", "-S"+ent, *flagOutfile)
++			if out, err := cmd.CombinedOutput(); err != nil {
++				Exitf("%s: running ldid failed: %v\n%s\n%s", os.Args[0], err, cmd, out)
++			}
++		}
++	}
++}
++
++// ldidEntitlements returns the entitlements plist that ldid embeds into the
++// linked output, or "" to leave it alone. $GOROOT/entitlements.plist is used
++// when it exists, so that several GOROOTs can carry their own copy.
++// GO_LDID_ENTITLEMENTS overrides that; set it empty to skip signing.
++func ldidEntitlements() string {
++	if v, ok := os.LookupEnv("GO_LDID_ENTITLEMENTS"); ok {
++		return v
++	}
++	if buildcfg.GOROOT == "" {
++		return ""
++	}
++	p := filepath.Join(buildcfg.GOROOT, "entitlements.plist")
++	if _, err := os.Stat(p); err != nil {
++		return ""
++	}
++	return p
+ }
+ 
+ // passLongArgsInResponseFile writes the arguments into a file if they
