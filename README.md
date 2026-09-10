@@ -110,6 +110,15 @@ packages/<名前>/
 | [nim](packages/nim) | 2.2.12 | コンパイラ・nimble・atlas・nimsuggest・nimgrep・nimpretty・testament |
 | [go](packages/go) | 1.26.8 | `golang-1.26-go` / `golang-1.26-src` / `golang-go` に分ける |
 
+`go` と `gofmt` は `/var/jb/usr/bin` に置くラッパーで、GOROOT を補ってから
+本体を呼ぶ。iOS では `os.Executable` が失敗するため、go が GOROOT を実行ファイルの
+位置から見つける経路が効かないことへの対処である。環境変数の GOROOT は要らない。
+
+**exec には libiosexec の限界がそのまま出る。** `exec.Command("sh", …)` と
+`#!/bin/sh` のシェバンは通るが、`exec.Command("/bin/sh", …)` のように絶対パスで
+封印された rootfs を指すと通らない。libiosexec は shebang の解釈先とシェルの探索は
+prefix 付きで行うが、直接渡された絶対パスは読み替えないため。Procursus の go でも同じ。
+
 **Go は 1.27 系を採らない。** `ios/arm64` で起動時に作業ディレクトリが実行ファイルの
 場所へ変わる退行が入っており（[golang/go#81465](https://github.com/golang/go/issues/81465)）、
 `cmd/go` が `go.mod` を見つけられなくなる。上流が直したら追随し、直らないまま
