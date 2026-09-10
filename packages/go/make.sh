@@ -56,9 +56,6 @@ build() {
   # ので、絶対パスのラッパーを渡すと利用者の環境に無いものを指してしまう。
   # 署名はリンカのパッチが行うため、ここにラッパーは要らない。
   export CC=clang CXX=clang++
-  # Procursus の clang は rpath を自動では付けない。libiosexec を引く
-  # バイナリが実行時に dyld で落ちるのを防ぐ。
-  export CGO_LDFLAGS="-Wl,-rpath,${JB}/usr/lib"
   # リンカのパッチが読む。ビルド中の中間バイナリもこれで署名される。
   export GO_LDID_ENTITLEMENTS="${ENTFILE}"
   export GOTELEMETRY=off
