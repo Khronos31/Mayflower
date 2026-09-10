@@ -121,9 +121,26 @@ package_src() {
   find "${dest}/src" -name '*.orig' -delete
 }
 
+# PATH に置くのは symlink ではなく GOROOT を補うラッパー。
+#
+# go は GOROOT を「環境変数 → ビルド時の焼き込み値 → os.Executable からの
+# 探索」の順に決めるが、iOS では **os.Executable が失敗する**ため3番目が
+# 効かない。焼き込み値もビルドした場所を指すのでインストール後には無く、
+# 素のままでは `'go' binary is trimmed and GOROOT is not set` で起動しない。
+# 既に GOROOT が設定されていればそれを尊重する。
 package_bin() {
   local dest="${pkgdir}${JB}/usr/bin"
+  local goroot="${JB}/usr/lib/go-${goseries}"
   install -d "${dest}"
-  ln -s "../lib/go-${goseries}/bin/go" "${dest}/go"
-  ln -s "../lib/go-${goseries}/bin/gofmt" "${dest}/gofmt"
+
+  local b
+  for b in go gofmt; do
+    cat > "${dest}/${b}" <<EOF
+#!${JB}/bin/sh
+GOROOT="\${GOROOT:-${goroot}}"
+export GOROOT
+exec "\${GOROOT}/bin/${b}" "\$@"
+EOF
+    chmod 755 "${dest}/${b}"
+  done
 }

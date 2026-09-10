@@ -1,0 +1,34 @@
+--- /dev/null
++++ b/src/syscall/execve_iosexec.go
+@@ -0,0 +1,31 @@
++// Copyright 2026 The Go Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style
++// license that can be found in the LICENSE file.
++
++//go:build ios && arm64
++
++package syscall
++
++import (
++	"internal/abi"
++	"unsafe"
++)
++
++// On a rootless jailbreak the sealed rootfs has no /bin/sh, and the kernel
++// will not resolve a shebang line that names an interpreter there. libiosexec
++// re-implements execve so that both the program path and the interpreter of a
++// shebang script are looked up under the jailbreak prefix first. Everything
++// that ends up in an exec, including os/exec and syscall.Exec, goes through
++// here, so importing ie_execve in place of execve is enough.
++
++func execve(path *byte, argv **byte, envp **byte) (err error) {
++	_, _, e1 := rawSyscall(abi.FuncPCABI0(libc_execve_trampoline), uintptr(unsafe.Pointer(path)), uintptr(unsafe.Pointer(argv)), uintptr(unsafe.Pointer(envp)))
++	if e1 != 0 {
++		err = errnoErr(e1)
++	}
++	return
++}
++
++func libc_execve_trampoline()
++
++//go:cgo_import_dynamic libc_execve ie_execve "/var/jb/usr/lib/libiosexec.1.dylib"

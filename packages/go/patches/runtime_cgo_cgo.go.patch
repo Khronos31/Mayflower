@@ -1,0 +1,14 @@
+--- a/src/runtime/cgo/cgo.go
++++ b/src/runtime/cgo/cgo.go
+@@ -13,6 +13,11 @@
+ 
+ #cgo darwin,!arm64 LDFLAGS: -lpthread
+ #cgo darwin,arm64 LDFLAGS: -framework CoreFoundation
++// Rootless jailbreaks have no /bin/sh and the kernel does not resolve a
++// shebang that points into the sealed rootfs. libiosexec re-implements the
++// exec family so that both are looked up under the jailbreak prefix.
++// The prefix is not on dyld's default search path, hence the rpath.
++#cgo ios,arm64 LDFLAGS: -liosexec -Wl,-rpath,/var/jb/usr/lib
+ #cgo dragonfly LDFLAGS: -lpthread
+ #cgo freebsd LDFLAGS: -lpthread
+ #cgo android LDFLAGS: -llog

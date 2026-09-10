@@ -1,0 +1,27 @@
+--- /dev/null
++++ b/src/syscall/execve_libc.go
+@@ -0,0 +1,24 @@
++// Copyright 2026 The Go Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style
++// license that can be found in the LICENSE file.
++
++//go:build darwin && arm64 && !ios
++
++package syscall
++
++import (
++	"internal/abi"
++	"unsafe"
++)
++
++func execve(path *byte, argv **byte, envp **byte) (err error) {
++	_, _, e1 := rawSyscall(abi.FuncPCABI0(libc_execve_trampoline), uintptr(unsafe.Pointer(path)), uintptr(unsafe.Pointer(argv)), uintptr(unsafe.Pointer(envp)))
++	if e1 != 0 {
++		err = errnoErr(e1)
++	}
++	return
++}
++
++func libc_execve_trampoline()
++
++//go:cgo_import_dynamic libc_execve execve "/usr/lib/libSystem.B.dylib"
