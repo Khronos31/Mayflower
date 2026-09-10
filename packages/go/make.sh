@@ -48,7 +48,10 @@ build() {
   # darwin を返す。実機は iOS なので host を明示する（cmd/dist のパッチ）。
   export GOHOSTOS=ios GOHOSTARCH="${ARCH}"
   export CGO_ENABLED=1
-  export CC="${ROOTDIR}/bin/cc" CXX="${ROOTDIR}/bin/c++"
+  # CC は素の名前でなければならない。Go はこの値を zdefaultcc.go に焼き込む
+  # ので、絶対パスのラッパーを渡すと利用者の環境に無いものを指してしまう。
+  # 署名はリンカのパッチが行うため、ここにラッパーは要らない。
+  export CC=clang CXX=clang++
   # Procursus の clang は rpath を自動では付けない。libiosexec を引く
   # バイナリが実行時に dyld で落ちるのを防ぐ。
   export CGO_LDFLAGS="-Wl,-rpath,${JB}/usr/lib"
