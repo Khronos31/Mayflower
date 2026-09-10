@@ -1,6 +1,6 @@
 --- a/src/cmd/link/internal/ld/lib.go
 +++ b/src/cmd/link/internal/ld/lib.go
-@@ -2161,6 +2161,41 @@
+@@ -2155,6 +2155,41 @@
  			Exitf("%s: code signing failed: %v", os.Args[0], err)
  		}
  	}

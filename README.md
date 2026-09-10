@@ -108,6 +108,12 @@ packages/<名前>/
 | パッケージ | 版 | 備考 |
 |---|---|---|
 | [nim](packages/nim) | 2.2.12 | コンパイラ・nimble・atlas・nimsuggest・nimgrep・nimpretty・testament |
+| [go](packages/go) | 1.26.8 | `golang-1.26-go` / `golang-1.26-src` / `golang-go` に分ける |
+
+**Go は 1.27 系を採らない。** `ios/arm64` で起動時に作業ディレクトリが実行ファイルの
+場所へ変わる退行が入っており（[golang/go#81465](https://github.com/golang/go/issues/81465)）、
+`cmd/go` が `go.mod` を見つけられなくなる。上流が直したら追随し、直らないまま
+1.29 系まで来たらこちらでパッチを当てる。
 
 Nim は端末に nim が入っていればそれを種にし、無ければ同梱の C ソースから
 立ち上げる。どちらでも `koch boot` の自己再生成まで通る。

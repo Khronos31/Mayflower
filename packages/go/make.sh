@@ -10,19 +10,23 @@
 # 実行される中間バイナリが起動できない。用意の仕方は README を見ること。
 #
 # 出来上がるのは Debian 流に分けた3つ:
-#   golang-1.27-go   GOROOT 本体（bin・pkg・api・go.env・entitlements.plist）
-#   golang-1.27-src  src ツリー
+#   golang-1.26-go   GOROOT 本体（bin・pkg・api・go.env・entitlements.plist）
+#   golang-1.26-src  src ツリー
 #   golang-go        /var/jb/usr/bin の symlink（Procursus の同名を置き換える）
 
+# 1.27 系は採らない。ios/arm64 で起動時に作業ディレクトリが実行ファイルの
+# 場所へ変わる退行が入っており（golang/go#81465）、cmd/go が go.mod を
+# 見つけられなくなる。上流が直したら追随する。直らないまま 1.29 系まで来たら
+# こちらでパッチを当てる。
 pkgname=go
-pkgver=1.27.1
+pkgver=1.26.8
 pkgrel=1
 srcname=go
 source="https://go.dev/dl/go${pkgver}.src.tar.gz"
 subpkgs=(go src bin)
 export compress=xz
 
-goseries=1.27
+goseries=1.26
 
 goroot_install() {
   echo "${JB}/usr/lib/go-${goseries}"
@@ -88,7 +92,7 @@ EOF
   cat > go.mod <<'EOF'
 module hello
 
-go 1.27
+go 1.26
 EOF
   # GOROOT を環境で渡さずに動くこと（焼き込みが効いているか）も見る。
   GOROOT="${goroot}" "${goroot}/bin/go" build -o hello ./

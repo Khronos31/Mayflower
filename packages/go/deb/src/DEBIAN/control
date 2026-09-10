@@ -1,11 +1,11 @@
-Package: golang-1.27-src
-Name: Go 1.27 source
+Package: golang-1.26-src
+Name: Go 1.26 source
 Version: @VERSION@
 Architecture: @ARCH@
 Section: Development
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
-Depends: golang-1.27-go (>= @VERSION@)
+Depends: golang-1.26-go (>= @VERSION@)
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://go.dev/
 Tag: purpose::console
