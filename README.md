@@ -168,6 +168,17 @@ gh api 'repos/ProcursusTeam/Procursus/git/trees/main?recursive=1' \
 
 ## ライセンス
 
+ビルドファイル（`make.sh` / `util/` / `bin/` / 各 `packages/*/make.sh` / `shim/` /
+`test/`）は **MIT**。[LICENSE](LICENSE) を見ること。
+
+**`packages/*/patches/` の下は例外**で、パッチは当てる先の派生物なので、
+その処理系のライセンスに従う。現在収録している Nim のパッチは Nim 自身が
+MIT なので MIT と衝突しない。今後 GPL の処理系を足す場合、そのパッチは
+GPL になる。
+
+`entitlements.plist` は Theos の `vendor/templates/ios/tool/` のテンプレートと
+同じ内容だが、Theos の LICENSE が「同梱テンプレートは license-free であり、
+使ってもプロジェクトにライセンスを及ぼさない」と明記している。
+
 各パッケージのソースそのものは、それぞれのライセンスに従う（`.deb` には
-`/var/jb/usr/share/licenses/` に同梱する）。このリポジトリのビルドファイル自体の
-ライセンスはまだ決めていない。
+`/var/jb/usr/share/licenses/` に同梱する）。
