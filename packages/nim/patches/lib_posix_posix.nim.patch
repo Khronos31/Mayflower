@@ -1,0 +1,80 @@
+--- a/lib/posix/posix.nim
++++ b/lib/posix/posix.nim
+@@ -521,14 +521,27 @@
+ proc dup2*(a1, a2: cint): cint {.importc, header: "<unistd.h>".}
+ proc encrypt*(a1: array[0..63, char], a2: cint) {.importc, header: "<unistd.h>".}
+ 
+-proc execl*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
+-proc execle*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
+-proc execlp*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
+-proc execv*(a1: cstring, a2: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
+-proc execve*(a1: cstring, a2, a3: cstringArray): cint {.
+-  importc, header: "<unistd.h>", sideEffect.}
+-proc execvp*(a1: cstring, a2: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
+-proc execvpe*(a1: cstring, a2: cstringArray, a3: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
++when defined(ios) and defined(libiosexec):
++  # Rootless jailbreaks have no /bin/sh; libiosexec resolves shebangs and
++  # interpreter paths under the jailbreak prefix.
++  {.passL: "-liosexec".}
++  proc execl*(a1, a2: cstring): cint {.varargs, importc: "ie_execl", sideEffect.}
++  proc execle*(a1, a2: cstring): cint {.varargs, importc: "ie_execle", sideEffect.}
++  proc execlp*(a1, a2: cstring): cint {.varargs, importc: "ie_execlp", sideEffect.}
++  proc execv*(a1: cstring, a2: cstringArray): cint {.importc: "ie_execv", sideEffect.}
++  proc execve*(a1: cstring, a2, a3: cstringArray): cint {.
++    importc: "ie_execve", sideEffect.}
++  proc execvp*(a1: cstring, a2: cstringArray): cint {.importc: "ie_execvp", sideEffect.}
++  proc execvpe*(a1: cstring, a2: cstringArray, a3: cstringArray): cint {.importc: "ie_execvpe", sideEffect.}
++else:
++  proc execl*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
++  proc execle*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
++  proc execlp*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
++  proc execv*(a1: cstring, a2: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
++  proc execve*(a1: cstring, a2, a3: cstringArray): cint {.
++    importc, header: "<unistd.h>", sideEffect.}
++  proc execvp*(a1: cstring, a2: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
++  proc execvpe*(a1: cstring, a2: cstringArray, a3: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
+ proc fchown*(a1: cint, a2: Uid, a3: Gid): cint {.importc, header: "<unistd.h>", sideEffect.}
+ proc fchdir*(a1: cint): cint {.importc, header: "<unistd.h>", sideEffect.}
+ proc fdatasync*(a1: cint): cint {.importc, header: "<unistd.h>".}
+@@ -875,10 +888,16 @@
+              importc, header: "<sys/select.h>".}
+ 
+ when hasSpawnH:
+-  proc posix_spawn*(a1: var Pid, a2: cstring,
+-            a3: var Tposix_spawn_file_actions,
+-            a4: var Tposix_spawnattr,
+-            a5, a6: cstringArray): cint {.importc, header: "<spawn.h>".}
++  when defined(ios) and defined(libiosexec):
++    proc posix_spawn*(a1: var Pid, a2: cstring,
++              a3: var Tposix_spawn_file_actions,
++              a4: var Tposix_spawnattr,
++              a5, a6: cstringArray): cint {.importc: "ie_posix_spawn".}
++  else:
++    proc posix_spawn*(a1: var Pid, a2: cstring,
++              a3: var Tposix_spawn_file_actions,
++              a4: var Tposix_spawnattr,
++              a5, a6: cstringArray): cint {.importc, header: "<spawn.h>".}
+   proc posix_spawn_file_actions_addclose*(a1: var Tposix_spawn_file_actions,
+             a2: cint): cint {.importc, header: "<spawn.h>".}
+   proc posix_spawn_file_actions_adddup2*(a1: var Tposix_spawn_file_actions,
+@@ -921,10 +940,16 @@
+                                        importc, header: "<spawn.h>".}
+   proc posix_spawnattr_setsigmask*(a1: var Tposix_spawnattr,
+             a2: var Sigset): cint {.importc, header: "<spawn.h>".}
+-  proc posix_spawnp*(a1: var Pid, a2: cstring,
+-            a3: var Tposix_spawn_file_actions,
+-            a4: var Tposix_spawnattr,
+-            a5, a6: cstringArray): cint {.importc, header: "<spawn.h>".}
++  when defined(ios) and defined(libiosexec):
++    proc posix_spawnp*(a1: var Pid, a2: cstring,
++              a3: var Tposix_spawn_file_actions,
++              a4: var Tposix_spawnattr,
++              a5, a6: cstringArray): cint {.importc: "ie_posix_spawnp".}
++  else:
++    proc posix_spawnp*(a1: var Pid, a2: cstring,
++              a3: var Tposix_spawn_file_actions,
++              a4: var Tposix_spawnattr,
++              a5, a6: cstringArray): cint {.importc, header: "<spawn.h>".}
+ 
+ when not defined(nintendoswitch):
+   proc getcontext*(a1: var Ucontext): cint {.importc, header: "<ucontext.h>".}

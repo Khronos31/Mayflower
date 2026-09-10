@@ -1,0 +1,28 @@
+--- a/lib/pure/osproc.nim
++++ b/lib/pure/osproc.nim
+@@ -976,8 +976,9 @@
+     var sysArgsRaw: seq[string]
+     if poEvalCommand in options:
+       const useShPath {.strdefine.} =
+-        when not defined(android): "/bin/sh"
+-        else: "/system/bin/sh"
++        when defined(android): "/system/bin/sh"
++        elif defined(ios) and defined(libiosexec): "/var/jb/bin/sh"
++        else: "/bin/sh"
+       data.sysCommand = useShPath
+       sysArgsRaw = @[useShPath, "-c", command]
+       assert args.len == 0, "`args` has to be empty when using poEvalCommand."
+@@ -1468,8 +1469,11 @@
+       p.errStream = createStream(p.errHandle, fmRead).newPipeOutStream
+     return p.errStream
+ 
+-  proc csystem(cmd: cstring): cint {.nodecl, importc: "system",
+-                                     header: "<stdlib.h>".}
++  when defined(ios) and defined(libiosexec):
++    proc csystem(cmd: cstring): cint {.importc: "ie_system".}
++  else:
++    proc csystem(cmd: cstring): cint {.nodecl, importc: "system",
++                                       header: "<stdlib.h>".}
+ 
+   proc execCmd(command: string): int =
+     when defined(posix):

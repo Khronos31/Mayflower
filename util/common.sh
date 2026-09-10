@@ -1,6 +1,17 @@
+# shellcheck shell=bash
+# shellcheck disable=SC2154  # 変数は make.sh が export する
+#
+# Mayflower | util/common.sh
+#
+# make.sh から読まれる共通処理。パッケージ側の make.sh はここの関数を
+# 上書きしてよい（例: 独自の download）。
+
 . "${ROOTDIR}/util/options.sh"
 . "${ROOTDIR}/util/tidy.sh"
 
+# リンク後に ldid で署名する clang ラッパー。脱獄 iOS では entitlements を
+# 持たない Mach-O は起動時に SIGKILL される（素の clang 出力も、entitlements
+# なしの `ldid -S` も rc=137）。
 DEFAULT_CC() {
   echo "${ROOTDIR}/bin/cc"
 }
@@ -20,26 +31,38 @@ download() {
   local tarball
   tarball="$(basename "${source}")"
   if [ ! -r "${PROJECTROOT}/${tarball}" ]; then
-    curl -sSL -o "${PROJECTROOT}/${tarball}" "${source}"
+    curl -fsSL -o "${PROJECTROOT}/${tarball}" "${source}"
   fi
-  tar xvf "${tarball}" -C "${BUILDROOT}"
+  tar xf "${PROJECTROOT}/${tarball}" -C "${BUILDROOT}"
 }
 
+# patches/*.patch を srcdir へ当てる。パッチは
+# `diff -u --label a/<path> --label b/<path>` 形式で書くこと（-p1 で当てる）。
 applyPatch() {
-  find "${PROJECTROOT}/patches" -name "*.patch" |
-  while read p; do
-    patch -u -p0 -d "${BUILDROOT}" -i "$p"
+  local p
+  for p in "${PROJECTROOT}"/patches/*.patch; do
+    [ -e "$p" ] || continue
+    echo "==> patch: $(basename "$p")"
+    patch -p1 -d "${srcdir}" -i "$p"
   done
 }
 
 makedeb() {
-  cp -R "${PROJECTROOT}/deb/." "${BUILDROOT}/build"
-  local os_ver
-  os_ver=">=11.0"
-  mv "${BUILDROOT}/build/DEBIAN/control" "${BUILDROOT}/build/DEBIAN/control_"
-  sed -e "/^Version:/s/@VERSION@/${pkgver}-${pkgrel}/" \
-      -e "/^Depends:/s/@FIRMWARE_VERSION@/${os_ver}/" \
-      "${BUILDROOT}/build/DEBIAN/control_" >"${BUILDROOT}/build/DEBIAN/control"
-  rm "${BUILDROOT}/build/DEBIAN/control_"
-  dpkg-deb -Z${compress-gzip} --root-owner-group --build "${BUILDROOT}/build" "${BUILDROOT}"
+  cp -R "${PROJECTROOT}/deb/." "${pkgdir}"
+
+  find "${pkgdir}" -type d -exec chmod 755 {} +
+  find "${pkgdir}/DEBIAN" -type f -exec chmod 755 {} +
+
+  local size
+  size="$(du -sk "${pkgdir}${JB}" | cut -f1)"
+
+  local control="${pkgdir}/DEBIAN/control"
+  sed -e "s/@VERSION@/${pkgver}-${pkgrel}/" \
+      -e "s/@ARCH@/${DEB_ARCH}/" \
+      -e "s/@INSTALLED_SIZE@/${size}/" \
+      "${control}" > "${control}.new"
+  mv "${control}.new" "${control}"
+  chmod 644 "${control}"
+
+  dpkg-deb "-Z${compress:-xz}" --root-owner-group --build "${pkgdir}" "${BUILDROOT}"
 }

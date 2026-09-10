@@ -1,0 +1,15 @@
+--- a/compiler/extccomp.nim
++++ b/compiler/extccomp.nim
+@@ -869,6 +869,12 @@
+     if optCDebug in conf.globalOptions and optGenStaticLib notin conf.globalOptions:
+       # if needed, add an option to skip or override location
+       result.add "dsymutil " & $(output).quoteShell
++  if conf.target.targetOS == osIos and optGenStaticLib notin conf.globalOptions:
++    # jailbroken iOS refuses to run binaries without a fake signature that
++    # carries entitlements (plain ad-hoc signing is not enough)
++    let entitlements = conf.getConfigVar("ldid.entitlements")
++    if entitlements.len > 0:
++      result.add "ldid " & quoteShell("-S" & entitlements) & " " & $(output).quoteShell
+ 
+ proc execLinkCmd(conf: ConfigRef; linkCmd: string) =
+   tryExceptOSErrorMessage(conf, "invocation of external linker program failed."):

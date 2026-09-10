@@ -1,0 +1,5 @@
+# ビルドツリーと取得したソース。パッケージごとに packages/<name>/<arch>/ を使う。
+packages/*/arm64/
+packages/*/*.tar.*
+packages/*/*.tgz
+*.deb

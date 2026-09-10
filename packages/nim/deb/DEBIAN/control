@@ -1,10 +1,17 @@
 Package: nim
-Priority: optional
 Name: Nim
 Version: @VERSION@
+Architecture: @ARCH@
 Section: Development
-Architecture: iphoneos-arm
-Maintainer: Khronos
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: clang, ldid, libiosexec1 (>= 1.3.1)
+Recommends: libpcre1
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://nim-lang.org/
 Tag: purpose::console
-Description: Statically typed compiled systems programming language
+Description: Nim programming language
+ Statically typed compiled systems programming language. This build runs
+ on-device on rootless jailbreaks: programs are linked against libiosexec
+ (rootless has no /bin/sh) and signed with ldid using
+ /var/jb/usr/share/nim/entitlements.plist after every link.

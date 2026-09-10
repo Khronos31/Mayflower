@@ -1,0 +1,13 @@
+Package:
+Name:
+Version: @VERSION@
+Architecture: @ARCH@
+Section:
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends:
+Maintainer:
+Homepage:
+Tag: purpose::console
+Description:
+ .
