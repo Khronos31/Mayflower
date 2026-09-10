@@ -42,6 +42,26 @@ entitlements 無しの `ldid -S` でも足りない。`platform-application` と
 これは clang を呼んだあと出力を `ldid -S` するラッパーで、`configure` が作る
 テストバイナリのような「ビルドの途中で実行される実行ファイル」もこれで動く。
 
+#### 自前のリンカを持つ言語では、`dsymutil` を探す
+
+Go や Rust や Nim のように**自分でリンカを起動する**処理系は、ラッパーを
+`CC` に置くだけでは足りず、リンク後に `ldid` を呼ぶコードを本体に入れる
+必要がある。その差し込み場所は `dsymutil` を grep すると一発で見つかる。
+
+```sh
+grep -lr dsymutil <ソースツリー>
+```
+
+`dsymutil` は Darwin でリンクした直後にデバッグ情報を取り出す後処理なので、
+**それを呼んでいる場所＝リンクが終わった直後**であり、署名を挿すべき場所と
+一致する。実際に3つとも隣り合っていた。
+
+| 処理系 | 見つかるファイル |
+|---|---|
+| Nim | `compiler/extccomp.nim`（`getExtraCmds` の dsymutil の直後に ldid を足した） |
+| Go | `src/cmd/link/internal/ld/lib.go`（`hostlink`。`llvm-ar` への差し替えも同じ関数） |
+| Rust | `compiler/rustc_codegen_ssa/src/back/link.rs`（dsymutil のブロックの直前） |
+
 ### 2. `/bin/sh` が無い
 
 rootless では rootfs が封印されていて、`/bin` には `df` と `ps` しかない。
