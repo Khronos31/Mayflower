@@ -57,7 +57,8 @@ build() {
     --build=aarch64-apple-darwin \
     --prefix="${JB}/usr" \
     --enable-shared \
-    --with-system-expat \
+    `# --with-system-expat は使わない。pyexpat.c が expat_config.h を無条件に` \
+    `# include するが、システムの expat はそれを配布しない。同梱の expat を使う` \
     --with-ensurepip=install \
     --disable-test-modules \
     --without-static-libpython
