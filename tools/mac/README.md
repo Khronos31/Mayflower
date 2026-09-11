@@ -13,6 +13,19 @@ RAM 1.93GB の iPhone 8 では成立しない。M2 Mac mini（8コア・8GB）�
 Command Line Tools だけでよい。足りないのは iPhoneOS SDK だけで、それは
 端末から持ってくる。
 
+**Xcode が入っている機械でも、端末由来の SDK を使う。** Xcode の iPhoneOS SDK は
+新しすぎる（Xcode 26.6 で SDK 26.5）。rustc の iOS 既定デプロイメントターゲットは
+10.0（`base/apple/mod.rs:312`）なので 26 系でも安全ではあるが、端末の iOS と
+版を揃えた方が、後で原因を追うときに変数が1つ減る。Procursus も端末の SDK で
+全部を建てている。shim は `--sdk iphoneos` だけを奪い、`--sdk macosx` は Xcode の
+本物へ委ねるので、同居して困らない。
+
+> ⚠️ **ビルド中に Xcode を入れないこと。** `xcode-select` の向き先とライセンス
+> 同意の状態が途中で変わり、走っているリンクが終了コード 69
+> （`You have not agreed to the Xcode license agreements`）で落ちる。入れたなら
+> `build/` を捨ててやり直す。ホスト側の SDK も CLT のものから Xcode のものへ
+> 変わるため、混ざった木を残さない方がよい。
+
 ```sh
 ssh ip8 'cd /var/jb/usr/share/SDKs && tar cf - iPhoneOS.sdk' \
   | ssh mac 'mkdir -p ~/ios-sdk && tar xf - -C ~/ios-sdk'
