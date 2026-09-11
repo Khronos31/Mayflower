@@ -26,7 +26,7 @@
 +    // archives that are read by the linker, never mapped, so leave them alone.
 +    // Dylibs and proc-macros do need one: rustc `dlopen`s proc-macros, and an
 +    // unsigned dylib is rejected just like an unsigned executable.
-+    if matches!(crate_type, CrateType::Rlib | CrateType::Staticlib) {
++    if matches!(crate_type, CrateType::Rlib | CrateType::StaticLib) {
 +        return;
 +    }
 +
