@@ -173,6 +173,10 @@ https://khronos31.github.io/Mayflower/
 端末の apt から直接使うなら `deb https://khronos31.github.io/Mayflower/ ./`。
 **署名はしていない**（脱獄リポジトリでは通例で、Sileo も警告を出さない）。
 
+> ⚠️ **Sileo は入力された URL を小文字に変えてしまう。** GitHub Pages のパスは大文字小文字を
+> 区別するので、`/mayflower/` は 404 になる。Sileo の UI から追加した場合は
+> `/var/jb/etc/apt/sources.list.d/` の該当ファイルを直接開いて `Mayflower` に直す。
+
 ### 作り方
 
 ```sh
