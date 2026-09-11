@@ -1,0 +1,13 @@
+Package: rust-std-1.98
+Name: Rust 1.98 standard library
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: rustc-1.98 (>= @VERSION@)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.rust-lang.org/
+Tag: purpose::console
+Description: Rust standard library for aarch64-apple-ios
+ The precompiled std that rustc links into every program built for this device.

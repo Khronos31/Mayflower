@@ -58,9 +58,12 @@ makedeb() {
   size="$(du -sk "${pkgdir}${JB}" | cut -f1)"
 
   local control="${pkgdir}/DEBIAN/control"
-  sed -e "s/@VERSION@/${pkgver}-${pkgrel}/" \
-      -e "s/@ARCH@/${DEB_ARCH}/" \
-      -e "s/@INSTALLED_SIZE@/${size}/" \
+  # **g が必要。** 1行に @VERSION@ が2つ以上あることがある（`Depends: a (>= @VERSION@),
+  # b (>= @VERSION@)`）。g が無いと2つ目が残り、dpkg-deb が
+  # 「バージョン番号が数字から始まっていません」で止まる。
+  sed -e "s/@VERSION@/${pkgver}-${pkgrel}/g" \
+      -e "s/@ARCH@/${DEB_ARCH}/g" \
+      -e "s/@INSTALLED_SIZE@/${size}/g" \
       "${control}" > "${control}.new"
   mv "${control}.new" "${control}"
   chmod 644 "${control}"

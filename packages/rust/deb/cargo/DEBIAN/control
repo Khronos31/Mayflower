@@ -1,0 +1,14 @@
+Package: cargo-1.98
+Name: Cargo 1.98
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: rustc-1.98 (>= @VERSION@), rust-std-1.98 (>= @VERSION@), libssl3, libcurl4
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.rust-lang.org/
+Tag: purpose::console
+Description: Rust package manager
+ Fetches crates over TLS using the bootstrap's own OpenSSL and libcurl, rather
+ than carrying its own copies.

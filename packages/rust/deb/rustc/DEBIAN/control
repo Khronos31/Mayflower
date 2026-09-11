@@ -1,0 +1,20 @@
+Package: rustc-1.98
+Name: Rust 1.98 compiler
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: clang, ldid, libssl3, libcurl4
+Recommends: rust-std-1.98, cargo-1.98
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.rust-lang.org/
+Tag: purpose::console
+Description: Rust systems programming language compiler
+ Cross-built on a Mac because the rustc bootstrap builds LLVM, which does not
+ fit on this device. The compiler itself runs on the device: it compiles, links
+ and signs programs without any help from a desktop.
+ .
+ The linker signs every executable and dylib it produces with ldid, using the
+ entitlements plist inside the toolchain, because jailbroken iOS kills unsigned
+ images and refuses to dlopen them.

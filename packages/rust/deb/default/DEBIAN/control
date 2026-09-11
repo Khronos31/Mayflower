@@ -1,0 +1,15 @@
+Package: rust-default
+Name: Rust (default version)
+Version: @VERSION@
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: rustc-1.98 (>= @VERSION@), cargo-1.98 (>= @VERSION@)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.rust-lang.org/
+Tag: purpose::console
+Description: Rust programming language - default version
+ Puts rustc and cargo on PATH, pointing at the Rust 1.98 toolchain. The wrappers
+ supply SDKROOT, because there is no xcrun on the device and rustc otherwise
+ warns on every invocation that it cannot find the iPhoneOS SDK.
