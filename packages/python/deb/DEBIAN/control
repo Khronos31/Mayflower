@@ -5,7 +5,7 @@ Architecture: @ARCH@
 Section: Development
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
-Depends: libffi8, libsqlite3-0, libreadline8, libncursesw6, liblzma5, libssl3
+Depends: libffi8, libsqlite3-1, libreadline8, libncursesw6, liblzma5, libssl3
 Conflicts: python3.14-minimal
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://www.python.org/
@@ -14,3 +14,9 @@ Description: Python 3.14 interpreter
  Built on-device for rootless jailbreaks. Configured as darwin rather than
  through the iOS support added in PEP 730, so that subprocess and the rest of
  the POSIX surface stay available, which is the point on a jailbroken device.
+ os.system and subprocess with shell=True use the shell under the jailbreak
+ prefix.
+ .
+ Installs as python3.14 and pip3.14 only. The unversioned python3 belongs to
+ the bootstrap's own python3 package, which other packages depend on, so it is
+ left alone.

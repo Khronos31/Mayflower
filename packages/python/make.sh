@@ -104,6 +104,16 @@ package() {
   rm -rf "${pkgdir}${JB}/usr/lib/python${pyseries}/idlelib"
   # idlelib を消すので、それを呼ぶ入口も消す（残すと壊れたスクリプトになる）
   rm -f "${pkgdir}${JB}/usr/bin/idle${pyseries}" "${pkgdir}${JB}/usr/bin/idle3"
+
+  # 版なしの入口は持たない。Procursus の python3（3.9.9）が
+  # python3 / pydoc3 / python3-config / idle3 / 2to3 を所有しており、
+  # ファイル衝突で dpkg が止まる。あちらは他のパッケージの依存にもなっている
+  # ので置き換えない。版付きの名前だけを出す（Debian の python3.X と同じ流儀）。
+  rm -f "${pkgdir}${JB}/usr/bin/python3" \
+        "${pkgdir}${JB}/usr/bin/python3-config" \
+        "${pkgdir}${JB}/usr/bin/pydoc3" \
+        "${pkgdir}${JB}/usr/bin/2to3" \
+        "${pkgdir}${JB}/usr/bin/pip3"
   rm -rf "${pkgdir}${JB}/usr/lib/python${pyseries}/tkinter"
   find "${pkgdir}" -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
   install -d "${pkgdir}${JB}/usr/share/licenses/python"
