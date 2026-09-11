@@ -1,13 +1,21 @@
-Package: golang-go
-Name: Go
+Package: golang-default
+Name: Go (default version)
 Version: @VERSION@
 Architecture: all
 Section: Development
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
 Depends: golang-1.26-go (>= @VERSION@)
+Provides: golang-go (= @VERSION@)
+Conflicts: golang-go
+Replaces: golang-go
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://go.dev/
 Tag: purpose::console
 Description: Go programming language compiler - default version
  Puts go and gofmt on PATH, pointing at the Go 1.26 toolchain.
+ .
+ Named golang-default rather than golang-go because the bootstrap repository
+ pins every one of its own packages above this one, so a package sharing its
+ name would be downgraded by apt upgrade. It provides golang-go, so the
+ bootstrap's golang metapackage stays satisfied.

@@ -102,8 +102,19 @@ export CPPFLAGS="-I${JB}/usr/include ${CPPFLAGS} ${COMMON_FLAGS}"
 # MAYFLOWER_RESUME=1 で clean / download / prepare / applyPatch を飛ばし、
 # 既にあるビルドツリーで build から始める。移植中、次の壁を1つずつ潰すための
 # 近道。完成したレシピの検証には使わないこと（素の状態から通るかが分からない）。
-if [ "${MAYFLOWER_RESUME:-0}" = 1 ]; then
-  echo "==> RESUME: 既存のビルドツリーを使う（clean/download/prepare/patch を飛ばす）"
+#
+# MAYFLOWER_RESUME=package は build / check も飛ばして package から始める。
+# 中身は同じまま .deb の作り方だけを変えたいとき（パッケージの分割、control の
+# 書き換え、名前の変更）に使う。端末で数時間かかるビルドをやり直さずに済む。
+case "${MAYFLOWER_RESUME:-0}" in
+  package) RESUME_FROM=package ;;
+  1)       RESUME_FROM=build ;;
+  0)       RESUME_FROM=all ;;
+  *) echo "$0: MAYFLOWER_RESUME は 0 / 1 / package のいずれか" >&2; exit 1 ;;
+esac
+
+if [ "${RESUME_FROM}" != all ]; then
+  echo "==> RESUME(${RESUME_FROM}): 既存のビルドツリーを使う"
   [ -d "${srcdir}" ] || { echo "$0: ${srcdir} が無い。最初は RESUME なしで回すこと" >&2; exit 1; }
 else
   cd "${PROJECTROOT}"
@@ -141,12 +152,14 @@ if [ "${ios_compat:-0}" = 1 ]; then
   export LDFLAGS="${LDFLAGS} -L${BUILDROOT} -lios_compat"
 fi
 
-cd "${BUILDROOT}"
-build
-
-if declare -F check >/dev/null; then
+if [ "${RESUME_FROM}" != package ]; then
   cd "${BUILDROOT}"
-  check
+  build
+
+  if declare -F check >/dev/null; then
+    cd "${BUILDROOT}"
+    check
+  fi
 fi
 
 # subpkgs を定義してあれば、その数だけ package_<名前> を呼んで .deb を作る。

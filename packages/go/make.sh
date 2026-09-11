@@ -12,7 +12,15 @@
 # 出来上がるのは Debian 流に分けた3つ:
 #   golang-1.26-go   GOROOT 本体（bin・pkg・api・go.env・entitlements.plist）
 #   golang-1.26-src  src ツリー
-#   golang-go        /var/jb/usr/bin の symlink（Procursus の同名を置き換える）
+#   golang-default   /var/jb/usr/bin に置くラッパー（Procursus の golang-go を置換）
+#
+# **Procursus と同じパッケージ名は使えない。** あちらは
+# /var/jb/etc/apt/preferences.d/procursus で `Package: *` を Pin-Priority 1001
+# に固定しており、1001 は「降格してでもその版を入れる」を意味する。同名の
+# golang-go 1.26.8-1 を出していたところ、apt-get -s upgrade が Procursus の
+# 1.22.4 への降格を提案した（実測）。戻される先は出力を署名しない Go なので
+# 端末では動かない。名前を変え、Provides: golang-go で golang メタパッケージの
+# 依存を満たす形にする。
 
 # 1.27 系は採らない。ios/arm64 で起動時に作業ディレクトリが実行ファイルの
 # 場所へ変わる退行が入っており（golang/go#81465）、cmd/go が go.mod を

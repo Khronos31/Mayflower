@@ -21,6 +21,11 @@ source="https://www.python.org/ftp/python/${pkgver}/Python-${pkgver}.tar.xz"
 
 pyseries=3.14
 
+# Debian 流に2つに分ける:
+#   python3.14      版付きの名前だけ（Procursus の python3 3.9.9 と同居できる）
+#   python3-default /var/jb/usr/bin の版なし symlink（Procursus の python3 を置換）
+subpkgs=(main default)
+
 # **-target を明示しないと macOS モードで建ってしまう。**
 # --build=...darwin と名乗ると configure の Darwin 判定が走り、OS の版を読んで
 # MACOSX_DEPLOYMENT_TARGET=16.7（iOS の版）を採用する。これは環境変数として
@@ -96,26 +101,76 @@ import urllib.request; print("urllib  ", "ok", urllib.request.getproxies())
 '
 }
 
-package() {
+package_main() {
   cd "${srcdir}" || return 1
-  make DESTDIR="${pkgdir}" install
+
+  # **ensurepip には任せない。** make install の ensurepip は --root で DESTDIR
+  # へ入れるが、pip 自身は「いまの環境に pip があるか」で判断する。ビルドツリーの
+  # ./python は sys.prefix が /var/jb/usr なので、既に python3.14 が入っている
+  # 端末で梱包し直すと `Requirement already satisfied` で何も置かずに終わる
+  # （実測。pip の無い deb が出来た）。環境変数では逃げられない——
+  # Lib/ensurepip/__init__.py の _disable_pip_configuration_settings が
+  # PIP_* を全部捨ててから pip を呼ぶ。同梱の wheel を自分で入れる。
+  make DESTDIR="${pkgdir}" install ENSUREPIP=no
+
+  local wheel
+  wheel="$(echo Lib/ensurepip/_bundled/pip-*.whl)"
+  [ -f "${wheel}" ] || { echo "package_main: 同梱の pip wheel が見つからない" >&2; return 1; }
+  DYLD_LIBRARY_PATH="${srcdir}" PYTHONPATH="${wheel}" ./python -m pip install \
+    --no-cache-dir --no-index --ignore-installed \
+    --root "${pkgdir}" "${wheel}"
   # 配布に要らないもの
   rm -rf "${pkgdir}${JB}/usr/lib/python${pyseries}/test"
   rm -rf "${pkgdir}${JB}/usr/lib/python${pyseries}/idlelib"
   # idlelib を消すので、それを呼ぶ入口も消す（残すと壊れたスクリプトになる）
   rm -f "${pkgdir}${JB}/usr/bin/idle${pyseries}" "${pkgdir}${JB}/usr/bin/idle3"
 
-  # 版なしの入口は持たない。Procursus の python3（3.9.9）が
-  # python3 / pydoc3 / python3-config / idle3 / 2to3 を所有しており、
-  # ファイル衝突で dpkg が止まる。あちらは他のパッケージの依存にもなっている
-  # ので置き換えない。版付きの名前だけを出す（Debian の python3.X と同じ流儀）。
+  # 版なしの名前はこちらには入れない。python3-default の持ち物にする
+  # （Debian の python3.X と python3 の分け方）。man も版付きだけを持つ。
   rm -f "${pkgdir}${JB}/usr/bin/python3" \
         "${pkgdir}${JB}/usr/bin/python3-config" \
         "${pkgdir}${JB}/usr/bin/pydoc3" \
         "${pkgdir}${JB}/usr/bin/2to3" \
+        "${pkgdir}${JB}/usr/bin/pip" \
         "${pkgdir}${JB}/usr/bin/pip3"
+  rm -f "${pkgdir}${JB}/usr/share/man/man1/python3.1"
   rm -rf "${pkgdir}${JB}/usr/lib/python${pyseries}/tkinter"
   find "${pkgdir}" -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
   install -d "${pkgdir}${JB}/usr/share/licenses/python"
   install -m644 LICENSE "${pkgdir}${JB}/usr/share/licenses/python/LICENSE"
+
+  # 黙って欠けるのが一番まずいので、出来上がりを確かめる
+  local f
+  for f in "bin/python${pyseries}" "bin/pip${pyseries}" \
+           "lib/python${pyseries}/site-packages/pip/__main__.py" \
+           "lib/libpython${pyseries}.dylib"; do
+    [ -e "${pkgdir}${JB}/usr/${f}" ] || { echo "package_main: ${f} が無い" >&2; return 1; }
+  done
+}
+
+# 版なしの入口。Procursus の python3（3.9.9）が python / python3 /
+# python3-config / pydoc3 / idle3 / 2to3 を持っているので、control で
+# Conflicts / Replaces / Provides を宣言して置き換える。
+#
+# **Procursus と同じパッケージ名は使えない。** あちらは
+# /var/jb/etc/apt/preferences.d/procursus で `Package: *` を Pin-Priority 1001
+# に固定しており、優先度 1001 は「降格してでもその版を入れる」を意味する。
+# 同名で新しい版を出しても、こちらの 500 が負けて apt upgrade で 3.9.9 に
+# 戻される（golang-go 1.26.8 で実測。apt-get -s upgrade が 1.22.4 への降格を
+# 提案した）。名前を変え、Provides で版なしの要求を満たす形にする。
+#
+# idle3 / 2to3 は出さない。3.13 で lib2to3 が消え、idlelib は tkinter が要る。
+package_default() {
+  local dest="${pkgdir}${JB}/usr/bin"
+  install -d "${dest}"
+  ln -s "python${pyseries}"           "${dest}/python"
+  ln -s "python${pyseries}"           "${dest}/python3"
+  ln -s "python${pyseries}-config"    "${dest}/python3-config"
+  ln -s "pydoc${pyseries}"            "${dest}/pydoc3"
+  ln -s "pip${pyseries}"              "${dest}/pip"
+  ln -s "pip${pyseries}"              "${dest}/pip3"
+
+  local man="${pkgdir}${JB}/usr/share/man/man1"
+  install -d "${man}"
+  ln -s "python${pyseries}.1" "${man}/python3.1"
 }

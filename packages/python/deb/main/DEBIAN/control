@@ -17,6 +17,6 @@ Description: Python 3.14 interpreter
  os.system and subprocess with shell=True use the shell under the jailbreak
  prefix.
  .
- Installs as python3.14 and pip3.14 only. The unversioned python3 belongs to
- the bootstrap's own python3 package, which other packages depend on, so it is
- left alone.
+ Installs versioned names only: python3.14, pip3.14, pydoc3.14 and
+ python3.14-config. Install python3-default to make python3 on PATH mean this
+ interpreter; that package supersedes the bootstrap's python3.
