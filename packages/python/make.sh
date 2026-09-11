@@ -21,6 +21,15 @@ source="https://www.python.org/ftp/python/${pkgver}/Python-${pkgver}.tar.xz"
 
 pyseries=3.14
 
+# **-target を明示しないと macOS モードで建ってしまう。**
+# --build=...darwin と名乗ると configure の Darwin 判定が走り、OS の版を読んで
+# MACOSX_DEPLOYMENT_TARGET=16.7（iOS の版）を採用する。これは環境変数として
+# clang に渡るため、iPhoneOS の sysroot を macOS 向けに読む状態になり
+# （clang が "using sysroot for 'iPhoneOS' but targeting 'MacOSX'" と警告する）、
+# 可用性マクロが噛み合わず getentropy が未宣言になって落ちる。
+# -target は環境変数より優先されるので、これで押さえる。
+COMMON_FLAGS="-target arm64-apple-ios16.0"
+
 prepare() {
   cd "${srcdir}" || return 1
 }
