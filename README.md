@@ -162,6 +162,46 @@ tar cf - -C ../../go-darwin-arm64-bootstrap . | ssh <端末> 'mkdir -p ~/dev/go-
 GOROOT_BOOTSTRAP=~/dev/go-bootstrap ./make.sh go
 ```
 
+## apt リポジトリ
+
+できた `.deb` は GitHub Pages で配っている。Sileo / Zebra / Cydia にはこれを入れる。
+
+```
+https://khronos31.github.io/Mayflower/
+```
+
+端末の apt から直接使うなら `deb https://khronos31.github.io/Mayflower/ ./`。
+**署名はしていない**（脱獄リポジトリでは通例で、Sileo も警告を出さない）。
+
+### 作り方
+
+```sh
+./tools/make-apt-repo <出力先> packages/*/arm64/*.deb
+```
+
+`Release`・`Packages`・`Packages.gz`・`Packages.xz`・`debs/` を作る。`apt-ftparchive` も
+`dpkg-scanpackages` も使わない——母艦の HAOS ではアドオンを再起動すると apt で入れたものが
+消えるため、公開のたびに入れ直す前提にしたくない。要るのは `dpkg-deb` と coreutils だけ。
+
+`Architectures` は収録した `.deb` から拾う（`all` は除く）。`ORIGIN` / `LABEL` / `SUITE` /
+`CODENAME` / `COMPONENTS` / `DESCRIPTION` は環境変数で上書きできる。
+
+### 公開の仕方
+
+`gh-pages` ブランチを**毎回ゼロから作って force-push する**。`git clone` は既定で全ブランチを
+取るので、`.deb` の履歴が積もると、ビルドしたいだけの人まで巻き込む。毎回作り直せば clone の
+費用は常に1スナップショット分で止まる。
+
+```sh
+rm -rf /tmp/ghp && mkdir /tmp/ghp && cd /tmp/ghp
+cp -a <make-apt-repo の出力>/. .
+cp <アイコン> CydiaIcon.png          # Sileo / Cydia がリポジトリの絵として出す
+touch .nojekyll                      # Jekyll に触らせない
+git init -b gh-pages && git add -A && git commit -m "apt: ..."
+git remote add origin git@github.com:Khronos31/Mayflower
+git push -f origin gh-pages
+```
+
 ## 追加予定
 
 移植する値打ちがあるのは次の3種類。いずれも「Procursus（`apt.procurs.us` の
