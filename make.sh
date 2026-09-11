@@ -53,6 +53,15 @@ export BUILDROOT="${PROJECTROOT}/${ARCH}"
 export srcdir="${BUILDROOT}/${srcname:-${pkgname}-${pkgver}}"
 export pkgdir="${BUILDROOT}/build"
 
+# $ROOTDIR/bin を PATH の先頭に置く。bin/make は GNU make に SHELL を与える
+# ラッパーで、これが無いと autotools も cmake も /bin/sh を探して死ぬ。
+# bin/cc と bin/c++ も同じ場所にあるので、ビルド中に cc を直接呼ぶ類も拾える。
+export PATH="${ROOTDIR}/bin:${PATH}"
+
+# autoconf の configure は SHELL=${CONFIG_SHELL-/bin/sh} を先頭で焼く。
+# config.sub / config.guess の実行がここを通るため、指定しないと即死する。
+export CONFIG_SHELL="${JB}/bin/sh"
+
 export CC="${CC:-$(DEFAULT_CC)}"
 export CXX="${CXX:-$(DEFAULT_CXX)}"
 export AR="${AR:-llvm-ar}"

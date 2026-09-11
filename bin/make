@@ -1,0 +1,10 @@
+#!/var/jb/bin/bash
+#
+# Mayflower | bin/make
+#
+# GNU make は SHELL を環境変数から取らない（makefile 内かコマンドラインのみ）。
+# rootless には /bin/sh が無いので、レシピが何も意識しなくても済むように
+# ここで与える。make.sh が $ROOTDIR/bin を PATH の先頭に置くため、
+# cmake が探す make もこれになる。
+
+exec /var/jb/usr/bin/make SHELL="${JB:-/var/jb}/bin/sh" "$@"

@@ -29,7 +29,7 @@ build() {
   cd "${srcdir}" || return 1
 
   # 共通層が -L/-rpath/-I を入れてくれるので、ここでは CPython 固有のものだけ。
-  sh configure \
+  "${CONFIG_SHELL}" configure \
     --build=aarch64-apple-darwin \
     --prefix="${JB}/usr" \
     --enable-shared \
@@ -38,6 +38,7 @@ build() {
     --disable-test-modules \
     --without-static-libpython
 
+  # make は $ROOTDIR/bin のラッパー（SHELL を与える）が PATH 先頭で拾われる
   make -j"$(/usr/sbin/sysctl -n hw.ncpu 2>/dev/null || echo 4)"
 }
 
