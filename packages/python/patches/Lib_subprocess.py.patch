@@ -1,0 +1,21 @@
+--- a/Lib/subprocess.py
++++ b/Lib/subprocess.py
+@@ -1846,8 +1846,16 @@
+ 
+             if shell:
+                 # On Android the default shell is at '/system/bin/sh'.
+-                unix_shell = ('/system/bin/sh' if
+-                          hasattr(sys, 'getandroidapilevel') else '/bin/sh')
++                # A rootless jailbreak seals the root filesystem, which leaves
++                # no /bin/sh; the shell lives under the jailbreak prefix. The
++                # /bin/sh check comes first so this is inert everywhere else.
++                if hasattr(sys, 'getandroidapilevel'):
++                    unix_shell = '/system/bin/sh'
++                elif (not os.path.exists('/bin/sh')
++                      and os.path.exists('/var/jb/bin/sh')):
++                    unix_shell = '/var/jb/bin/sh'
++                else:
++                    unix_shell = '/bin/sh'
+                 args = [unix_shell, "-c"] + args
+                 if executable:
+                     args[0] = executable

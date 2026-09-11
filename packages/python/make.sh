@@ -80,8 +80,10 @@ build() {
 check() {
   cd "${srcdir}" || return 1
   # 建てた python が動き、脱獄機で効いてほしいものが揃っているかを見る。
-  DYLD_LIBRARY_PATH="${srcdir}" ./python.exe -c '
-import sys, sysconfig, subprocess, ssl, sqlite3, lzma, bz2, zlib, ctypes, readline
+  # 出来るのは ./python（macOS では python.exe になるが、iOS の APFS は
+  # 大文字小文字を区別するのでこの名前）。
+  DYLD_LIBRARY_PATH="${srcdir}" ./python -c '
+import sys, sysconfig, subprocess, ssl, sqlite3, lzma, bz2, zlib, ctypes, readline, os
 print("version ", sys.version.split()[0])
 print("platform", sys.platform, sysconfig.get_platform())
 print("ssl     ", ssl.OPENSSL_VERSION)
@@ -89,6 +91,8 @@ print("sqlite3 ", sqlite3.sqlite_version)
 print("lzma    ", lzma.__name__, "ok")
 print("subprocess", subprocess.run(["uname","-m"], capture_output=True, text=True).stdout.strip())
 print("shell   ", subprocess.run("echo shell-ok", shell=True, capture_output=True, text=True).stdout.strip() or "FAILED")
+print("system  ", os.system("echo os.system-ok"))
+import urllib.request; print("urllib  ", "ok", urllib.request.getproxies())
 '
 }
 
