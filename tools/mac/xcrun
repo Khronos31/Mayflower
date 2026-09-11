@@ -1,0 +1,90 @@
+#!/bin/sh
+#
+# Mayflower | tools/mac/xcrun
+#
+# Xcode の無い Mac（Command Line Tools だけ）で、iPhoneOS SDK について答える
+# xcrun の shim。PATH の先頭に置いて使う。
+#
+#   MAYFLOWER_IOS_SDK=~/ios-sdk/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk
+#   PATH=<このファイルのあるディレクトリ>:$PATH
+#
+# SDK は端末（脱獄機）の /var/jb/usr/share/SDKs/iPhoneOS.sdk を持ってくる。
+# Procursus の build-essential が入れているもので、版は端末の iOS に近い。
+# **リポジトリには入れないこと。** 個人の機械の間で複製するだけにする。
+#
+# ■ なぜ shim なのか
+#
+# rustc も cc-rs も、Apple 向けの SDK を **PATH の xcrun** に尋ねる。rustc 側は
+# 「nixpkgs などが shim を提供するので /usr/bin/xcrun を直接は見ない」と
+# コメントで明言している。したがって shim が正規の差し込み口になる。
+#
+# ■ グローバルな SDKROOT では代用できない（実測）
+#
+# cc-rs は SDKROOT を apple_sdk_name() の返り値で検査するが、macOS 向けの
+# 分岐名が "macosx10.15" のままで、実際に渡るのは "macosx"。一致しないため
+# `_ => return Ok(sdkroot)` に落ち、**ホスト側の C まで iOS SDK で建ててしまう**。
+# rustc 側（link.rs の get_apple_sdk_root）は同じ表を持つが、こちらは
+# ".platform" を含むパスで正しく弾く。cc-rs の分岐名が腐っている。
+#
+# ■ IPHONEOS_DEPLOYMENT_TARGET も環境に置いてはいけない（実測）
+#
+# clang の Darwin ドライバは、この環境変数があるとプラットフォームごと iOS を
+# 選ぶ。rustc の bootstrap は libcxx-version という **ホストで実行する** 小道具を
+# 素の clang++ で建てるので、iOS バイナリになって exec に失敗する。
+#
+set -eu
+
+IOS_SDK="${MAYFLOWER_IOS_SDK:-${HOME}/ios-sdk/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk}"
+
+# 版は SDK 自身から読む。無ければ黙って本物へ委ねる。
+ios_sdk_version() {
+  [ -r "${IOS_SDK}/SDKSettings.json" ] || return 1
+  /usr/bin/python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["Version"])' \
+    "${IOS_SDK}/SDKSettings.json" 2>/dev/null
+}
+
+sdk=""
+query=""
+next=""
+for a in "$@"; do
+  if [ -n "${next}" ]; then
+    case "${next}" in sdk) sdk="$a" ;; esac
+    next=""
+    continue
+  fi
+  case "$a" in
+    -sdk|--sdk) next=sdk ;;
+    --sdk=*) sdk="${a#--sdk=}" ;;
+    --show-sdk-path|--show-sdk-version|--show-sdk-platform-path|--show-sdk-build-version|--show-sdk-platform-version)
+      query="$a" ;;
+  esac
+done
+
+case "${sdk}" in
+  iphoneos*)
+    if [ -d "${IOS_SDK}" ]; then
+      ver="$(ios_sdk_version || echo '')"
+      platform="${IOS_SDK%/Developer/SDKs/*}"
+      case "${query}" in
+        --show-sdk-path)             echo "${IOS_SDK}";  exit 0 ;;
+        --show-sdk-platform-path)    echo "${platform}"; exit 0 ;;
+        --show-sdk-version|--show-sdk-platform-version|--show-sdk-build-version)
+          [ -n "${ver}" ] && { echo "${ver}"; exit 0; } ;;
+      esac
+      # 道具の探索・実行は Command Line Tools のもので足りる。--sdk だけ外す。
+      args=""
+      skip=0
+      for a in "$@"; do
+        if [ "${skip}" = 1 ]; then skip=0; continue; fi
+        case "$a" in
+          -sdk|--sdk) skip=1; continue ;;
+          --sdk=*) continue ;;
+        esac
+        args="${args} \"$a\""
+      done
+      eval "exec /usr/bin/xcrun ${args}"
+    fi
+    ;;
+esac
+
+exec /usr/bin/xcrun "$@"

@@ -1,0 +1,35 @@
+change-id = "ignore"
+
+# Mayflower: aarch64-apple-ios をホストとして建てる。
+# SDK は PATH の xcrun shim（~/ios-tools/xcrun）が答える。
+
+[llvm]
+targets = "AArch64"
+link-shared = false
+assertions = false
+link-jobs = 1
+download-ci-llvm = false
+
+[build]
+build = "aarch64-apple-darwin"
+host = ["aarch64-apple-ios"]
+target = ["aarch64-apple-ios"]
+docs = false
+compiler-docs = false
+extended = true
+tools = ["cargo"]
+
+[install]
+prefix = "/var/jb/usr"
+
+[rust]
+channel = "stable"
+rpath = true
+debuginfo-level = 0
+codegen-units-std = 1
+default-linker = "clang"
+
+[target.aarch64-apple-ios]
+cc = "clang"
+cxx = "clang++"
+linker = "clang"
