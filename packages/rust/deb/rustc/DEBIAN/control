@@ -5,7 +5,7 @@ Architecture: @ARCH@
 Section: Development
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
-Depends: clang, ldid, libssl3, libcurl4
+Depends: clang, ldid
 Recommends: rust-std-1.98, cargo-1.98
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://www.rust-lang.org/

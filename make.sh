@@ -183,5 +183,30 @@ else
   makedeb
 fi
 
+# 分割したパッケージが同じファイルを持っていると、dpkg が「上書きしようとして
+# います」で入れる段で止まる。そこまで気づかないと手戻りが大きいので、ここで見る。
+# rust の manifest.in（rust-installer が各コンポーネントに同名で置く）で踏んだ。
+if [ "${#subpkgs[@]}" -gt 1 ]; then
+  echo "==> 重なりの点検"
+  overlap=0
+  for a in "${subpkgs[@]}"; do
+    for b in "${subpkgs[@]}"; do
+      [[ "${a}" < "${b}" ]] || continue
+      [ -d "${BUILDROOT}/pkg-${a}" ] && [ -d "${BUILDROOT}/pkg-${b}" ] || continue
+      (cd "${BUILDROOT}/pkg-${a}" && find . ! -type d ! -path './DEBIAN/*' | sort) > "${BUILDROOT}/.ov-a"
+      (cd "${BUILDROOT}/pkg-${b}" && find . ! -type d ! -path './DEBIAN/*' | sort) > "${BUILDROOT}/.ov-b"
+      comm -12 "${BUILDROOT}/.ov-a" "${BUILDROOT}/.ov-b" > "${BUILDROOT}/.ov-c"
+      if [ -s "${BUILDROOT}/.ov-c" ]; then
+        echo "    ${a} と ${b} が同じファイルを持っている:" >&2
+        sed 's/^/      /' "${BUILDROOT}/.ov-c" >&2
+        overlap=1
+      fi
+    done
+  done
+  rm -f "${BUILDROOT}/.ov-a" "${BUILDROOT}/.ov-b" "${BUILDROOT}/.ov-c"
+  [ "${overlap}" = 0 ] || { echo "$0: ファイルが重なっている。dpkg が入れる段で止まる" >&2; exit 1; }
+  echo "    重なり無し"
+fi
+
 echo "==> できあがり:"
 find "${BUILDROOT}" -maxdepth 1 -name '*.deb' -exec echo "    {}" \;

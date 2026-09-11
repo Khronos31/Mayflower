@@ -71,6 +71,10 @@ package_rustc() {
   install -d "${dest}"
   cp -R "rustc-${pkgver}-aarch64-apple-ios/rustc/." "${dest}/"
 
+  # rust-installer の梱包用ファイル。インストール後には要らないうえ、各
+  # コンポーネントが同じ名前で持っているのでファイル衝突になる。
+  rm -f "${dest}/manifest.in"
+
   # std は別パッケージが持つので、本体からは外す
   rm -rf "${dest}/lib/rustlib/aarch64-apple-ios/lib"
 
@@ -102,6 +106,7 @@ package_cargo() {
   dest="${pkgdir}$(rust_install)"
   install -d "${dest}"
   cp -R "cargo-${pkgver}-aarch64-apple-ios/cargo/." "${dest}/"
+  rm -f "${dest}/manifest.in"
   install -d "${pkgdir}${JB}/usr/share/licenses/cargo-${rustseries}"
   local l
   for l in "cargo-${pkgver}-aarch64-apple-ios"/LICENSE-*; do
