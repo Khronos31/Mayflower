@@ -124,10 +124,16 @@ fi
 # 既定では入れない——`#define system ...` は大きな基盤だと名前衝突を起こしうる。
 if [ "${ios_compat:-0}" = 1 ]; then
   echo "==> ios_compat: system(3) を ${JB}/bin/sh 経由に差し替える"
+  # オブジェクトではなく静的ライブラリで渡す。LDFLAGS はビルド系によって
+  # 複数の変数へ展開される（CPython の BLDSHARED など）ため、.o を直接入れると
+  # 同じオブジェクトが2回並んで duplicate symbol になる。ライブラリなら
+  # 何度並んでもメンバは必要なときに1回だけ引かれる。
   clang -O2 -c "${ROOTDIR}/compat/ios_compat.c" -o "${BUILDROOT}/ios_compat.o"
+  rm -f "${BUILDROOT}/libios_compat.a"
+  "${AR}" rcs "${BUILDROOT}/libios_compat.a" "${BUILDROOT}/ios_compat.o"
   export CFLAGS="${CFLAGS} -include ${ROOTDIR}/compat/ios_compat.h"
   export CXXFLAGS="${CXXFLAGS} -include ${ROOTDIR}/compat/ios_compat.h"
-  export LDFLAGS="${LDFLAGS} ${BUILDROOT}/ios_compat.o"
+  export LDFLAGS="${LDFLAGS} -L${BUILDROOT} -lios_compat"
 fi
 
 cd "${BUILDROOT}"
