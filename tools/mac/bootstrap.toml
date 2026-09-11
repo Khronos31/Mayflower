@@ -23,6 +23,9 @@ tools = ["cargo"]
 prefix = "/var/jb/usr"
 
 [rust]
+# 上流の CI ではないので、警告を error に昇格させない。tarball 展開では
+# rust-analyzer が .git/HEAD を見つけられず警告を出し、それで止まる。
+deny-warnings = false
 channel = "stable"
 rpath = true
 debuginfo-level = 0

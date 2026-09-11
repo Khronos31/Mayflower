@@ -73,5 +73,21 @@ env -u SDKROOT -u IPHONEOS_DEPLOYMENT_TARGET \
   caffeinate -i nohup python3 x.py dist --stage 2 -j 4 > dist.log 2>&1 &
 ```
 
+`x.py check --host aarch64-apple-ios` を先に回すと、設定の誤りとパッチの型エラーを
+短時間で拾える（LLVM と stage1 は `dist` でも使い回される）。ただし `check` は
+`rust-analyzer` まで検査し、tarball 展開では `.git/HEAD` が無いという警告が出る。
+`deny-warnings = false` にしておくこと。
+
+段の構成は次のとおり。**Rust の言う「ブートストラップ」= stage0 は建てない**
+（既成の rustc をダウンロードする）。
+
+| 段 | 何 | 動く場所 |
+|---|---|---|
+| stage0 | 既成の rustc | Mac（ダウンロード） |
+| LLVM (darwin) | stage1 rustc 用 | Mac |
+| stage1 rustc | stage0 が建てる | Mac |
+| LLVM (ios) | stage2 rustc 用 | iPhone |
+| stage2 rustc | stage1 が建てる | iPhone（成果物） |
+
 出来た tarball を端末へ渡し、`make.sh rust` の `prepare()` がそれを要求する。
 Go の `GOROOT_BOOTSTRAP` と同じ扱いで、母艦の事情を `make.sh` に持ち込まない。
