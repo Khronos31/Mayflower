@@ -1,0 +1,16 @@
+Package: python3.14
+Name: Python 3.14
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libffi8, libsqlite3-0, libreadline8, libncursesw6, liblzma5, libssl3
+Conflicts: python3.14-minimal
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.python.org/
+Tag: purpose::console
+Description: Python 3.14 interpreter
+ Built on-device for rootless jailbreaks. Configured as darwin rather than
+ through the iOS support added in PEP 730, so that subprocess and the rest of
+ the POSIX surface stay available, which is the point on a jailbroken device.

@@ -63,8 +63,17 @@ export RANLIB="${RANLIB:-llvm-ranlib}"
 # 実際の SDK とずれる。必要なパッケージだけ COMMON_FLAGS で与えること。
 export CFLAGS="${CFLAGS} ${COMMON_FLAGS}"
 export CXXFLAGS="${CXXFLAGS} ${COMMON_FLAGS}"
-export CPPFLAGS="${CPPFLAGS} ${COMMON_FLAGS}"
-export LDFLAGS="${LDFLAGS} ${COMMON_FLAGS}"
+
+# -L は必須。iOS SDK の .tbd スタブは clang の既定の探索先にあり、そちらが
+# 先に当たるため、Procursus が持っているものでも系統が system 側へ逃げる。
+# 実測では -llzma がヘッダ 5.4.4 に対して実行時 5.0.5 の system を掴み、
+# -lreadline は SDK の libreadline.tbd 経由で libedit になっていた。
+#
+# -rpath も必須。dyld は既定で /usr/lib と /usr/local/lib しか見ないので、
+# Procursus の dylib を引いたバイナリは実行時に落ちる。Procursus 自身の
+# 実行ファイルも一律に LC_RPATH /var/jb/usr/lib を持っている。
+export LDFLAGS="-L${JB}/usr/lib -Wl,-rpath,${JB}/usr/lib ${LDFLAGS} ${COMMON_FLAGS}"
+export CPPFLAGS="-I${JB}/usr/include ${CPPFLAGS} ${COMMON_FLAGS}"
 
 cd "${PROJECTROOT}"
 clean
