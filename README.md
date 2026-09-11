@@ -108,7 +108,24 @@ packages/<名前>/
 | パッケージ | 版 | 備考 |
 |---|---|---|
 | [nim](packages/nim) | 2.2.12 | コンパイラ・nimble・atlas・nimsuggest・nimgrep・nimpretty・testament |
-| [go](packages/go) | 1.26.8 | `golang-1.26-go` / `golang-1.26-src` / `golang-go` に分ける |
+| [go](packages/go) | 1.26.8 | `golang-1.26-go` / `golang-1.26-src` / `golang-default` に分ける |
+| [python](packages/python) | 3.14.7 | `python3.14`（版付きのみ）/ `python3-default`（版なしの入口） |
+
+**Procursus と同じパッケージ名は使わない。** あちらは
+`/var/jb/etc/apt/preferences.d/procursus` で `Package: *` を `Pin-Priority: 1001`
+に固定している。1001 は「降格してでもその版を入れる」を意味するので、同名で
+新しい版を出してもこちら（500）が負け、`apt upgrade` で戻される。`golang-go`
+1.26.8-1 を入れた状態で `apt-get -s upgrade` を回すと Procursus の 1.22.4 への
+降格が提案された。`preferences.d` を配って自分を上に置くのは第三者リポジトリの
+すべきことではないので、名前を変え `Provides` / `Conflicts` / `Replaces` で
+置き換える形にしている。
+
+Python は Debian と同じく版付きと版なしに分ける。`python3.14` は Procursus の
+`python3` 3.9.9 と同居でき、`python3-default` を入れると `python`・`python3`・
+`pip3`・`pydoc3`・`python3-config` がこちらを向き、Procursus の `python3` が
+外れる。`idle3` と `2to3` は出さない（3.13 で `lib2to3` が消え、`idlelib` は
+tkinter が要る）。`rdepends` 上 Procursus の `python3` に依存する物は無く、
+実際に使っているのは git の `git-p4` だけで、これは新しい `python3` で動く。
 
 `go` と `gofmt` は `/var/jb/usr/bin` に置くラッパーで、GOROOT を補ってから
 本体を呼ぶ。iOS では `os.Executable` が失敗するため、go が GOROOT を実行ファイルの
@@ -187,6 +204,11 @@ https://khronos31.github.io/Mayflower/
 `dpkg-scanpackages` も使わない——母艦の HAOS ではアドオンを再起動すると apt で入れたものが
 消えるため、公開のたびに入れ直す前提にしたくない。要るのは `dpkg-deb` と coreutils だけ。
 
+**端末で回すこと。** `Packages.xz` を作るのに圧縮できる `xz` が必要で、HAOS に入って
+いるのは busybox 版（展開専用）。`Architectures` に `all` を並べないのは flat な
+リポジトリ（`deb <URL> ./`）では購読側が `Packages` を1つ読むだけで、この欄を
+アーキテクチャごとのファイル選択に使わないため。
+
 `Architectures` は収録した `.deb` から拾う（`all` は除く）。`ORIGIN` / `LABEL` / `SUITE` /
 `CODENAME` / `COMPONENTS` / `DESCRIPTION` は環境変数で上書きできる。
 
@@ -232,10 +254,10 @@ rootless スイート `1900` の索引にバイナリが1つも無いもの。Pr
 
 ### 2. Procursus にあるが古いもの
 
-| パッケージ | Procursus `1900` | upstream |
-|---|---|---|
-| python3 | 3.9.9 | 3.14.7 |
-| golang | 1.22.4 | 1.27.1 |
+| パッケージ | Procursus `1900` | upstream | |
+|---|---|---|---|
+| python3 | 3.9.9 | 3.14.7 | ← 収録した |
+| golang | 1.22.4 | 1.27.1 | ← 収録した（1.26.8） |
 | perl | 5.32.1 | 5.44.0 |
 | openssl | 3.2.1 | 4.0.2 |
 | git | 2.39.1 | — |
