@@ -138,8 +138,15 @@ prefix 付きで行うが、直接渡された絶対パスは読み替えない�
 
 **Go は 1.27 系を採らない。** `ios/arm64` で起動時に作業ディレクトリが実行ファイルの
 場所へ変わる退行が入っており（[golang/go#81465](https://github.com/golang/go/issues/81465)）、
-`cmd/go` が `go.mod` を見つけられなくなる。上流が直したら追随し、直らないまま
-1.29 系まで来たらこちらでパッチを当てる。
+`cmd/go` が `go.mod` を見つけられなくなる。
+
+**上流は直しつつある（2026-09-11 時点）。** CL 830864
+「runtime: keep the working directory for non-bundled ios/arm64 binaries」が
+Code-Review +2・TryBot 緑で master に出ており、1.27 へのバックポートも
+[golang/go#81469](https://github.com/golang/go/issues/81469) として
+マイルストーン **Go1.27.2** で起票されている。中身は報告した分析どおりで、
+`Info.plist` の有無を `chdir` の条件に戻し、パスの取得だけ
+`CFBundleCopyBundleURL` に残す形。**Go 1.27.2 が出たらそこへ移る。**
 
 Nim は端末に nim が入っていればそれを種にし、無ければ同梱の C ソースから
 立ち上げる。どちらでも `koch boot` の自己再生成まで通る。

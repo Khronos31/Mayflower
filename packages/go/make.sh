@@ -24,8 +24,14 @@
 
 # 1.27 系は採らない。ios/arm64 で起動時に作業ディレクトリが実行ファイルの
 # 場所へ変わる退行が入っており（golang/go#81465）、cmd/go が go.mod を
-# 見つけられなくなる。上流が直したら追随する。直らないまま 1.29 系まで来たら
-# こちらでパッチを当てる。
+# 見つけられなくなる。
+#
+# **上流は直しつつある（2026-09-11 時点）。** CL 830864
+# 「runtime: keep the working directory for non-bundled ios/arm64 binaries」が
+# Code-Review +2・TryBot 緑で master に出ており、1.27 へのバックポートも
+# golang/go#81469 としてマイルストーン **Go1.27.2** で起票済み。中身は
+# 報告どおりで、`Info.plist` の有無を chdir の条件に戻し、パスの取得だけ
+# CFBundleCopyBundleURL に残す形。**Go1.27.2 が出たらそこへ移る。**
 pkgname=go
 pkgver=1.26.8
 pkgrel=1
