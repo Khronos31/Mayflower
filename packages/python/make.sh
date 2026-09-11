@@ -41,6 +41,14 @@ prepare() {
 build() {
   cd "${srcdir}" || return 1
 
+  # _scproxy は macOS の SystemConfiguration からプロキシ設定を読むモジュールで、
+  # 使っている定数が全部 API_UNAVAILABLE(ios)。19 個のエラーになるので外す。
+  # configure は Modules/Setup.local が既にあれば上書きしないが、ここで書くのは
+  # MAYFLOWER_RESUME でも効くようにするため。
+  # 無くなると urllib が import に失敗する（sys.platform は darwin のまま）ので、
+  # patches/Lib_urllib_request.py.patch で空実装に落としてある。
+  printf '*disabled*\n_scproxy\n' > Modules/Setup.local
+
   # 共通層が -L/-rpath/-I を入れてくれるので、ここでは CPython 固有のものだけ。
   # iOS SDK は宣言を出さないが libSystem にシンボルはある、という関数がある。
   # configure はリンクで見つけて HAVE_* を立てるが、コンパイルは

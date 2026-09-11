@@ -1,0 +1,22 @@
+--- a/Lib/urllib/request.py
++++ b/Lib/urllib/request.py
+@@ -2031,7 +2031,18 @@
+ 
+ 
+ if sys.platform == 'darwin':
+-    from _scproxy import _get_proxy_settings, _get_proxies
++    try:
++        from _scproxy import _get_proxy_settings, _get_proxies
++    except ImportError:
++        # iOS keeps sys.platform == 'darwin' but does not expose the
++        # SystemConfiguration proxy keys, so _scproxy cannot be built there.
++        # Report "no proxies configured"; getproxies() below then falls back to
++        # the environment variables, as on any other platform.
++        def _get_proxy_settings():
++            return {'exclude_simple': False, 'exceptions': []}
++
++        def _get_proxies():
++            return {}
+ 
+     def proxy_bypass_macosx_sysconf(host):
+         proxy_settings = _get_proxy_settings()
