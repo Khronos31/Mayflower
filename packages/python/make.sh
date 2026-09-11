@@ -15,7 +15,7 @@
 
 pkgname=python
 pkgver=3.14.7
-pkgrel=1
+pkgrel=2
 srcname="Python-${pkgver}"
 source="https://www.python.org/ftp/python/${pkgver}/Python-${pkgver}.tar.xz"
 
