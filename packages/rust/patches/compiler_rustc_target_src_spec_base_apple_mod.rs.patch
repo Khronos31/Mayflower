@@ -1,0 +1,20 @@
+--- a/compiler/rustc_target/src/spec/base/apple/mod.rs
++++ b/compiler/rustc_target/src/spec/base/apple/mod.rs
+@@ -309,7 +309,16 @@
+         // ```
+         let (major, minor, patch) = match os {
+             Os::MacOs => (10, 12, 0),
+-            Os::IOs => (10, 0, 0),
++            // Mayflower: 脱獄 iOS 16 を対象にするので床を上げる。10.0 のままだと
++            // rustc が -target arm64-apple-ios10.0.0 を渡し、SDK 16.2 で建てた
++            // LLVM の C++ オブジェクトが要求する ___chkstk_darwin（iOS 12 以降）が
++            // 解決できずに librustc_driver のリンクが落ちる。
++            //
++            // 環境変数 IPHONEOS_DEPLOYMENT_TARGET では代用できない。clang の Darwin
++            // ドライバが、-target の無いコンパイルでプラットフォームごと iOS を
++            // 選ぶため、bootstrap がホストで実行する libcxx-version が iOS バイナリに
++            // なって落ちる。MACOSX_DEPLOYMENT_TARGET を併記しても iOS が選ばれる。
++            Os::IOs => (16, 0, 0),
+             Os::TvOs => (10, 0, 0),
+             Os::WatchOs => (5, 0, 0),
+             Os::VisionOs => (1, 0, 0),
