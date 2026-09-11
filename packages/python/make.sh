@@ -47,7 +47,12 @@ build() {
   # -Werror=implicit-function-declaration で落ちる。該当するものは
   # ac_cv_func_*=no にして CPython の代替経路へ逃がす。
   #   getentropy … iOS の sys/random.h に宣言が無い。CPython は /dev/urandom へ落ちる
+  #
+  # SDK が iOS で塞いでいる関数のうち、使えるようにする価値のないものも落とす。
+  #   clock_settime … 時計の設定。root が要るうえ iOS では意味がない。
+  #                   system(3) と違って差し替える値打ちがないので time モジュールから外す
   ac_cv_func_getentropy=no \
+  ac_cv_func_clock_settime=no \
   "${CONFIG_SHELL}" configure \
     --build=aarch64-apple-darwin \
     --prefix="${JB}/usr" \
