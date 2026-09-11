@@ -104,6 +104,17 @@ else
   applyPatch
 fi
 
+# ios_compat=1 のパッケージには、SDK が iOS で塞いでいる system(3) の
+# 代替を差し込む。ヘッダを -include し、実装を LDFLAGS に足す。
+# 既定では入れない——`#define system ...` は大きな基盤だと名前衝突を起こしうる。
+if [ "${ios_compat:-0}" = 1 ]; then
+  echo "==> ios_compat: system(3) を ${JB}/bin/sh 経由に差し替える"
+  clang -O2 -c "${ROOTDIR}/compat/ios_compat.c" -o "${BUILDROOT}/ios_compat.o"
+  export CFLAGS="${CFLAGS} -include ${ROOTDIR}/compat/ios_compat.h"
+  export CXXFLAGS="${CXXFLAGS} -include ${ROOTDIR}/compat/ios_compat.h"
+  export LDFLAGS="${LDFLAGS} ${BUILDROOT}/ios_compat.o"
+fi
+
 cd "${BUILDROOT}"
 build
 

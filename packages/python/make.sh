@@ -30,6 +30,10 @@ pyseries=3.14
 # -target は環境変数より優先されるので、これで押さえる。
 COMMON_FLAGS="-target arm64-apple-ios16.0"
 
+# os.system を使えるようにする。SDK は system(3) を iOS で塞いでおり、
+# 塞ぎを外しても実行時に /bin/sh を探して失敗するため、共通層の差し替えを使う。
+ios_compat=1
+
 prepare() {
   cd "${srcdir}" || return 1
 }
