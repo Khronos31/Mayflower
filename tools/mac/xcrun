@@ -20,11 +20,12 @@
 #
 # ■ グローバルな SDKROOT では代用できない（実測）
 #
-# cc-rs は SDKROOT を apple_sdk_name() の返り値で検査するが、macOS 向けの
-# 分岐名が "macosx10.15" のままで、実際に渡るのは "macosx"。一致しないため
-# `_ => return Ok(sdkroot)` に落ち、**ホスト側の C まで iOS SDK で建ててしまう**。
-# rustc 側（link.rs の get_apple_sdk_root）は同じ表を持つが、こちらは
-# ".platform" を含むパスで正しく弾く。cc-rs の分岐名が腐っている。
+# **clang 自身が環境の SDKROOT を sysroot として採用する。** SDKROOT に iOS SDK を
+# 置いた状態で `clang -v -c` を叩くと、ホスト向けコンパイルの -isysroot が iOS SDK に
+# なる。cc-rs や rustc を通さない素の clang で起きるので、ビルド系では避けられない。
+#
+# （cc-rs が -isysroot を渡すのは target.os != "macos" のときだけなので、macOS
+# ネイティブのコンパイルに cc-rs は関与しない。）
 #
 # ■ IPHONEOS_DEPLOYMENT_TARGET も環境に置いてはいけない（実測）
 #

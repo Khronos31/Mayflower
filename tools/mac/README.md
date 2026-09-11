@@ -13,6 +13,10 @@ RAM 1.93GB の iPhone 8 では成立しない。M2 Mac mini（8コア・8GB）�
 Command Line Tools だけでよい。足りないのは iPhoneOS SDK だけで、それは
 端末から持ってくる。
 
+**shim は Xcode が無い機械では必須、ある機械では版を選ぶための道具。** Xcode が
+無ければ `xcrun` は iPhoneOS SDK を知らないので、cc-rs も rustc も SDK を見つけ
+られない。Xcode があれば見つかるが、返ってくるのは最新版になる。
+
 **Xcode が入っている機械でも、端末由来の SDK を使う。** Xcode の iPhoneOS SDK は
 新しすぎる（Xcode 26.6 で SDK 26.5）。rustc の iOS 既定デプロイメントターゲットは
 10.0（`base/apple/mod.rs:312`）なので 26 系でも安全ではあるが、端末の iOS と
@@ -49,9 +53,10 @@ ssh mac 'cd ~/ios-sdk && mkdir -p iPhoneOS.platform/Developer/SDKs \
 `tools/mac/xcrun` を PATH の先頭へ。理由はファイル冒頭のコメントに書いた。
 要点は2つで、どちらも実測:
 
-- **グローバルな `SDKROOT` は使えない。** cc-rs の判定表が `"macosx10.15"` の
-  ままで、実際に渡る `"macosx"` と一致しないため、ホスト側の C まで iOS SDK で
-  建ててしまう。
+- **グローバルな `SDKROOT` は使えない。** clang 自身が環境の `SDKROOT` を
+  sysroot として採用するため、ホスト向けのコンパイルまで iOS SDK で行われる
+  （`SDKROOT` を置いた状態の `clang -v -c` の `-isysroot` が iOS SDK になる）。
+  cc-rs や rustc を通さない素の clang で起きる。
 - **`IPHONEOS_DEPLOYMENT_TARGET` も環境に置けない。** clang の Darwin ドライバが
   プラットフォームごと iOS を選ぶので、bootstrap がホストで実行する
   `libcxx-version` が iOS バイナリになって落ちる。
