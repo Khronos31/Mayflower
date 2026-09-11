@@ -58,7 +58,9 @@ build() {
     --prefix="${JB}/usr" \
     --enable-shared \
     `# --with-system-expat は使わない。pyexpat.c が expat_config.h を無条件に` \
-    `# include するが、システムの expat はそれを配布しない。同梱の expat を使う` \
+    `# include するのに、システムの expat はそれを配布せず、include パスにも` \
+    `# Modules/expat が入らないため成立しない。上流にも同じ include が残って` \
+    `# いるので、こちらの見落としがある余地はある（未確認）。同梱の expat を使う` \
     --with-ensurepip=install \
     --disable-test-modules \
     --without-static-libpython
