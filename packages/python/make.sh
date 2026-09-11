@@ -38,6 +38,12 @@ build() {
   cd "${srcdir}" || return 1
 
   # 共通層が -L/-rpath/-I を入れてくれるので、ここでは CPython 固有のものだけ。
+  # iOS SDK は宣言を出さないが libSystem にシンボルはある、という関数がある。
+  # configure はリンクで見つけて HAVE_* を立てるが、コンパイルは
+  # -Werror=implicit-function-declaration で落ちる。該当するものは
+  # ac_cv_func_*=no にして CPython の代替経路へ逃がす。
+  #   getentropy … iOS の sys/random.h に宣言が無い。CPython は /dev/urandom へ落ちる
+  ac_cv_func_getentropy=no \
   "${CONFIG_SHELL}" configure \
     --build=aarch64-apple-darwin \
     --prefix="${JB}/usr" \

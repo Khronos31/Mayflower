@@ -84,17 +84,25 @@ export CXXFLAGS="${CXXFLAGS} ${COMMON_FLAGS}"
 export LDFLAGS="-L${JB}/usr/lib -Wl,-rpath,${JB}/usr/lib ${LDFLAGS} ${COMMON_FLAGS}"
 export CPPFLAGS="-I${JB}/usr/include ${CPPFLAGS} ${COMMON_FLAGS}"
 
-cd "${PROJECTROOT}"
-clean
-if [ -n "${source}" ]; then
-  download
+# MAYFLOWER_RESUME=1 で clean / download / prepare / applyPatch を飛ばし、
+# 既にあるビルドツリーで build から始める。移植中、次の壁を1つずつ潰すための
+# 近道。完成したレシピの検証には使わないこと（素の状態から通るかが分からない）。
+if [ "${MAYFLOWER_RESUME:-0}" = 1 ]; then
+  echo "==> RESUME: 既存のビルドツリーを使う（clean/download/prepare/patch を飛ばす）"
+  [ -d "${srcdir}" ] || { echo "$0: ${srcdir} が無い。最初は RESUME なしで回すこと" >&2; exit 1; }
+else
+  cd "${PROJECTROOT}"
+  clean
+  if [ -n "${source}" ]; then
+    download
+  fi
+
+  cd "${BUILDROOT}"
+  prepare
+
+  cd "${PROJECTROOT}"
+  applyPatch
 fi
-
-cd "${BUILDROOT}"
-prepare
-
-cd "${PROJECTROOT}"
-applyPatch
 
 cd "${BUILDROOT}"
 build
