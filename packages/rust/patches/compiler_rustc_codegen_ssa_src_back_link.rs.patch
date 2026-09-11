@@ -1,0 +1,63 @@
+--- a/compiler/rustc_codegen_ssa/src/back/link.rs
++++ b/compiler/rustc_codegen_ssa/src/back/link.rs
+@@ -1308,6 +1308,60 @@
+         let mut ab = archive_builder_builder.new_archive_builder(sess);
+         ab.add_file(temp_filename, ArchiveEntryKind::Other);
+         ab.build(out_filename, None);
++    }
++
++    // Jailbroken iOS kills unsigned Mach-O images on execution and refuses to
++    // `dlopen` them, so sign the output as the last step of linking. It has to
++    // be last: `dsymutil`, `strip` and the archive step above all rewrite the
++    // file, and any of them would invalidate a signature made earlier.
++    if sess.target.os == Os::IOs {
++        sign_with_ldid(sess, out_filename, crate_type);
++    }
++}
++
++/// Sign a Mach-O image with `ldid` so that it can run on a jailbroken iOS device.
++///
++/// The entitlements come from `RUST_LDID_ENTITLEMENTS` when set, and otherwise
++/// from the toolchain itself, mirroring how the rest of the toolchain finds its
++/// own files. Signing without entitlements still produces a runnable binary, so
++/// a missing file is not an error.
++fn sign_with_ldid(sess: &Session, out_filename: &Path, crate_type: CrateType) {
++    // Only images that dyld loads need a signature. `rlib` and `staticlib` are
++    // archives that are read by the linker, never mapped, so leave them alone.
++    // Dylibs and proc-macros do need one: rustc `dlopen`s proc-macros, and an
++    // unsigned dylib is rejected just like an unsigned executable.
++    if matches!(crate_type, CrateType::Rlib | CrateType::Staticlib) {
++        return;
++    }
++
++    let entitlements = match env::var_os("RUST_LDID_ENTITLEMENTS") {
++        Some(path) => PathBuf::from(path),
++        None => sess.opts.sysroot.path().join("lib").join("rustlib").join("entitlements.plist"),
++    };
++
++    let mut cmd = Command::new("ldid");
++    if entitlements.is_file() {
++        cmd.arg(format!("-S{}", entitlements.display()));
++    } else {
++        cmd.arg("-S");
++    }
++    cmd.arg(out_filename);
++
++    match cmd.output() {
++        Ok(prog) if prog.status.success() => {}
++        Ok(prog) => {
++            let mut output = prog.stderr.clone();
++            output.extend_from_slice(&prog.stdout);
++            sess.dcx().fatal(format!(
++                "`ldid` failed to sign `{}` with {}: {}",
++                out_filename.display(),
++                prog.status,
++                escape_string(&output)
++            ));
++        }
++        Err(error) => {
++            sess.dcx().fatal(format!("unable to run `ldid`: {error}"));
++        }
+     }
+ }
+ 

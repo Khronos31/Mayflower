@@ -1,0 +1,11 @@
+--- a/src/tools/cargo/crates/cargo-util/src/paths.rs
++++ b/src/tools/cargo/crates/cargo-util/src/paths.rs
+@@ -38,7 +38,7 @@
+ pub fn dylib_path_envvar() -> &'static str {
+     if cfg!(windows) {
+         "PATH"
+-    } else if cfg!(target_os = "macos") {
++    } else if cfg!(any(target_os = "macos", target_os = "ios")) {
+         // When loading and linking a dynamic library or bundle, dlopen
+         // searches in LD_LIBRARY_PATH, DYLD_LIBRARY_PATH, PWD, and
+         // DYLD_FALLBACK_LIBRARY_PATH.
