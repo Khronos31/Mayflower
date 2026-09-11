@@ -64,8 +64,23 @@ export CONFIG_SHELL="${JB}/bin/sh"
 
 export CC="${CC:-$(DEFAULT_CC)}"
 export CXX="${CXX:-$(DEFAULT_CXX)}"
-export AR="${AR:-llvm-ar}"
-export RANLIB="${RANLIB:-llvm-ranlib}"
+# アーカイバは実在するものから選ぶ。この bootstrap には `llvm-ar` という名前は
+# 無く、版付きの `llvm-ar-16` と、odcctools（Apple の cctools）の `ar` がある。
+# 2020 年の構成は `llvm-ar` 決め打ちだったので、そのままでは Modules/_decimal の
+# アーカイブ作成で `llvm-ar: not found` になる（python で踏んだ）。
+pick_tool() {
+  local c
+  for c in "$@"; do
+    if command -v "$c" >/dev/null 2>&1; then
+      echo "$c"
+      return 0
+    fi
+  done
+  echo "$1"
+}
+AR="${AR:-$(pick_tool llvm-ar llvm-ar-16 ar)}"
+RANLIB="${RANLIB:-$(pick_tool llvm-ranlib llvm-ranlib-16 ranlib)}"
+export AR RANLIB
 
 # Procursus の clang は素で SDK に合った LC_BUILD_VERSION を吐くため、
 # -isysroot や -miphoneos-version-min を既定では足さない。上書きすると
