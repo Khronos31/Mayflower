@@ -119,9 +119,16 @@ else
   applyPatch
 fi
 
-# ios_compat=1 のパッケージには、SDK が iOS で塞いでいる system(3) の
-# 代替を差し込む。ヘッダを -include し、実装を LDFLAGS に足す。
-# 既定では入れない——`#define system ...` は大きな基盤だと名前衝突を起こしうる。
+# ios_compat=1 のパッケージには、SDK が iOS で塞いでいる system(3) の代替を
+# 静的ライブラリとして繋ぐ。呼ぶ側の書き換えはパッケージの仕事（パッチで
+# `mayflower_system` を呼ぶ）。
+#
+# **-include や -D で system を一括改名してはいけない。** 改名用ヘッダが
+# <stdlib.h> を先に読むと、autoconf の古い形式の関数検出
+# （#define f innocuous_f → ヘッダ → #undef → `char f(void);`）が、本物の
+# プロトタイプを rename の前に見てしまい衝突する。実測では wait / wait3 /
+# wait4 / waitid / waitpid / realpath / getpriority / getrusage / ptsname などが
+# まとめて「無い」と判定され、os.waitpid が消えた。
 if [ "${ios_compat:-0}" = 1 ]; then
   echo "==> ios_compat: system(3) を ${JB}/bin/sh 経由に差し替える"
   # オブジェクトではなく静的ライブラリで渡す。LDFLAGS はビルド系によって
@@ -131,8 +138,6 @@ if [ "${ios_compat:-0}" = 1 ]; then
   clang -O2 -c "${ROOTDIR}/compat/ios_compat.c" -o "${BUILDROOT}/ios_compat.o"
   rm -f "${BUILDROOT}/libios_compat.a"
   "${AR}" rcs "${BUILDROOT}/libios_compat.a" "${BUILDROOT}/ios_compat.o"
-  export CFLAGS="${CFLAGS} -include ${ROOTDIR}/compat/ios_compat.h"
-  export CXXFLAGS="${CXXFLAGS} -include ${ROOTDIR}/compat/ios_compat.h"
   export LDFLAGS="${LDFLAGS} -L${BUILDROOT} -lios_compat"
 fi
 

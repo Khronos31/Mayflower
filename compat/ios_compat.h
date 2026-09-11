@@ -1,7 +1,12 @@
 /*
  * Mayflower | compat/ios_compat.h
  *
- * Force-included (-include) for packages that set ios_compat=1.
+ * Declared by packages that set ios_compat=1. **Do not force-include this with
+ * -include, and do not rename system(3) with -D.** Pulling <stdlib.h> in before
+ * the translation unit's own includes makes autoconf's old-style function
+ * checks see the real prototypes before their rename trick, and a whole set of
+ * functions (the wait family, realpath, getpriority, ptsname, ...) is then
+ * detected as missing. Call mayflower_system() from a patch instead.
  *
  * system(3) is the one process-spawning function that Apple still marks
  * __IOS_PROHIBITED in the iOS SDK:
