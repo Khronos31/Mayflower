@@ -102,6 +102,8 @@ package() {
   # 配布に要らないもの
   rm -rf "${pkgdir}${JB}/usr/lib/python${pyseries}/test"
   rm -rf "${pkgdir}${JB}/usr/lib/python${pyseries}/idlelib"
+  # idlelib を消すので、それを呼ぶ入口も消す（残すと壊れたスクリプトになる）
+  rm -f "${pkgdir}${JB}/usr/bin/idle${pyseries}" "${pkgdir}${JB}/usr/bin/idle3"
   rm -rf "${pkgdir}${JB}/usr/lib/python${pyseries}/tkinter"
   find "${pkgdir}" -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
   install -d "${pkgdir}${JB}/usr/share/licenses/python"
