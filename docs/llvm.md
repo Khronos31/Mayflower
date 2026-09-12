@@ -6,8 +6,9 @@
 
 - **端末ではソースビルドしない**（Node / Rust と同じ例外）。
 - Mac で Apple `llvm-project`（Swift 6.1.x タグの LLVM）をクロスし、tarball を梱包。
-- Procursus と同じ **lib\*** / versioned / meta 分割で、`libllvm16` などと**同居**しつつ
-  メタだけ置換できる。
+- Procursus と同じ **lib\*** / versioned / meta 分割。versioned は 16 と同居可能だが、
+  メタ（`clang-default` / `libc++-dev` 等）でデフォルトを 19 に寄せたあと、
+  Swift 5.9.2 を捨てるなら `libllvm16` 一式は外せる。
 - Swift フロントエンドは別パッケージ（`packages/swift` — 触らない）。
 
 | パッケージ | 内容 |
@@ -58,25 +59,29 @@ ninja -C "$WORKDIR/build/ios" …   # clang / lld / libLLVM など
 以前の cache（DYLIB 無し）のまま `install` しても `libLLVM.dylib` は出ない。
 README の reconfigure note を参照。
 
-## Procursus との関係（慎重に）— migration
+## Procursus との関係 — migration
 
-1. **先に versioned + lib\*** を入れる（`libllvm19`, `libclang-*19`, `llvm-19`,
-   `lld-19`, `clang-19`, …）。Procursus 16 系と**同居**できる。
-2. 必要ならメタを置換: `clang-default` / `llvm-default` / `llvm-dev` / `lld` /
-   `libc++-dev`。
-3. **`libllvm16` は `swift-5.9.2` が入っている間は外さない。**
-4. **Conflict/Replace しないもの:** `libllvm16`, `clang-16`, `llvm-16*`,
-   `libc++-16-dev`, `swift-5.9.2`。
-5. メタ（同名）だけ Conflicts/Replaces してよい: `clang`（via clang-default）,
-   `llvm`（via llvm-default）, `llvm-dev`, `lld`, `libc++-dev`。
+1. **先に versioned + lib\***（`libllvm19`, `libclang-*19`, `llvm-19`, `lld-19`,
+   `clang-19`, `libc++-19-dev`, …）。この段階では Procursus 16 と同居できる。
+2. メタを置換: `clang-default` / `llvm-default` / `llvm-dev` / `lld` /
+   `libc++-dev`。パッケージ名は `clang-default` のまま（Procursus apt Priority
+   1001 には版では勝てない）。`Conflicts` で同居は防げるが、`apt install clang`
+   での差し戻しはユーザ責任。
+3. C++ ヘッダは `libc++-dev` → `libc++-19-dev` にしたあと、Swift 5.9.2 を捨てる
+   なら **`libllvm16` / `clang-16` / `llvm-16*` / `libc++-16-dev` / `swift*` を
+   外してよい**（ABI 的に `libllvm19` では Swift 5.9.2 を賄えない）。
+4. **Swift 6.1** は別パッケージ（`packages/swift`）で後追い。それまで端末に
+   Swift は無い。
 
-`libc++-19-dev` のあと `libc++-dev` メタを Mayflower に差し替えると、
-`/var/jb/usr/include/c++` が llvm-19 のヘッダを指すので、C++ は 16 の
-ヘッダに頼らなくなる。`libllvm16` は Swift 6.1 が出るまで
-`swift-5.9.2` 用に残す。`libc++-16-dev` 自体は消さない（外す指示が無い限り）。
+### ip8 現状スナップショット（2026-09-12）
+
+- Mayflower `19.1.4-7` 一式 + メタが入っている。`clang` / `libc++` は 19。
+- Procursus `libllvm16` スタックと `swift-5.9.2` は**削除済み**。
+- `build-essential` は `apt-mark manual`（SDK 相当。autoremove で落とさない）。
+- `rustc-1.98` / `nim` / `golang-1.26-go` / `ld64` は Mayflower `clang` /
+  `llvm-dev` に依存したまま動作。
 
 `clang` メタに依存する例: `rustc-1.98`, `nim`, `golang-*`, `libtool`。
-default 導入後は `clang-19` が PATH の `clang` になる。
 
 ## 端末で梱包
 
@@ -107,6 +112,7 @@ sudo dpkg -i packages/llvm/arm64/libllvm19_*.deb \
 - Procursus `makefiles/llvm.mk` / `build_patch/llvm/`
 - 申し送り: `ha:/config/.tools/handoff/20260912-clang-procursus-patches.md`
 - Node の先例: [`docs/node.md`](node.md)
+- ip8 スナップショット: [`docs/ip8-llvm19-status.md`](ip8-llvm19-status.md)
 
 ## ldid
 
