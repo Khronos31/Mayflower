@@ -113,7 +113,7 @@ configure_target() {
     -DLLVM_HOST_TRIPLE="${TRIPLE}" \
     -DLLVM_DEFAULT_TARGET_TRIPLE="${TRIPLE}" \
     -DLLVM_TARGETS_TO_BUILD="AArch64" \
-    -DLLVM_ENABLE_PROJECTS="clang;lld;lldb" \
+    -DLLVM_ENABLE_PROJECTS="clang;lld" \
     -DLLVM_TABLEGEN="${BUILD}/native/bin/llvm-tblgen" \
     -DCLANG_TABLEGEN="${BUILD}/native/bin/clang-tblgen" \
     -DLLVM_INCLUDE_TESTS=OFF \
