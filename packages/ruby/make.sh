@@ -23,6 +23,9 @@ source="https://cache.ruby-lang.org/pub/ruby/4.0/ruby-${pkgver}.tar.xz"
 # **-target を明示しないと macOS モードで建ってしまう。** Python と同じ。
 COMMON_FLAGS="-target arm64-apple-ios16.0"
 
+# vm_dump.c の RUBY_ON_BUG が system(3) を呼ぶ。iOS SDK では unavailable。
+ios_compat=1
+
 prepare() {
   cd "${srcdir}" || return 1
 }

@@ -1,0 +1,16 @@
+--- a/vm_dump.c
++++ b/vm_dump.c
+@@ -1388,7 +1388,13 @@
+     if (cmd) {
+         char buf[0x100];
+         snprintf(buf, sizeof(buf), "%s %"PRI_PIDT_PREFIX"d", cmd, getpid());
++#ifdef __APPLE__
++        /* system(3) is __IOS_PROHIBITED. Mayflower links mayflower_system. */
++        extern int mayflower_system(const char *);
++        int r = mayflower_system(buf);
++#else
+         int r = system(buf);
++#endif
+         if (r == -1) {
+             snprintf(buf, sizeof(buf), "Launching RUBY_ON_BUG command failed.");
+         }

@@ -42,7 +42,9 @@ rootless に `/bin/sh` は無い。パッチで次を `/var/jb/bin/sh` に向け
 - `ext/pty/pty.c` の既定シェル
 - `lib/mkmf.rb` が Makefile に書く `SHELL`
 
-`system(3)` は Darwin の fork 経路では使わないので、`ios_compat` は付けない。
+`Kernel#system` は Darwin では fork+exec なので `system(3)` を使わない。
+ただし `vm_dump.c` の `RUBY_ON_BUG` は `system(3)` を直呼びするので、
+`ios_compat=1` で `mayflower_system` に差し替える。
 
 ### 文書
 
