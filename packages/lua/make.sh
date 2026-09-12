@@ -18,12 +18,15 @@
 
 pkgname=lua
 pkgver=5.5.1
-pkgrel=2
+pkgrel=3
 srcname="lua-${pkgver}"
 source="https://www.lua.org/ftp/lua-${pkgver}.tar.gz"
 subpkgs=(lib lua dev default)
 
 COMMON_FLAGS="-target arm64-apple-ios16.0"
+
+# os.execute を mayflower_system 経由にする（LUA_USE_IOS のスタブを置き換え）。
+ios_compat=1
 
 LIBLUA_O=(
   lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o
@@ -43,7 +46,7 @@ build() {
   make ios \
     CC="${CC} -std=gnu99" \
     MYCFLAGS="${COMMON_FLAGS}" \
-    MYLDFLAGS="-Wl,-rpath,${JB}/usr/lib"
+    MYLDFLAGS="-Wl,-rpath,${JB}/usr/lib -L${BUILDROOT} -lios_compat"
 
   cd src || return 1
   # 上流は liblua.a だけ。同じオブジェクトから dylib を出す。
@@ -52,11 +55,11 @@ build() {
     ${COMMON_FLAGS} \
     -install_name @rpath/liblua5.5.0.dylib \
     -compatibility_version 5.5 -current_version 5.5.1 \
-    -Wl,-rpath,${JB}/usr/lib -lm
+    -Wl,-rpath,${JB}/usr/lib -L${BUILDROOT} -lios_compat -lm
 
   # lua は dylib へ。luac は luaU_dump など内部記号を使うので liblua.a のまま。
   "${CC}" -std=gnu99 -o lua ${COMMON_FLAGS} lua.o liblua5.5.0.dylib -lm \
-    -Wl,-rpath,${JB}/usr/lib
+    -Wl,-rpath,${JB}/usr/lib -L${BUILDROOT} -lios_compat
 }
 
 check() {
