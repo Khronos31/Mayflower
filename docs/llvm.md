@@ -40,6 +40,14 @@ ninja -C "$WORKDIR/build/ios"   # clang / lld など
 ./tools/mac/llvm-swift/build.sh pack      # dist/*.tar.xz
 ```
 
+## Procursus との関係（慎重に）
+
+- **versioned**（`clang-19` / `llvm-19` / `llvm-19-linker-tools`）は Procursus 16 と**同居**できる。
+- **`clang-default` / `llvm-default`** は Procursus の `clang` / `llvm` **メタだけ**を Conflicts/Replaces する。
+- `clang-16` / `libllvm16` / `llvm-16*` / `swift-5.9.2` は消さない（多数が `libllvm16` に依存）。
+- `clang` メタに依存する例: `rustc-1.98`, `nim`, `golang-*`, `libtool`。default 導入後は `clang-19` が PATH の `clang` になる。
+- `llvm-dev` は未提供。`odcctools` / `ld64` の `llvm-dev` 依存は Procursus のまま。
+
 ## 端末で梱包
 
 ```sh
