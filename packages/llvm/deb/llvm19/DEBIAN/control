@@ -1,14 +1,15 @@
 Package: llvm-19
-Name: LLVM 19
+Name: LLVM 19 tools
 Version: @VERSION@
 Architecture: @ARCH@
 Section: Development
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
-Depends: ldid
+Depends: libllvm19 (= @VERSION@), llvm-19-linker-tools (= @VERSION@), ldid
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://llvm.org/
 Tag: role::developer
-Description: llvm-ar / llvm-nm / llvm-ranlib / llvm-config (19)
- Versioned tools under /var/jb/usr/lib/llvm-19 and *-19 on PATH.
- Slim build for now (no shared libLLVM; no -dev package yet).
+Description: LLVM 19 binutils-style tools
+ llvm-ar / nm / ranlib / config / dsymutil / opt / llc / objdump / objcopy /
+ strip / symbolizer / cxxfilt / size / strings / install-name-tool / lipo under
+ /var/jb/usr/lib/llvm-19 with *-19 on PATH.

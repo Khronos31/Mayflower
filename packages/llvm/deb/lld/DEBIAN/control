@@ -1,0 +1,15 @@
+Package: lld
+Name: LLD (default version)
+Version: @VERSION@
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: lld-19 (= @VERSION@)
+Provides: lld (= @VERSION@)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://lld.llvm.org/
+Tag: role::developer
+Description: LLD 19 as the default lld on PATH
+ Unversioned lld / ld64.lld / ld.lld (and friends) pointing at llvm-19.
+ Replaces the Procursus lld meta package of the same name.

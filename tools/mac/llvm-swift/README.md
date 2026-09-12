@@ -14,13 +14,49 @@ iPhone 上では建てない。ここでクロスして tarball を作り、端�
 ```sh
 export WORKDIR="$HOME/dev/toolchain-swift-6.1"
 ./tools/mac/llvm-swift/build.sh all
-ninja -C "$WORKDIR/build/ios"
+# Prefer building the artifacts we package (discover exact names after configure):
+#   ninja -C "$WORKDIR/build/ios" -t targets | rg -i 'install.*(LLVM|clang|LTO|lld)'
+ninja -C "$WORKDIR/build/ios" clang lld libLLVM LLVM clang-cpp libclang LTO \
+  llvm-ar llvm-nm llvm-ranlib llvm-config dsymutil opt llc
 ./tools/mac/llvm-swift/build.sh install
 ./tools/mac/llvm-swift/build.sh pack
 # => $WORKDIR/dist/llvm-19.1.4-swift-6.1.1-aarch64-apple-ios.tar.xz
 ```
 
-`install` は当面 slim（clang / resource headers / lld / llvm-ar·nm·ranlib·config）。
+### Reconfigure note (DYLIB)
+
+`configure` now passes:
+
+- `-DLLVM_BUILD_LLVM_DYLIB=ON`
+- `-DLLVM_LINK_LLVM_DYLIB=ON`
+- `-DCLANG_LINK_CLANG_DYLIB=ON`
+- `-DCMAKE_INSTALL_NAME_DIR=/var/jb/usr/lib/llvm-19/lib`
+- `-DCMAKE_INSTALL_RPATH=/var/jb/usr/lib/llvm-19/lib`
+
+If `build/ios` was configured **without** these flags, `install` alone will not
+produce `libLLVM.dylib`. Wipe and re-run configure:
+
+```sh
+rm -rf "$WORKDIR/build/ios"
+./tools/mac/llvm-swift/build.sh configure
+```
+
+`install` refuses to proceed if `CMakeCache.txt` lacks `LLVM_BUILD_LLVM_DYLIB=ON`,
+and fails if `libLLVM.dylib` is still missing after selective `install-*`.
+
+### What `install` ships
+
+Explicit `ninja install-*` (not full `install`):
+
+- clang + resource headers (+ clang headers if target exists)
+- lld
+- llvm tools: ar nm ranlib config dsymutil opt llc objdump objcopy strip
+  symbolizer cxxfilt size strings install-name-tool lipo
+- shared: `libLLVM.dylib`, `libclang-cpp*`, `libclang`, `libLTO` (via
+  `install-LLVM` / `install-clang-cpp` / `install-libclang` / `install-LTO` or
+  discovered aliases)
+- headers for llvm / llvm-c when install targets exist
+
 Swift ランタイム同梱は後続。`patches-host/*.patch` は `configure` / `all` 時に当たる。
 
 端末（または Mac から `LLVM_DIST_DIR` を渡して）:

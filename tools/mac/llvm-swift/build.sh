@@ -120,28 +120,113 @@ configure_target() {
     -DLLVM_INCLUDE_EXAMPLES=OFF \
     -DCLANG_INCLUDE_TESTS=OFF \
     -DLLDB_USE_SYSTEM_DEBUGSERVER=OFF \
-    -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
+    -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
+    -DLLVM_BUILD_LLVM_DYLIB=ON \
+    -DLLVM_LINK_LLVM_DYLIB=ON \
+    -DCLANG_LINK_CLANG_DYLIB=ON \
+    -DCMAKE_INSTALL_NAME_DIR=/var/jb/usr/lib/llvm-19/lib \
+    -DCMAKE_INSTALL_RPATH=/var/jb/usr/lib/llvm-19/lib
   echo "==> configured target at ${t}"
-  echo "    next: ninja -C ${t} && DESTDIR=${BUILD}/stage ninja -C ${t} install"
+  echo "    NOTE: DYLIB flags require a clean configure. If CMakeCache predates them:"
+  echo "      rm -rf ${t}   # or at least CMakeCache.txt — then re-run configure"
+  echo "    next: ninja -C ${t} … && ./tools/mac/llvm-swift/build.sh install"
+}
+
+# Run matching install-* ninja targets that exist; skip missing optional ones.
+# Required targets fail hard so we never ship an incomplete Procursus replacement.
+ninja_install_one() {
+  local t="$1" target="$2" required="${3:-0}"
+  if ninja -C "${t}" -t targets 2>/dev/null | awk '{print $1}' | grep -qx "${target}"; then
+    echo "==> ninja ${target}"
+    DESTDIR="${BUILD}/stage" ninja -C "${t}" "${target}"
+    return 0
+  fi
+  if [ "${required}" = "1" ]; then
+    echo "do_install: required ninja target missing: ${target}" >&2
+    echo "  discover with: ninja -C ${t} -t targets | rg -i 'install.*(LLVM|clang|LTO|lld)'" >&2
+    return 1
+  fi
+  echo "==> skip missing optional target: ${target}"
+  return 0
 }
 
 do_install() {
   local t="${BUILD}/ios"
   local stage="${BUILD}/stage"
   [ -d "${t}" ] || { echo "do_install: ${t} が無い" >&2; exit 1; }
+  if [ -f "${t}/CMakeCache.txt" ] && ! grep -q 'LLVM_BUILD_LLVM_DYLIB:BOOL=ON' "${t}/CMakeCache.txt" 2>/dev/null; then
+    echo "do_install: ${t} was configured without LLVM_BUILD_LLVM_DYLIB=ON" >&2
+    echo "  wipe and reconfigure: rm -rf ${t} && $0 configure" >&2
+    exit 1
+  fi
   rm -rf "${stage}"
   mkdir -p "${stage}"
-  # Full `ninja install` pulls ORC/JIT/lldb and rebuilds for hours.
-  # Ship the clang-19 smoke set first; widen later when Swift lands.
-  echo "==> DESTDIR=${stage} ninja install-clang (+ resource headers, lld, llvm-ar/nm/ranlib/config)"
-  DESTDIR="${stage}" ninja -C "${t}"     install-clang install-clang-resource-headers install-lld     install-llvm-ar install-llvm-nm install-llvm-ranlib install-llvm-config
-  # Mayflower entitlements beside prefix (clang driver looks here)
+  # Full `ninja install` pulls ORC/JIT/lldb for hours — explicit install-* only.
+  echo "==> DESTDIR=${stage} selective ninja install-* (clang/lld/tools/dylibs/headers)"
+
+  # Frontend + resources
+  ninja_install_one "${t}" install-clang 1
+  ninja_install_one "${t}" install-clang-resource-headers 1
+  ninja_install_one "${t}" install-clang-headers 0
+
+  # Linker
+  ninja_install_one "${t}" install-lld 1
+
+  # LLVM tools (names as produced by LLVM CMake)
+  local tool
+  for tool in \
+    llvm-ar llvm-nm llvm-ranlib llvm-config dsymutil opt llc \
+    llvm-objdump llvm-objcopy llvm-strip llvm-symbolizer llvm-cxxfilt \
+    llvm-size llvm-strings llvm-install-name-tool llvm-lipo
+  do
+    ninja_install_one "${t}" "install-${tool}" 0
+  done
+  # Some trees expose unprefixed install targets for a few tools
+  for tool in dsymutil opt llc; do
+    ninja_install_one "${t}" "install-${tool}" 0
+  done
+
+  # Shared libs — discover spelling, prefer install-LLVM / install-clang-cpp / install-libclang / install-LTO
+  if ninja -C "${t}" -t targets 2>/dev/null | awk '{print $1}' | grep -qx install-LLVM; then
+    ninja_install_one "${t}" install-LLVM 1
+  elif ninja -C "${t}" -t targets 2>/dev/null | awk '{print $1}' | grep -qx install-libLLVM; then
+    ninja_install_one "${t}" install-libLLVM 1
+  else
+    echo "do_install: neither install-LLVM nor install-libLLVM exists — reconfigure with DYLIB?" >&2
+    ninja -C "${t}" -t targets 2>/dev/null | rg -i 'install.*(LLVM|clang|LTO)' >&2 || true
+    exit 1
+  fi
+  ninja_install_one "${t}" install-clang-cpp 0
+  ninja_install_one "${t}" install-libclang-cpp 0
+  ninja_install_one "${t}" install-libclang 0
+  ninja_install_one "${t}" install-LTO 0
+  ninja_install_one "${t}" install-libLTO 0
+
+  # Headers
+  ninja_install_one "${t}" install-llvm-headers 0
+  ninja_install_one "${t}" install-llvm-c-headers 0
+
+  # Require libLLVM in stage (Procursus replacement needs it)
+  local libdir="${stage}${PREFIX_IN_TAR}/lib"
+  if [ ! -e "${libdir}/libLLVM.dylib" ] && [ ! -e "${libdir}/libLLVM.19.dylib" ]; then
+    echo "do_install: libLLVM.dylib missing under ${libdir}" >&2
+    echo "  Available install targets (filter):" >&2
+    ninja -C "${t}" -t targets 2>/dev/null | rg -i 'install.*(LLVM|clang|LTO|lld)' >&2 || true
+    echo "  If CMake lacked DYLIB flags, wipe build/ios and re-run configure." >&2
+    exit 1
+  fi
+  # Convenience symlink libLLVM-19.dylib if only libLLVM.dylib landed
+  if [ -e "${libdir}/libLLVM.dylib" ] && [ ! -e "${libdir}/libLLVM-19.dylib" ]; then
+    ln -sf libLLVM.dylib "${libdir}/libLLVM-19.dylib"
+  fi
+
   local ent="${ROOT}/packages/llvm/files/entitlements.plist"
   if [ -f "${ent}" ]; then
     install -m644 "${ent}" "${stage}${PREFIX_IN_TAR}/entitlements.plist"
   fi
   echo "==> installed to ${stage}${PREFIX_IN_TAR}"
   du -sh "${stage}${PREFIX_IN_TAR}"
+  ls -la "${libdir}"/libLLVM*.dylib "${libdir}"/libclang*.dylib "${libdir}"/libLTO.dylib 2>/dev/null || true
 }
 
 pack_dist() {

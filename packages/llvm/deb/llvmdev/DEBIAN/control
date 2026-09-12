@@ -1,0 +1,18 @@
+Package: llvm-dev
+Name: LLVM development files (default)
+Version: @VERSION@
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: llvm-19-dev (= @VERSION@), llvm-19-linker-tools (= @VERSION@)
+Provides: liblto
+Conflicts: libto
+Replaces: liblto
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://llvm.org/
+Tag: role::developer
+Description: Default LLVM headers/libs (Procursus llvm-dev replacement)
+ Symlinks usr/include/llvm{,-c} and usr/lib/libLTO.dylib to the llvm-19 tree.
+ Conflicts/Replaces Procursus llvm-dev of the same name; does not touch
+ libllvm16 / llvm-16*.

@@ -6,18 +6,25 @@
 
 - **端末ではソースビルドしない**（Node / Rust と同じ例外）。
 - Mac で Apple `llvm-project`（Swift 6.1.x タグの LLVM）をクロスし、tarball を梱包。
-- 版付きパッケージに加え、`clang-default` / `llvm-default` で Procursus の `clang` / `llvm` メタを置換できる。
-- Swift フロントエンドは別パッケージ。
+- Procursus と同じ **lib\*** / versioned / meta 分割で、`libllvm16` などと**同居**しつつ
+  メタだけ置換できる。
+- Swift フロントエンドは別パッケージ（`packages/swift` — 触らない）。
 
 | パッケージ | 内容 |
 |---|---|
-| `clang-19` | コンパイラ + resource headers + `clang-19` ラッパー |
-| `llvm-19-linker-tools` | `lld` / `ld64.lld`（ldid 署名込み） |
-| `llvm-19` | `llvm-ar` / `llvm-nm` / `llvm-ranlib` / `llvm-config` |
+| `libllvm19` | `libLLVM.dylib` + `libLLVM-19.dylib` |
+| `libclang-cpp19` | `libclang-cpp*.dylib` |
+| `libclang1-19` | `libclang.dylib` + `libclang-19.dylib` |
+| `libclang-common-19-dev` | `lib/clang/19` resource headers（+ Polly if any） |
+| `llvm-19-linker-tools` | `libLTO.dylib`（+ LLVMPolly）；**lld バイナリは含まない** |
+| `lld-19` | `lld` / `ld64.lld` / `ld.lld` under llvm-19/bin + versioned PATH |
+| `lld` | メタ: 非版付き PATH → lld-19（Procursus `lld` メタ置換） |
+| `llvm-19` | 拡張ツール群；Depends `libllvm19`, `llvm-19-linker-tools` |
+| `llvm-19-dev` | `include/llvm`, `include/llvm-c`, static libs if any |
+| `llvm-dev` | メタ: Depends `llvm-19-dev` + `llvm-19-linker-tools`；Provides `liblto`；`usr/include/llvm{,-c}` と `usr/lib/libLTO.dylib` の symlink |
+| `clang-19` | frontend + wrappers；Depends lib\* + `libclang-common-19-dev` + `lld-19` + `ld64` + `ldid` |
 | `clang-default` | PATH の `clang` 等。`Provides: clang` で Procursus `clang` を置換 |
-| `llvm-default` | PATH の `llvm-ar` / `lld` 等。`Provides: llvm` で Procursus `llvm` を置換 |
-
-Swift は別パッケージ（このツリーには含めない）。
+| `llvm-default` | PATH の `llvm-ar` 等。`Provides: llvm` で Procursus `llvm` を置換 |
 
 ## 版ピン
 
@@ -25,7 +32,7 @@ Swift は別パッケージ（このツリーには含めない）。
 |---|---|
 | Swift | 6.1.1-RELEASE |
 | LLVM | 19.1.4（`swift-6.1.1-RELEASE` の CMake） |
-| Mayflower `pkgver` | 19.1.4 |
+| Mayflower `pkgver` / `pkgrel` | 19.1.4-6 |
 
 ## Mac ビルド
 
@@ -33,31 +40,50 @@ Swift は別パッケージ（このツリーには含めない）。
 
 ```sh
 export WORKDIR="$HOME/dev/toolchain-swift-6.1"
-./tools/mac/llvm-swift/build.sh all
-# patches-host 適用済みソースで:
-ninja -C "$WORKDIR/build/ios"   # clang / lld など
-./tools/mac/llvm-swift/build.sh install   # DESTDIR=stage（slim）
+# DYLIB フラグ導入後は必ずクリーン configure
+rm -rf "$WORKDIR/build/ios"
+./tools/mac/llvm-swift/build.sh configure
+ninja -C "$WORKDIR/build/ios" …   # clang / lld / libLLVM など
+./tools/mac/llvm-swift/build.sh install   # DESTDIR=stage（selective install-*）
 ./tools/mac/llvm-swift/build.sh pack      # dist/*.tar.xz
 ```
 
-## Procursus との関係（慎重に）
+以前の cache（DYLIB 無し）のまま `install` しても `libLLVM.dylib` は出ない。
+README の reconfigure note を参照。
 
-- **versioned**（`clang-19` / `llvm-19` / `llvm-19-linker-tools`）は Procursus 16 と**同居**できる。
-- **`clang-default` / `llvm-default`** は Procursus の `clang` / `llvm` **メタだけ**を Conflicts/Replaces する。
-- `clang-16` / `libllvm16` / `llvm-16*` / `swift-5.9.2` は消さない（多数が `libllvm16` に依存）。
-- `clang` メタに依存する例: `rustc-1.98`, `nim`, `golang-*`, `libtool`。default 導入後は `clang-19` が PATH の `clang` になる。
-- `llvm-dev` は未提供。`odcctools` / `ld64` の `llvm-dev` 依存は Procursus のまま。
+## Procursus との関係（慎重に）— migration
+
+1. **先に versioned + lib\*** を入れる（`libllvm19`, `libclang-*19`, `llvm-19`,
+   `lld-19`, `clang-19`, …）。Procursus 16 系と**同居**できる。
+2. 必要ならメタを置換: `clang-default` / `llvm-default` / `llvm-dev` / `lld`。
+3. **`libllvm16` は `swift-5.9.2` が入っている間は外さない。**
+4. **Conflict/Replace しないもの:** `libllvm16`, `clang-16`, `llvm-16*`, `swift-5.9.2`。
+5. メタ（同名）だけ Conflicts/Replaces してよい: `clang`（via clang-default）,
+   `llvm`（via llvm-default）, `llvm-dev`, `lld`。
+
+`clang` メタに依存する例: `rustc-1.98`, `nim`, `golang-*`, `libtool`。
+default 導入後は `clang-19` が PATH の `clang` になる。
 
 ## 端末で梱包
 
 ```sh
 export LLVM_DIST_DIR="$HOME/dev/toolchain-swift-6.1/dist"
 ./make.sh llvm
-sudo dpkg -i packages/llvm/arm64/llvm-19-linker-tools_*.deb \
+# 例: lib* / versioned を先に、metas は任意
+sudo dpkg -i packages/llvm/arm64/libllvm19_*.deb \
+             packages/llvm/arm64/libclang-cpp19_*.deb \
+             packages/llvm/arm64/libclang1-19_*.deb \
+             packages/llvm/arm64/libclang-common-19-dev_*.deb \
+             packages/llvm/arm64/llvm-19-linker-tools_*.deb \
+             packages/llvm/arm64/lld-19_*.deb \
              packages/llvm/arm64/llvm-19_*.deb \
-             packages/llvm/arm64/clang-19_*.deb \
-             packages/llvm/arm64/clang-default_*.deb \
-             packages/llvm/arm64/llvm-default_*.deb
+             packages/llvm/arm64/clang-19_*.deb
+# optional metas (replace Procursus metas):
+# sudo dpkg -i packages/llvm/arm64/lld_*.deb \
+#              packages/llvm/arm64/clang-default_*.deb \
+#              packages/llvm/arm64/llvm-default_*.deb \
+#              packages/llvm/arm64/llvm-dev_*.deb \
+#              packages/llvm/arm64/llvm-19-dev_*.deb
 ```
 
 ## 参考
@@ -93,8 +119,8 @@ sudo dpkg -i packages/llvm/arm64/llvm-19-linker-tools_*.deb \
 
 ## 同梱ツール
 
-コンパイラは `clang-19`、リンカは `llvm-19-linker-tools`、`llvm-ar` 等は `llvm-19`。
-アーカイブ出力に ldid は不要。ツール本体の署名は梱包時。
+コンパイラは `clang-19`、リンカは `lld-19`、LTO プラグインは `llvm-19-linker-tools`、
+`llvm-ar` 等は `llvm-19`。アーカイブ出力に ldid は不要。ツール本体の署名は梱包時。
 
 ## 実機検証
 
@@ -106,4 +132,3 @@ export PATH="/var/jb/usr/lib/llvm-19/bin:$PATH"
 # 作業ファイルは $HOME/tmp（/tmp だと SIGKILL されることがある）
 bash packages/llvm/tests/ldid-matrix.sh
 ```
-

@@ -5,11 +5,11 @@ Architecture: @ARCH@
 Section: Development
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
-Depends: ld64, ldid, llvm-19-linker-tools (= @VERSION@)
+Depends: libllvm19 (= @VERSION@), libclang-cpp19 (= @VERSION@), libclang-common-19-dev (= @VERSION@), lld-19 (= @VERSION@), ld64, ldid
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://clang.llvm.org/
 Tag: role::developer
 Description: Clang 19 frontend (versioned)
  Installs under /var/jb/usr/lib/llvm-19 with clang-19 on PATH via a thin
- wrapper (Procursus-style). Resource headers included. Does not take over
+ wrapper. Resource headers are in libclang-common-19-dev. Does not take over
  the unversioned clang name; install clang-default for that.
