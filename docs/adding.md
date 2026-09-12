@@ -10,7 +10,7 @@ apt リポジトリ（`gh-pages`）への掲載はこの手順の外。
 
 `<package>-<version>`。`main` から切る。
 
-- `package` は `packages/` のディレクトリ名（`nim` / `go` / `python` / `rust` / `ruby` / `lua`）
+- `package` は `packages/` のディレクトリ名（`nim` / `go` / `python` / `rust` / `ruby` / `lua` / `luarocks`）
 - `version` は `pkgver`（`pkgrel` は付けない）
 
 ```sh
@@ -28,7 +28,7 @@ git switch -c node-22.9.0 main
 | 新規 | `Add <Package> <version>` |
 | 版上げ | `Update <Package> <version>` |
 
-`<Package>` は人が読む名前（`Nim` / `Go` / `Python` / `Rust` / `Ruby` / `Lua`）。
+`<Package>` は人が読む名前（`Nim` / `Go` / `Python` / `Rust` / `Ruby` / `Lua` / `LuaRocks`）。
 `<version>` は枝と同じ `pkgver`。
 
 ```
