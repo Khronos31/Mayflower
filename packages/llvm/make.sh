@@ -10,12 +10,13 @@
 # 出来上がるのは2つ（当面 default メタは作らない = Procursus clang-16 /
 # swift 5.9.2 を置換しない）:
 #   clang-19   /var/jb/usr/lib/llvm-19 と clang-19 / clang++-19 など
+#              （ドライバがリンク後に ldid。patches-host/）
 #   swift-6.1  swiftc-6.1 と Swift ランタイム（llvm-19 ツリー内）
 
 pkgname=llvm
 # Apple llvm-project @ swift-6.1.1-RELEASE → LLVM 19.1.4
 pkgver=19.1.4
-pkgrel=1
+pkgrel=2
 # Debian 風に Swift を版に載せる（表示・依存用）。実体の tarball 名は dist。
 swiftver=6.1.1
 srcname=dist
@@ -79,7 +80,11 @@ package_clang() {
   # swift パッケージが同じ pref を Depends する前提で clang が本体を持つ。
   cp -a "${tree}/." "${pkgdir}${pref}/"
 
-  # 版付きラッパー（実体は llvm-19/bin）
+  # entitlements（ドライバが $PREFIX/entitlements.plist を探す）
+  install -m644 "${PROJECTROOT}/files/entitlements.plist" \
+    "${pkgdir}${pref}/entitlements.plist"
+
+  # 版付き symlink（実体は llvm-19/bin。ldid はドライバ内）
   local t
   for t in clang clang++ clang-cpp; do
     if [ -e "${pkgdir}${pref}/bin/${t}" ]; then

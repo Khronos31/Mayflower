@@ -46,3 +46,10 @@ sudo dpkg -i packages/llvm/arm64/clang-19_*.deb \
 - Procursus `makefiles/llvm.mk` / `build_patch/llvm/`
 - 申し送り: `ha:/config/.tools/handoff/20260912-clang-procursus-patches.md`
 - Node の先例: [`docs/node.md`](node.md)
+
+## ldid
+
+ラッパではない。`patches-host/clang_driver_darwin_ldid.patch` で
+`darwin::Linker::ConstructJob` の末尾に `ldid` を足している（dsymutil 別ジョブとは別経路）。
+entitlements は `CLANG_LDID_ENTITLEMENTS`、無ければ
+`/var/jb/usr/lib/llvm-19/entitlements.plist`、それも無ければ `ldid -S`。

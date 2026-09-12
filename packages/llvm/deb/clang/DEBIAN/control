@@ -5,11 +5,13 @@ Architecture: @ARCH@
 Section: Development
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
-Depends: ld64
+Depends: ld64, ldid
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://www.swift.org/
 Tag: role::developer
 Description: Clang/LLVM 19 for rootless iOS (Swift 6.1 companion)
  Versioned install under /var/jb/usr/lib/llvm-19 with clang-19 on PATH.
+ The Darwin linker job runs ldid after link (driver patch) so
+ ./a.out runs on jailbroken iOS without a manual sign step.
  Built on Mac from Apple llvm-project @ Swift 6.1.x; packaged here.
  Does not replace Procursus clang-16. Install swift-6.1 for Swift.

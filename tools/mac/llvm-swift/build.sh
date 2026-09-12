@@ -33,17 +33,41 @@ mkdir -p "${SRC}" "${BUILD}" "${DIST}"
 fetch() {
   local tag="swift-${SWIFT_VER}-RELEASE"
   cd "${SRC}"
+  mkdir -p "${SRC}"
   if [ ! -d llvm-project ]; then
-    echo "==> clone apple/llvm-project @ ${tag}"
-    git clone --depth 1 --branch "${tag}" \
-      https://github.com/apple/llvm-project.git llvm-project
+    local lt="llvm-project-${tag}.tar.gz"
+    echo "==> download apple/llvm-project @ ${tag}"
+    curl -fL --retry 3 -o "${lt}" \
+      "https://github.com/apple/llvm-project/archive/refs/tags/${tag}.tar.gz"
+    tar xzf "${lt}"
+    mv "llvm-project-${tag}" llvm-project
   fi
   if [ ! -d swift ]; then
-    echo "==> clone swiftlang/swift @ ${tag}"
-    git clone --depth 1 --branch "${tag}" \
-      https://github.com/swiftlang/swift.git swift
+    local st="swift-${tag}.tar.gz"
+    echo "==> download swiftlang/swift @ ${tag}"
+    curl -fL --retry 3 -o "${st}" \
+      "https://github.com/swiftlang/swift/archive/refs/tags/${tag}.tar.gz"
+    tar xzf "${st}"
+    mv "swift-${tag}" swift
   fi
   # cmark / swift-syntax は Swift ビルドが要求したら足す
+}
+
+apply_patches() {
+  local patchdir="${ROOT}/packages/llvm/patches-host"
+  [ -d "${patchdir}" ] || return 0
+  cd "${SRC}/llvm-project"
+  local p
+  for p in "${patchdir}"/*.patch; do
+    [ -f "${p}" ] || continue
+    # already applied?
+    if patch -p1 --dry-run -N < "${p}" >/dev/null 2>&1; then
+      echo "==> apply $(basename "${p}")"
+      patch -p1 -N < "${p}"
+    else
+      echo "==> skip (already applied?) $(basename "${p}")"
+    fi
+  done
 }
 
 build_native() {
@@ -137,9 +161,9 @@ cmd="${1:-all}"
 case "${cmd}" in
   fetch) fetch ;;
   native) fetch; build_native ;;
-  configure) fetch; build_native; configure_target ;;
+  configure) fetch; apply_patches; build_native; configure_target ;;
   pack) pack_dist ;;
-  all) fetch; build_native; configure_target; echo "==> configure まで完了。ビルドは手動で ninja" ;;
+  all) fetch; apply_patches; build_native; configure_target; echo "==> configure まで完了。ビルドは手動で ninja" ;;
   -h|--help|help) usage ;;
   *) usage; exit 1 ;;
 esac
