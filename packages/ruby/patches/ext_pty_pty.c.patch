@@ -1,0 +1,11 @@
+--- a/ext/pty/pty.c
++++ b/ext/pty/pty.c
+@@ -207,7 +207,7 @@
+     char		errbuf[32];
+ 
+     if (argc == 0) {
+-        const char *shellname = "/bin/sh";
++        const char *shellname = "/var/jb/bin/sh";
+ 
+         if ((p = getenv("SHELL")) != NULL) {
+             shellname = p;

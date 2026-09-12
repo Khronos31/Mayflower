@@ -1,0 +1,44 @@
+--- a/process.c
++++ b/process.c
+@@ -1617,9 +1617,9 @@
+     *argv = (char *)prog;
+     *--argv = (char *)"sh";
+     if (envp)
+-        execve("/bin/sh", argv, envp); /* async-signal-safe */
++        execve("/var/jb/bin/sh", argv, envp); /* async-signal-safe */
+     else
+-        execv("/bin/sh", argv); /* async-signal-safe (since SUSv4) */
++        execv("/var/jb/bin/sh", argv); /* async-signal-safe (since SUSv4) */
+ }
+ 
+ #else
+@@ -1687,9 +1687,9 @@
+     }
+ #else
+     if (envp_str)
+-        execle("/bin/sh", "sh", "-c", str, (char *)NULL, RB_IMEMO_TMPBUF_PTR(envp_str)); /* async-signal-safe */
++        execle("/var/jb/bin/sh", "sh", "-c", str, (char *)NULL, RB_IMEMO_TMPBUF_PTR(envp_str)); /* async-signal-safe */
+     else
+-        execl("/bin/sh", "sh", "-c", str, (char *)NULL); /* async-signal-safe (since SUSv4) */
++        execl("/var/jb/bin/sh", "sh", "-c", str, (char *)NULL); /* async-signal-safe (since SUSv4) */
+ #endif	/* _WIN32 */
+     return errno;
+ }
+@@ -1791,7 +1791,7 @@
+     if (status == -1 && errno == ENOEXEC) {
+         *argv = (char *)prog;
+         *--argv = (char *)"sh";
+-        status = spawnv(P_NOWAIT, "/bin/sh", (const char **)argv);
++        status = spawnv(P_NOWAIT, "/var/jb/bin/sh", (const char **)argv);
+         after_exec();
+         if (status == -1) errno = ENOEXEC;
+     }
+@@ -1829,7 +1829,7 @@
+ 
+     char *shell = dln_find_exe_r("sh", 0, fbuf, sizeof(fbuf));
+     before_exec();
+-    status = spawnl(P_NOWAIT, (shell ? shell : "/bin/sh"), "sh", "-c", str, (char*)NULL);
++    status = spawnl(P_NOWAIT, (shell ? shell : "/var/jb/bin/sh"), "sh", "-c", str, (char*)NULL);
+     after_exec();
+     return status;
+ }
