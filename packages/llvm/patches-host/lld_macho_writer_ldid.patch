@@ -1,0 +1,59 @@
+--- a/lld/MachO/Writer.cpp	2026-09-13 02:56:01
++++ b/lld/MachO/Writer.cpp	2026-09-13 02:56:01
+@@ -23,16 +23,20 @@
+ 
+ #include "lld/Common/Arrays.h"
+ #include "lld/Common/CommonLinkerContext.h"
++#include "lld/Common/ErrorHandler.h"
+ #include "llvm/BinaryFormat/MachO.h"
+ #include "llvm/Config/llvm-config.h"
+ #include "llvm/Support/LEB128.h"
+ #include "llvm/Support/Parallel.h"
+ #include "llvm/Support/Path.h"
++#include "llvm/Support/Program.h"
++#include "llvm/Support/FileSystem.h"
+ #include "llvm/Support/TimeProfiler.h"
+ #include "llvm/Support/thread.h"
+ #include "llvm/Support/xxhash.h"
+ 
+ #include <algorithm>
++#include <cstdlib>
+ 
+ using namespace llvm;
+ using namespace llvm::MachO;
+@@ -1337,6 +1341,35 @@
+ 
+   finalizeLinkEditSegment();
+   writeOutputFile();
++
++  // Mayflower / jailbroken iOS: after the Mach-O is on disk, sign with ldid so
++  // direct `ld64.lld` and `clang`→lld links produce runnable images.
++  // CLANG_NO_LDID or LLD_NO_LDID: skip (Go/Rust/Nim sign themselves last).
++  // CLANG_LDID_ENTITLEMENTS: entitlements plist; else plain `ldid -S`.
++  if (!errorCount() &&
++      (config->outputType == MH_EXECUTE || config->outputType == MH_DYLIB ||
++       config->outputType == MH_BUNDLE) &&
++      !::getenv("CLANG_NO_LDID") && !::getenv("LLD_NO_LDID")) {
++    std::string LdidPath;
++    if (auto P = sys::findProgramByName("ldid"))
++      LdidPath = std::string(*P);
++    else
++      warn("ldid not found on PATH; leaving " + config->outputFile +
++           " unsigned");
++    if (!LdidPath.empty()) {
++      std::string EntArg = "-S";
++      if (const char *EnvEnt = ::getenv("CLANG_LDID_ENTITLEMENTS")) {
++        EntArg = std::string("-S") + EnvEnt;
++      }
++      SmallVector<StringRef, 3> Args{LdidPath, EntArg, config->outputFile};
++      std::string Err;
++      int RC = sys::ExecuteAndWait(LdidPath, Args, std::nullopt, {}, 0, 0, &Err);
++      if (RC != 0)
++        error("ldid failed for " + config->outputFile +
++              (Err.empty() ? Twine() : Twine(": ") + Err));
++    }
++  }
++
+   mapFileWriter.join();
+ }
+ 

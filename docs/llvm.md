@@ -49,12 +49,19 @@ sudo dpkg -i packages/llvm/arm64/clang-19_*.deb \
 
 ## ldid
 
-ラッパではない。`patches-host/clang_driver_darwin_ldid.patch` で
-`darwin::Linker::ConstructJob` の末尾に `ldid` を足している（dsymutil 別ジョブとは別経路）。
+署名は **リンカ（lld）が主**。clang は後処理があるときだけ補う。
+
+| パッチ | 場所 | いつ動く |
+| --- | --- | --- |
+| `lld_macho_writer_ldid.patch` | `lld/MachO/Writer.cpp` `writeOutputFile` 直後 | `MH_EXECUTE` / `MH_DYLIB` / `MH_BUNDLE` を書いたあと |
+| `clang_driver_darwin_ldid.patch` | `darwin::Linker` | **lld 以外**のリンカ（例: Apple `ld64`）のときだけ |
+| 同上 | `darwin::Dsymutil` | `-g` で dsymutil がイメージを触ったあと、リンク成果物を再署名 |
+
+`clang` が `lld` を spawn して終わる通常パスは lld 側だけで足りる。dsymutil がバイナリを書き換える経路だけ clang 側も持つ。
 
 | 環境変数 | 意味 |
-|---|---|
-| （未設定） | リンク後に自動で `ldid` |
-| `CLANG_NO_LDID`（何か入っていれば） | 署名しない。Go/Rust/Nim など自前リンカが最後に署名するとき用 |
-| `CLANG_LDID_ENTITLEMENTS` | entitlements plist のパス。未設定なら `/var/jb/usr/lib/llvm-19/entitlements.plist`、それも無ければ `ldid -S` |
+| --- | --- |
+| （未設定） | 上記どおり自動で `ldid` |
+| `CLANG_NO_LDID` または `LLD_NO_LDID` | 署名しない。Go/Rust/Nim など自前で最後に署名するとき用（どちらでも両方スキップ） |
+| `CLANG_LDID_ENTITLEMENTS` | entitlements plist のパス。未設定ならプレーン `ldid -S`（clang 経路はプレフィックス旁の `entitlements.plist` も見る） |
 
