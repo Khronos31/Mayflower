@@ -68,6 +68,12 @@ sudo dpkg -i packages/llvm/arm64/clang-19_*.deb \
 | `CLANG_NO_LDID` または `LLD_NO_LDID` | 署名しない。Go/Rust/Nim など自前で最後に署名するとき用（どちらでも両方スキップ） |
 | `CLANG_LDID_ENTITLEMENTS` | entitlements plist のパス。未設定ならプレーン `ldid -S`（clang 経路はプレフィックス旁の `entitlements.plist` も見る） |
 
+## PATH ラッパー
+
+`clang-19` / `clang++-19` / `clang-cpp-19` は Procursus と同じく `/var/jb/usr/bin` の薄いラッパー。
+実体は `/var/jb/usr/lib/llvm-19/bin`。こうしないと `InstalledDir` が preboot 実パスになり、
+未指定時の `SDKROOT`（`iPhoneOS.sdk`）も入らない。
+
 ## 同梱ツール（llvm-ar ほか）
 
 `clang-19` にコンパイラ＋リンカ＋ LLVM binutils 相当を入れる。`llvm-ar` / `llvm-nm` / `llvm-ranlib` / `llvm-config` は版付き symlink（`*-19`）。アーカイブ出力に ldid は不要。ツール本体の署名は梱包時。

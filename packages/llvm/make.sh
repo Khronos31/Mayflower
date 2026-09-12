@@ -16,7 +16,7 @@
 pkgname=llvm
 # Apple llvm-project @ swift-6.1.1-RELEASE → LLVM 19.1.4
 pkgver=19.1.4
-pkgrel=3
+pkgrel=4
 # Debian 風に Swift を版に載せる（表示・依存用）。実体の tarball 名は dist。
 swiftver=6.1.1
 srcname=dist
@@ -92,15 +92,32 @@ package_clang() {
     fi
   done
 
-  # 版付き symlink（実体は llvm-19/bin）
+  # clang 系は Procursus 同様、/usr/bin に薄いラッパーを置く。
+  # symlink 直結だと InstalledDir が preboot 実パスになり、また SDKROOT も入らない。
+  install_clang_wrapper() {
+    local outname="$1" toolname="$2"
+    local real="${pref}/bin/${toolname}"
+    [ -e "${pkgdir}${real}" ] || return 0
+    "${CC}" -O2 -o "${pkgdir}${JB}/usr/bin/${outname}" \
+      "${PROJECTROOT}/files/toolchain-wrapper.c" \
+      -DTOOL="\"${real}\"" \
+      -DDEFAULT_SYSROOT="\"${JB}/usr/share/SDKs/iPhoneOS.sdk\"" \
+      -DEXTRA_CPATH="\"${JB}/usr/include\"" \
+      -DEXTRA_LIBRARY_PATH="\"${JB}/usr/lib\""
+    ldid -S"${ENTFILE}" "${pkgdir}${JB}/usr/bin/${outname}"
+  }
+  install_clang_wrapper "clang-${llvm_major}" "clang-19"
+  install_clang_wrapper "clang++-${llvm_major}" "clang++"
+  install_clang_wrapper "clang-cpp-${llvm_major}" "clang-cpp"
+
+  # リンカ / binutils は版付き symlink のまま
   local t
-  for t in clang clang++ clang-cpp lld llvm-ar llvm-ranlib llvm-nm llvm-config; do
+  for t in lld llvm-ar llvm-ranlib llvm-nm llvm-config; do
     if [ -e "${pkgdir}${pref}/bin/${t}" ]; then
       ln -sf "../lib/llvm-${llvm_major}/bin/${t}" \
         "${pkgdir}${JB}/usr/bin/${t}-${llvm_major}"
     fi
   done
-  # Darwin / ELF 風の lld フロントも版付きで残す（lld-19 とは別名）
   for t in ld64.lld ld.lld; do
     if [ -e "${pkgdir}${pref}/bin/${t}" ]; then
       ln -sf "../lib/llvm-${llvm_major}/bin/${t}" \
