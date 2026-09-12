@@ -1,5 +1,5 @@
-Package: siano-ts
-Name: siano-ts
+Package: siano-userland
+Name: Siano Driver
 Version: @VERSION@
 Architecture: @ARCH@
 Section: Utilities

@@ -3,7 +3,7 @@
 #
 # Mayflower | packages/siano-userland/make.sh
 #
-# siano-userland v0.1.5 → deb Package: siano-ts
+# siano-userland v0.1.5 → Package: siano-userland / Name: Siano Driver / バイナリ: siano-ts
 # USB 受信のため packages/siano-userland/entitlements.plist（IOKit USB）を使う。
 # ルートの薄い entitlements.plist では libusb が開けない。
 #
@@ -13,7 +13,7 @@
 
 pkgname=siano-userland
 pkgver=0.1.5
-pkgrel=1
+pkgrel=2
 srcname="siano-userland-${pkgver}"
 source="https://github.com/Khronos31/siano-userland/archive/refs/tags/v${pkgver}.tar.gz"
 

@@ -1,17 +1,17 @@
-# siano-userland（siano-ts）
+# siano-userland
 
 ソースツリー: [`packages/siano-userland`](../packages/siano-userland)
 
 [siano-userland](https://github.com/Khronos31/siano-userland) v0.1.5。
 Siano RIO 系 USB チューナー（PLEX PX-S1UD など）向けのユーザー空間 ISDB-T
-選局・MPEG-TS 出力。ディレクトリ名は上流リポジトリに合わせ `siano-userland`、
-インストールする deb / バイナリ名は `siano-ts`。
+選局・MPEG-TS 出力。
 
 ## パッケージ情報
 
-- ディレクトリ: `packages/siano-userland`
-- deb Package: `siano-ts`（Procursus に無い）
-- 版: 0.1.5-1
+- ディレクトリ / `Package:`: `siano-userland`
+- Sileo の `Name:`: Siano Driver
+- バイナリ: `siano-ts`
+- 版: 0.1.5-2
 - Depends: `libusb-1.0-0`
 - バイナリ: `/var/jb/usr/bin/siano-ts`
 - ファームウェア: `/var/jb/usr/share/siano-ts/isdbt_rio.inp`（および `/var/jb/lib/firmware/isdbt_rio.inp`）
