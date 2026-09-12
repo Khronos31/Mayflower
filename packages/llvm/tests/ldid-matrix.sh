@@ -224,7 +224,14 @@ if [ -n "$SYS_LD" ]; then
 
   clear_env; export CLANG_NO_LDID=1
   rm -f e12
-  if cc_link_ld "$SYS_LD" e12 hello.c 2>"$WORK/e12.err"; then assert_unsigned ./e12 "E12 non-lld CLANG_NO_LDID"
+  if cc_link_ld "$SYS_LD" e12 hello.c 2>"$WORK/e12.err"; then
+    # Apple/Procursus ld64 still writes LC_CODE_SIGNATURE (ad-hoc). We only
+    # assert clang did NOT apply Mayflower entitlements via ldid.
+    if ldid -e ./e12 2>/dev/null | grep -q platform-application; then
+      fail "E12 non-lld CLANG_NO_LDID" "clang still applied entitlements.plist"
+    else
+      ok "E12 non-lld CLANG_NO_LDID (clang skipped ldid; ld64 ad-hoc ok)"
+    fi
   else fail "E12 compile" "$(head -c 300 "$WORK/e12.err")"; fi
 
   clear_env; export LLD_NO_LDID=1
