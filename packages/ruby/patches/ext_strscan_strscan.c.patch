@@ -1,0 +1,18 @@
+--- a/ext/strscan/strscan.c
++++ b/ext/strscan/strscan.c
+@@ -615,7 +615,14 @@
+     }
+ }
+ 
+-/* rb_reg_onig_match is available in Ruby 3.3 and later. */
++/* rb_reg_onig_match is available in Ruby 3.3 and later.
++ * In-tree 4.0 builds can miss HAVE_RB_REG_ONIG_MATCH if extconf's have_func
++ * test binary dies (unsigned Mach-O). The function is in ruby/re.h. */
++#ifndef HAVE_RB_REG_ONIG_MATCH
++# if defined(RUBY_API_VERSION_CODE) && RUBY_API_VERSION_CODE >= 30300
++#  define HAVE_RB_REG_ONIG_MATCH 1
++# endif
++#endif
+ #ifndef HAVE_RB_REG_ONIG_MATCH
+ static OnigPosition
+ rb_reg_onig_match(VALUE re, VALUE str,
