@@ -93,6 +93,9 @@ package() {
 
   install -d "${pkgdir}${JB}/usr/share/siano-ts"
   install -m644 "${fw}" "${pkgdir}${JB}/usr/share/siano-ts/isdbt_rio.inp"
+  # LICENCE.siano 要求: 再配布物に著作権表示と許諾文を添える
+  install -m644 LICENCE.siano "${pkgdir}${JB}/usr/share/siano-ts/LICENCE.siano"
+  install -m644 "${PROJECTROOT}/firmware/NOTICE" "${pkgdir}${JB}/usr/share/siano-ts/NOTICE"
 
   # 任意の探索パス（パッチで追加）にも置く
   install -d "${pkgdir}${JB}/lib/firmware"
@@ -101,4 +104,7 @@ package() {
   install -d "${pkgdir}${JB}/usr/share/licenses/siano-ts"
   install -m644 COPYING "${pkgdir}${JB}/usr/share/licenses/siano-ts/"
   install -m644 LICENCE.siano "${pkgdir}${JB}/usr/share/licenses/siano-ts/"
+
+  install -d "${pkgdir}${JB}/usr/share/doc/siano-ts"
+  install -m644 "${PROJECTROOT}/copyright" "${pkgdir}${JB}/usr/share/doc/siano-ts/copyright"
 }

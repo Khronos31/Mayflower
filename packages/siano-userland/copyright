@@ -1,0 +1,48 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: siano-userland
+Upstream-Contact: Khronos31
+Source: https://github.com/Khronos31/siano-userland
+Comment: Mayflower on-device build of siano-ts for rootless jailbroken iOS.
+ This binary package redistributes the unmodified Siano firmware
+ isdbt_rio.inp together with the GPL-2.0-or-later application.
+
+Files: *
+Copyright: Khronos31 and contributors (see upstream)
+License: GPL-2.0-or-later
+ The application sources and the built siano-ts binary are licensed
+ under GPL-2.0-or-later. See /var/jb/usr/share/licenses/siano-ts/COPYING.
+
+Files: isdbt_rio.inp
+ usr/share/siano-ts/isdbt_rio.inp
+ lib/firmware/isdbt_rio.inp
+Copyright: 2005-2014 Siano Mobile Silicon Ltd.
+License: Siano-firmware
+ Redistribution and use in binary form, without modification, are
+ permitted provided that the following conditions are met:
+ .
+ * Redistributions must reproduce the above copyright notice and the
+   following disclaimer in the documentation and/or other materials
+   provided with the distribution.
+ .
+ * Neither the name of Siano Mobile Silicon Ltd. nor the names of its
+   suppliers may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+ .
+ * No reverse engineering, decompilation, or disassembly of this
+   software is permitted.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ .
+ The full upstream text is also installed as
+ /var/jb/usr/share/licenses/siano-ts/LICENCE.siano and next to the
+ firmware as /var/jb/usr/share/siano-ts/LICENCE.siano.
