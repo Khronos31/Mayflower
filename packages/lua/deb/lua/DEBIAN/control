@@ -1,0 +1,15 @@
+Package: lua5.5
+Name: Lua 5.5
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Interpreters
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: liblua5.5-0
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.lua.org/
+Tag: purpose::console
+Description: Lua 5.5 interpreter
+ Built on-device for rootless jailbreaks using upstream's ios target
+ (LUA_USE_IOS). Installs versioned names lua5.5 and luac5.5. Install
+ lua-default to put lua and luac on PATH.

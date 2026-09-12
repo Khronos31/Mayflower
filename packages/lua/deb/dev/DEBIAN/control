@@ -1,0 +1,12 @@
+Package: liblua5.5-dev
+Name: Lua 5.5 development files
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: liblua5.5-0
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.lua.org/
+Description: Lua 5.5 headers, static library and pkg-config
+ Headers live under /var/jb/usr/include/lua5.5. pkg-config name is lua5.5.
