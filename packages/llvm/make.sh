@@ -67,17 +67,27 @@ build() {
 
 check() {
   cd "${srcdir}" || return 1
-  local clang
-  clang="$(tree_name)/bin/clang"
+  local clang treedir
+  treedir="$(tree_name)"
+  clang="${treedir}/bin/clang"
   [ -x "${clang}" ] || {
     echo "check: ${clang} が無い" >&2
     return 1
   }
+  # Shared builds need libclang-cpp / libLLVM from the unpacked tree before install.
+  export DYLD_LIBRARY_PATH="${srcdir}/${treedir}/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
   if command -v ldid >/dev/null 2>&1; then
     ldid -S"${ENTFILE}" "${clang}"
+    local d
+    for d in "${treedir}/lib"/libLLVM.dylib "${treedir}/lib"/libclang-cpp*.dylib \
+             "${treedir}/lib"/libclang.dylib "${treedir}/lib"/libLTO.dylib; do
+      [ -e "${d}" ] || continue
+      ldid -S"${ENTFILE}" "${d}" || true
+    done
   fi
   "${clang}" --version
 }
+
 
 install_tool() {
   local src="$1" dest="$2"
