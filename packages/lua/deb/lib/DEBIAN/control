@@ -1,0 +1,13 @@
+Package: liblua5.5-0
+Name: Lua 5.5 shared library
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Libraries
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.lua.org/
+Description: Lua 5.5 shared library
+ Built on-device for rootless jailbreaks. Upstream only ships a static
+ archive; this dylib is linked from the same objects with install_name
+ @rpath/liblua5.5.0.dylib.

@@ -1,0 +1,30 @@
+# lua
+
+ソースツリー: [`packages/lua`](../packages/lua)
+
+Lua 5.5.1 を rootless 脱獄 iOS 上でセルフビルドする。
+
+## パッケージ情報
+
+Procursus は `lua5.4` / `liblua5.4-0` / `liblua5.4-dev` まで。5.5 は無い。
+版なしの `lua` は alternatives で 5.4 のまま。
+
+| パッケージ | 中身 |
+|---|---|
+| `lua5.5` | `lua5.5` / `luac5.5` |
+| `liblua5.5-0` | `liblua5.5.0.dylib`（`@rpath/liblua5.5.0.dylib`） |
+| `liblua5.5-dev` | `include/lua5.5/`、`liblua5.5.dylib`、`liblua5.5.a`、`lua5.5.pc` |
+
+版: 5.5.1-1
+
+iPhone 8 / iOS 16.7.14 で `./make.sh lua` が通り、3本を `dpkg -i` した。
+`lua5.5 -v` は `Lua 5.5.1`。版なしの `lua` は 5.4.2 のまま。
+
+## ビルドの要点
+
+上流 Makefile に `ios` ターゲットがある。`LUA_USE_IOS` で POSIX と dlopen を
+付け、`os.execute` は `system(3)` を呼ばないスタブ。共有ライブラリは出さない
+ので、同じ `.o` から `liblua5.5.0.dylib` をリンクし、`lua` だけそれへ付け替える。
+`luac` は `luaU_dump` など `LUAI_FUNC`（非公開）を使うので `liblua.a` のまま。
+
+`LUA_ROOT` は `/var/jb/usr/`（パッチ）。`-target arm64-apple-ios16.0`。
