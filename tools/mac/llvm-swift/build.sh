@@ -124,6 +124,7 @@ configure_target() {
     -DLLVM_BUILD_LLVM_DYLIB=ON \
     -DLLVM_LINK_LLVM_DYLIB=ON \
     -DCLANG_LINK_CLANG_DYLIB=ON \
+    -DLLVM_ENABLE_ZSTD=OFF \
     -DCMAKE_INSTALL_NAME_DIR=/var/jb/usr/lib/llvm-19/lib \
     -DCMAKE_INSTALL_RPATH=/var/jb/usr/lib/llvm-19/lib
   echo "==> configured target at ${t}"
