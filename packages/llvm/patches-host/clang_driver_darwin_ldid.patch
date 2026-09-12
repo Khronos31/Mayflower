@@ -1,0 +1,71 @@
+--- a/clang/lib/Driver/ToolChains/Darwin.cpp	2026-09-13 02:55:55
++++ b/clang/lib/Driver/ToolChains/Darwin.cpp	2026-09-13 02:55:55
+@@ -22,6 +22,7 @@
+ #include "llvm/Option/ArgList.h"
+ #include "llvm/ProfileData/InstrProf.h"
+ #include "llvm/Support/Path.h"
++#include "llvm/Support/FileSystem.h"
+ #include "llvm/Support/ScopedPrinter.h"
+ #include "llvm/Support/Threading.h"
+ #include "llvm/Support/VirtualFileSystem.h"
+@@ -924,6 +925,31 @@
+   }
+ 
+   C.addCommand(std::move(Cmd));
++
++  // Mayflower: ldid for non-lld linkers only. Patched lld signs itself after
++  // writeOutputFile. When clang later runs dsymutil (which rewrites the image),
++  // darwin::Dsymutil signs again.
++  // CLANG_NO_LDID skips. CLANG_LDID_ENTITLEMENTS selects the plist.
++  if (!LinkerIsLLD && Output.isFilename() &&
++      getToolChain().getTriple().isOSDarwin() && !::getenv("CLANG_NO_LDID")) {
++    ArgStringList LdidArgs;
++    if (const char *EnvEnt = ::getenv("CLANG_LDID_ENTITLEMENTS")) {
++      LdidArgs.push_back(Args.MakeArgString(std::string("-S") + EnvEnt));
++    } else {
++      SmallString<256> Ent;
++      Ent = getToolChain().getDriver().Dir;
++      llvm::sys::path::append(Ent, "..", "entitlements.plist");
++      if (llvm::sys::fs::exists(Ent))
++        LdidArgs.push_back(Args.MakeArgString(std::string("-S") + Ent.c_str()));
++      else
++        LdidArgs.push_back("-S");
++    }
++    LdidArgs.push_back(Output.getFilename());
++    const char *Ldid =
++        Args.MakeArgString(getToolChain().GetProgramPath("ldid"));
++    C.addCommand(std::make_unique<Command>(JA, *this, ResponseFileSupport::None(),
++                                           Ldid, LdidArgs, Inputs, Output));
++  }
+ }
+ 
+ void darwin::StaticLibTool::ConstructJob(Compilation &C, const JobAction &JA,
+@@ -1016,6 +1042,28 @@
+       Args.MakeArgString(getToolChain().GetProgramPath("dsymutil"));
+   C.addCommand(std::make_unique<Command>(JA, *this, ResponseFileSupport::None(),
+                                          Exec, CmdArgs, Inputs, Output));
++
++  // Mayflower: dsymutil rewrites the linked image after lld/ld signed it.
++  // Re-sign the link output (Input), not the .dSYM bundle (Output).
++  if (!::getenv("CLANG_NO_LDID") && Input.isFilename()) {
++    ArgStringList LdidArgs;
++    if (const char *EnvEnt = ::getenv("CLANG_LDID_ENTITLEMENTS")) {
++      LdidArgs.push_back(Args.MakeArgString(std::string("-S") + EnvEnt));
++    } else {
++      SmallString<256> Ent;
++      Ent = getToolChain().getDriver().Dir;
++      llvm::sys::path::append(Ent, "..", "entitlements.plist");
++      if (llvm::sys::fs::exists(Ent))
++        LdidArgs.push_back(Args.MakeArgString(std::string("-S") + Ent.c_str()));
++      else
++        LdidArgs.push_back("-S");
++    }
++    LdidArgs.push_back(Input.getFilename());
++    const char *Ldid =
++        Args.MakeArgString(getToolChain().GetProgramPath("ldid"));
++    C.addCommand(std::make_unique<Command>(JA, *this, ResponseFileSupport::None(),
++                                           Ldid, LdidArgs, Inputs, Output));
++  }
+ }
+ 
+ void darwin::VerifyDebug::ConstructJob(Compilation &C, const JobAction &JA,

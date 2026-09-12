@@ -1,0 +1,13 @@
+Package: llvm-19-dev
+Name: LLVM 19 development files
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libllvm19 (= @VERSION@), llvm-19 (= @VERSION@)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://llvm.org/
+Tag: role::developer
+Description: LLVM 19 headers and static libs
+ include/llvm, include/llvm-c, and any libLLVM*.a / cmake bits from the dist.

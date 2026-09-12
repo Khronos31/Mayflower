@@ -1,0 +1,13 @@
+Package: libclang1-19
+Name: Clang C library 19
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Libraries
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libllvm19 (= @VERSION@), ldid
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://clang.llvm.org/
+Tag: role::shared-lib
+Description: libclang.dylib for Clang 19
+ C interface to Clang (libclang.dylib + libclang-19.dylib).

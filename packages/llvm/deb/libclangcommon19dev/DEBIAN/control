@@ -1,0 +1,14 @@
+Package: libclang-common-19-dev
+Name: Clang 19 common resources
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libllvm19 (= @VERSION@)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://clang.llvm.org/
+Tag: role::developer
+Description: Clang 19 resource headers (and Polly if present)
+ Ships lib/clang/19 resource headers used by the clang-19 frontend.
+ Moved out of the clang-19 package to mirror Procursus libclang-common-*-dev.

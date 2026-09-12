@@ -1,0 +1,14 @@
+Package: llvm-19-linker-tools
+Name: LLVM 19 linker plugins
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libllvm19 (= @VERSION@), ldid
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://llvm.org/
+Tag: role::developer
+Description: libLTO (+ LLVMPolly) for LLVM 19
+ Provides libLTO.dylib under /var/jb/usr/lib/llvm-19/lib. Does not ship lld
+ binaries — those are in lld-19.
