@@ -1,0 +1,30 @@
+--- a/dir.c
++++ b/dir.c
+@@ -97,7 +97,26 @@
+ # define NORMALIZE_UTF8PATH 1
+ # include <sys/param.h>
+ # include <sys/mount.h>
+-# include <sys/vnode.h>
++# if defined(__has_include) && __has_include(<sys/vnode.h>)
++#  include <sys/vnode.h>
++# else
++/* iOS SDK has no sys/vnode.h. Values from XNU bsd/sys/vnode.h. */
++#  ifndef VT_HFS
++#   define VT_HFS 16
++#  endif
++#  ifndef VT_CIFS
++#   define VT_CIFS 23
++#  endif
++#  ifndef VREG
++#   define VREG 1
++#  endif
++#  ifndef VDIR
++#   define VDIR 2
++#  endif
++#  ifndef VLNK
++#   define VLNK 5
++#  endif
++# endif
+ #else
+ # define NORMALIZE_UTF8PATH 0
+ #endif

@@ -53,6 +53,7 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 | [go](docs/go.md) | 1.26.8 | `golang-1.26-go` / `golang-1.26-src` / `golang-default` |
 | [python](docs/python.md) | 3.14.7 | `python3.14` / `python3-default` |
 | [rust](docs/rust.md) | 1.98.1 | `rustc-1.98` / `rust-std-1.98` / `cargo-1.98` / `rust-default`。ツールチェインのビルドだけ Mac |
+| [ruby](docs/ruby.md) | 4.0.6 | インタプリタ。YJIT / ZJIT は建てない |
 
 Procursus と同じパッケージ名は使わない。あちらは
 `/var/jb/etc/apt/preferences.d/procursus` で `Package: *` を `Pin-Priority: 1001` に
@@ -88,7 +89,7 @@ packages/<名前>/
 
 | 種別 | パッケージ |
 |---|---|
-| Procursus に無いもの | node, ruby, ghc, openjdk, mariadb |
+| Procursus に無いもの | node, ghc, openjdk, mariadb |
 | あるが古いもの | perl, openssl, git, sqlite3, curl, meson |
 
 ## ライセンス

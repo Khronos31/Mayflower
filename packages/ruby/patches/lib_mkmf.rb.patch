@@ -1,0 +1,11 @@
+--- a/lib/mkmf.rb
++++ b/lib/mkmf.rb
+@@ -2084,7 +2084,7 @@
+     vpath = $VPATH.dup
+     CONFIG["hdrdir"] ||= $hdrdir
+     mk << %{
+-SHELL = /bin/sh
++SHELL = /var/jb/bin/sh
+ 
+ # V=0 quiet, V=1 verbose.  other values don't work.
+ V = #{verbose}
