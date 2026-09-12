@@ -1,0 +1,15 @@
+Package: git-2.55
+Name: Git 2.55
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libiosexec1 (>= 1.2.2), libcurl4, libssl3, libpcre2-8-0, perl
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://git-scm.com/
+Tag: role::developer
+Description: Distributed revision control system
+ Built on-device. Installs the versioned command git-2.55 and helpers
+ under /usr/libexec/git-2.55. Put git on PATH with git-default, which
+ replaces Procursus git 2.39.1.

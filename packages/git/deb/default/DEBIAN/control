@@ -1,0 +1,16 @@
+Package: git-default
+Name: Git (default version)
+Version: @VERSION@
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: git-2.55 (>= @VERSION@)
+Provides: git (= @VERSION@)
+Conflicts: git
+Replaces: git
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://git-scm.com/
+Tag: role::developer
+Description: Git 2.55 as the default git on PATH
+ Puts git on PATH, pointing at git-2.55. Replaces Procursus git 2.39.1.
