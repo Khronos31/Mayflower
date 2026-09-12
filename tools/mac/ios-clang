@@ -1,0 +1,57 @@
+#!/bin/bash
+# Mayflower | iOS 向け clang。SDK と triple を必ず与える。
+# 呼び手が付けてくる -target / -arch / --target= / -isysroot は落とす。
+#
+# **eval で引数を繋いではいけない。** Node の openssl が
+# -DMODULESDIR="...$(BUILDTYPE)..." を渡すと、eval が $(BUILDTYPE) を
+# シェルとして実行する。
+set -euo pipefail
+
+SDK="${MAYFLOWER_IOS_SDK:-${HOME}/ios-sdk/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk}"
+TRIPLE="arm64-apple-ios16.0"
+
+prog="${0##*/}"
+case "$prog" in
+  *cxx|*++) real=/usr/bin/clang++ ;;
+  *) real=/usr/bin/clang ;;
+esac
+
+args=()
+skip=0
+has_std=0
+for a in "$@"; do
+  if [ "$skip" = 1 ]; then
+    skip=0
+    continue
+  fi
+  case "$a" in
+    -target|-arch) skip=1; continue ;;
+    --target=*) continue ;;
+    -isysroot) skip=1; continue ;;
+    -std=*|--std=*) has_std=1 ;;
+    -Wl,--start-group|-Wl,--end-group) continue ;;
+  esac
+  args+=("$a")
+done
+
+# Apple clang の既定は gnu++14。V8 同梱 abseil は C++17 未満を拒否する。
+case "$prog" in
+  *cxx|*++)
+    if [ "$has_std" = 0 ]; then
+      args+=(-std=gnu++20)
+    fi
+    ;;
+esac
+
+# 実行ファイルのリンク。abseil の time_zone が CoreFoundation を引く。
+is_compile=0
+for a in "${args[@]}"; do
+  case "$a" in -c) is_compile=1 ;; esac
+done
+if [ "$is_compile" = 0 ]; then
+  case "$prog" in
+    *cxx|*++) args+=(-framework CoreFoundation) ;;
+  esac
+fi
+
+exec "$real" -target "$TRIPLE" -isysroot "$SDK" "${args[@]}"

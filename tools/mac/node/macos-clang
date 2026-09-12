@@ -1,0 +1,44 @@
+#!/bin/bash
+# Mayflower | ホスト（macOS）向け clang。Node の V8 スナップショット用。
+# GNU ld の --start-group / --end-group は Mach-O に無いので落とす。
+set -euo pipefail
+
+prog="${0##*/}"
+case "$prog" in
+  *cxx|*++) real=/usr/bin/clang++ ;;
+  *) real=/usr/bin/clang ;;
+esac
+
+sdk_root="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
+
+args=()
+has_std=0
+for arg in "$@"; do
+  case "$arg" in
+    -Wl,--start-group|-Wl,--end-group) continue ;;
+    -std=*|--std=*) has_std=1 ;;
+  esac
+  args+=("$arg")
+done
+
+# Apple clang の既定は gnu++14。ICU / V8 は C++17 以上が要る。
+case "$prog" in
+  *cxx|*++)
+    if [ "$has_std" = 0 ]; then
+      args+=(-std=gnu++20)
+    fi
+    ;;
+esac
+
+# ホスト実行ファイルのリンク。abseil の time_zone が CoreFoundation を引く。
+is_compile=0
+for a in "${args[@]}"; do
+  case "$a" in -c) is_compile=1 ;; esac
+done
+if [ "$is_compile" = 0 ]; then
+  case "$prog" in
+    *cxx|*++) args+=(-framework CoreFoundation) ;;
+  esac
+fi
+
+exec "$real" -isysroot "$sdk_root" "${args[@]}"

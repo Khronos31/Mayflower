@@ -1,8 +1,8 @@
 # Mac からのクロスビルド
 
-Rust だけは端末で建てられない。rustc の bootstrap は LLVM を建てるので、
-RAM 1.93GB の iPhone 8 では成立しない。M2 Mac mini（8コア・8GB）から
-`host = ["aarch64-apple-ios"]` として建て、**梱包と署名は端末で行う**。
+Rust と Node は端末で建てられない。rustc の bootstrap は LLVM を、Node は
+ホスト用 V8 を建てるので、RAM 1.93GB の iPhone 8 では成立しない。M2 Mac mini
+（8コア・8GB）からクロスし、**梱包と署名は端末で行う**。
 
 2020 年の Mayflower（`rust` 枝）も同じ形だった。あちらは
 `x86_64-apple-darwin` で stage1 を建ててから stage0 に据え直していたが、
@@ -48,6 +48,9 @@ ssh mac 'cd ~/ios-sdk && mkdir -p iPhoneOS.platform/Developer/SDKs \
 **SDK はリポジトリに入れない。deb にも入れない。** 個人の機械の間で複製する
 だけにする。
 
+`tools/mac/ios-clang` は iOS 向けの clang ラッパー。引数は配列のまま渡し、
+`eval` しない。Node の openssl が `-DMODULESDIR="...$(BUILDTYPE)..."` を付けるため。
+
 ## xcrun の shim を PATH に置く
 
 `tools/mac/xcrun` を PATH の先頭へ。理由はファイル冒頭のコメントに書いた。
@@ -91,3 +94,15 @@ env -u SDKROOT -u IPHONEOS_DEPLOYMENT_TARGET \
 
 出来た tarball を端末へ渡し、`make.sh rust` の `prepare()` がそれを要求する。
 Go の `GOROOT_BOOTSTRAP` と同じ扱いで、母艦の事情を `make.sh` に持ち込まない。
+
+## Node
+
+```sh
+export MAYFLOWER=~/Mayflower
+export PATH=~/ios-tools:$PATH
+# SDK は build.sh が /usr/bin/xcrun --sdk iphoneos で Xcode のを選ぶ。
+caffeinate -i nohup "$MAYFLOWER/tools/mac/node/build.sh" > ~/node-ios/build.log 2>&1 &
+```
+
+成果は `~/node-ios/dist/node-24.21.0-aarch64-apple-ios.tar.xz`。端末では
+`NODE_DIST_DIR` にその `dist` を渡す。

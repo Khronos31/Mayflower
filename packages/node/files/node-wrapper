@@ -1,0 +1,18 @@
+#!/var/jb/bin/sh
+# Mayflower | node-24 の起動ラッパー
+#
+# 実体は /var/jb/usr/lib/nodejs-24/node-bin。V8 は既定で --jitless。
+# Dopamine では JIT 用の実行可能メモリ確保が SIGBUS になる。palera1n で
+# JIT を試すときは NODE_IOS_ALLOW_JIT=1。
+#
+# npm が /var/jb の symlink を辿って prefix を /var/jb/usr/lib と誤認し、
+# usr/lib/lib/node_modules へ入れるのを防ぐ。
+set -eu
+
+node_bin=/var/jb/usr/lib/nodejs-24/node-bin
+export NPM_CONFIG_PREFIX="${NPM_CONFIG_PREFIX:-/var/jb/usr}"
+
+if [ "${NODE_IOS_ALLOW_JIT:-0}" = 1 ]; then
+  exec "$node_bin" "$@"
+fi
+exec "$node_bin" --jitless "$@"

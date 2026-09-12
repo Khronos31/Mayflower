@@ -1,0 +1,37 @@
+--- a/src/crypto/crypto_context.cc
++++ b/src/crypto/crypto_context.cc
+@@ -19,6 +19,7 @@
+ #include <openssl/rand.h>
+ #include <openssl/x509.h>
+ #ifdef __APPLE__
++#include <TargetConditionals.h>
+ #include <Security/Security.h>
+ #endif
+ 
+@@ -332,7 +333,7 @@
+ // Licensed under a BSD-style license
+ // See https://chromium.googlesource.com/chromium/src/+/HEAD/LICENSE for
+ // details.
+-#ifdef __APPLE__
++#if defined(__APPLE__) && !TARGET_OS_IPHONE
+ TrustStatus IsTrustDictionaryTrustedForPolicy(CFDictionaryRef trust_dict,
+                                               bool is_self_issued) {
+   // Trust settings may be scoped to a single application
+@@ -634,7 +635,7 @@
+   }
+   CFRelease(curr_anchors);
+ }
+-#endif  // __APPLE__
++#endif  // defined(__APPLE__) && !TARGET_OS_IPHONE
+ 
+ #ifdef _WIN32
+ 
+@@ -902,7 +903,7 @@
+ 
+ static std::vector<X509*> InitializeSystemStoreCertificates() {
+   std::vector<X509*> system_store_certs;
+-#ifdef __APPLE__
++#if defined(__APPLE__) && !TARGET_OS_IPHONE
+   ReadMacOSKeychainCertificates(&system_store_certs);
+ #endif
+ #ifdef _WIN32
