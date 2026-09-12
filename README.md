@@ -1,8 +1,8 @@
 # Mayflower
 
 脱獄した iOS へパッケージを移植するためのビルドファイル集。原則として端末の上で
-（Mac を介さず）ソースからビルドし、`.deb` を作る。例外は Rust だけ（ツールチェイン
-自身は Mac からクロスビルド、出来た rustc/cargo は端末で動く）。
+（Mac を介さず）ソースからビルドし、`.deb` を作る。例外は Rust と Node
+（ツールチェイン / V8 自身は Mac からクロスビルド、出来たバイナリは端末で動く）。
 
 `make.sh <パッケージ名>` を叩くと、取得・パッチ適用・ビルド・検証・パッケージング
 までを順に行う。Arch Linux の PKGBUILD に似た構成で、パッケージごとの知識は
@@ -56,6 +56,7 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 | [ruby](docs/ruby.md) | 4.0.6 | インタプリタ。YJIT / ZJIT は建てない |
 | [lua](docs/lua.md) | 5.5.1 | `lua5.5` / `liblua5.5-0` / `liblua5.5-dev` / `lua-default` |
 | [luarocks](docs/luarocks.md) | 3.13.0 | Lua 5.5 用。ユーザートリーは `~/.luarocks` |
+| [node](docs/node.md) | 24.21.0 | `nodejs-24` / `node-default`。ビルドだけ Mac。`--jitless` 既定。`node-default` が Procursus の npm 8.1.1 を置換 |
 | [siano-userland](docs/siano-userland.md) | 0.1.5 | `siano-ts`。Siano RIO (PX-S1UD) のユーザー空間 ISDB-T 受信 |
 
 Procursus と同じパッケージ名は使わない。あちらは
@@ -92,7 +93,7 @@ packages/<名前>/
 
 | 種別 | パッケージ |
 |---|---|
-| Procursus に無いもの | node, ghc, openjdk, mariadb |
+| Procursus に無いもの | ghc, openjdk, mariadb |
 | あるが古いもの | perl, openssl, git, sqlite3, curl, meson |
 
 ## ライセンス

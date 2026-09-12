@@ -1,0 +1,15 @@
+Package: nodejs-24
+Name: Node.js 24
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Interpreters
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://nodejs.org/
+Tag: purpose::console, role::developer
+Description: Node.js 24 LTS interpreter
+ Cross-built for rootless jailbreaks as aarch64-apple-ios. Installs versioned
+ names node-24, npm-24 and npx-24. The node-24 wrapper runs V8 with --jitless
+ unless NODE_IOS_ALLOW_JIT=1. Install node-default to put node, npm and npx
+ on PATH.

@@ -1,0 +1,18 @@
+Package: node-default
+Name: Node.js (default version)
+Version: @VERSION@
+Architecture: all
+Section: Interpreters
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: nodejs-24 (>= @VERSION@)
+Provides: nodejs (= @VERSION@), npm (= @VERSION@)
+Conflicts: npm
+Replaces: npm
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://nodejs.org/
+Tag: purpose::console
+Description: Node.js 24 as the default node on PATH
+ Puts node, npm and npx on PATH, pointing at node-24, npm-24 and npx-24.
+ Provides nodejs so Procursus npm's Depends: nodejs is satisfied, and
+ replaces the bootstrap's npm 8.1.1.
