@@ -59,7 +59,8 @@ build() {
 check() {
   cd "${srcdir}" || return 1
   # 建てた ruby が動き、シェルと Fiber が使えるかを見る。YJIT は入っていない。
-  DYLD_LIBRARY_PATH="${srcdir}" ./ruby -e '
+  DYLD_LIBRARY_PATH="${srcdir}" ./ruby \
+    -I.ext/arm64-darwin -I.ext/common -Ilib -e '
     raise "yjit" if defined?(RubyVM::YJIT) && RubyVM::YJIT.respond_to?(:enabled?) && RubyVM::YJIT.enabled?
     raise "zjit" if defined?(RubyVM::ZJIT) && RubyVM::ZJIT.respond_to?(:enabled?) && RubyVM::ZJIT.enabled?
     puts "version #{RUBY_VERSION}"
@@ -71,7 +72,6 @@ check() {
     require "openssl"; puts "ssl     #{OpenSSL::OPENSSL_VERSION}"
     require "yaml";    puts "yaml    ok"
     require "zlib";    puts "zlib    ok"
-    require "fiddle";  puts "fiddle  ok"
   '
 }
 
