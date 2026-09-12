@@ -14,11 +14,12 @@ Procursus は `lua5.4` / `liblua5.4-0` / `liblua5.4-dev` まで。5.5 は無い�
 | `lua5.5` | `lua5.5` / `luac5.5` |
 | `liblua5.5-0` | `liblua5.5.0.dylib`（`@rpath/liblua5.5.0.dylib`） |
 | `liblua5.5-dev` | `include/lua5.5/`、`liblua5.5.dylib`、`liblua5.5.a`、`lua5.5.pc` |
+| `lua-default` | `lua` / `luac`（`lua5.5` を指す） |
 
 版: 5.5.1-1
 
-iPhone 8 / iOS 16.7.14 で `./make.sh lua` が通り、3本を `dpkg -i` した。
-`lua5.5 -v` は `Lua 5.5.1`。版なしの `lua` は 5.4.2 のまま。
+iPhone 8 / iOS 16.7.14 で `./make.sh lua` が通り、`lua5.5` / `liblua5.5-0` /
+`liblua5.5-dev` を `dpkg -i` した。`lua-default` が `lua` / `luac` を 5.5 にする。
 
 ## ビルドの要点
 

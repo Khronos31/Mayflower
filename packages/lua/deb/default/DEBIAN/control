@@ -1,0 +1,13 @@
+Package: lua-default
+Name: Lua (default version)
+Version: @VERSION@
+Architecture: all
+Section: Interpreters
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: lua5.5 (>= @VERSION@)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.lua.org/
+Tag: purpose::console
+Description: Lua 5.5 as the default lua on PATH
+ Puts lua and luac on PATH, pointing at lua5.5 and luac5.5.

@@ -9,18 +9,19 @@
 # liblua.a しか出さないので、同じ .o から dylib を足す。
 #
 # Procursus は lua5.4 / liblua5.4-0 / liblua5.4-dev まで。5.5 は無いので
-# 同名を避けなくてよい。版なしの lua は alternatives で 5.4 を指したまま。
+# 同名を避けなくてよい。版なしの lua / luac は lua-default が出す。
 #
 #   liblua5.5-0    liblua5.5.0.dylib
 #   lua5.5         lua5.5 / luac5.5
 #   liblua5.5-dev  ヘッダ・liblua5.5.dylib・liblua5.5.a・lua5.5.pc
+#   lua-default    /var/jb/usr/bin の lua / luac（lua5.5 を指す）
 
 pkgname=lua
 pkgver=5.5.1
-pkgrel=1
+pkgrel=2
 srcname="lua-${pkgver}"
 source="https://www.lua.org/ftp/lua-${pkgver}.tar.gz"
-subpkgs=(lib lua dev)
+subpkgs=(lib lua dev default)
 
 COMMON_FLAGS="-target arm64-apple-ios16.0"
 
@@ -105,4 +106,16 @@ Version: ${pkgver}
 Libs: -L\${libdir} -llua5.5
 Cflags: -I\${includedir}
 EOF
+}
+
+package_default() {
+  local dest="${pkgdir}${JB}/usr/bin"
+  install -d "${dest}"
+  ln -s lua5.5 "${dest}/lua"
+  ln -s luac5.5 "${dest}/luac"
+
+  local man="${pkgdir}${JB}/usr/share/man/man1"
+  install -d "${man}"
+  ln -s lua5.5.1 "${man}/lua.1"
+  ln -s luac5.5.1 "${man}/luac.1"
 }

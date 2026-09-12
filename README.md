@@ -54,7 +54,7 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 | [python](docs/python.md) | 3.14.7 | `python3.14` / `python3-default` |
 | [rust](docs/rust.md) | 1.98.1 | `rustc-1.98` / `rust-std-1.98` / `cargo-1.98` / `rust-default`。ツールチェインのビルドだけ Mac |
 | [ruby](docs/ruby.md) | 4.0.6 | インタプリタ。YJIT / ZJIT は建てない |
-| [lua](docs/lua.md) | 5.5.1 | `lua5.5` / `liblua5.5-0` / `liblua5.5-dev`。版なしの `lua` は 5.4 のまま |
+| [lua](docs/lua.md) | 5.5.1 | `lua5.5` / `liblua5.5-0` / `liblua5.5-dev` / `lua-default` |
 
 Procursus と同じパッケージ名は使わない。あちらは
 `/var/jb/etc/apt/preferences.d/procursus` で `Package: *` を `Pin-Priority: 1001` に

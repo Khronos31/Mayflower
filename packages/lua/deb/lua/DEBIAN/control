@@ -11,5 +11,5 @@ Homepage: https://www.lua.org/
 Tag: purpose::console
 Description: Lua 5.5 interpreter
  Built on-device for rootless jailbreaks using upstream's ios target
- (LUA_USE_IOS). Installs versioned names only: lua5.5 and luac5.5. The
- bootstrap's lua (5.4, via alternatives) is left alone.
+ (LUA_USE_IOS). Installs versioned names lua5.5 and luac5.5. Install
+ lua-default to put lua and luac on PATH.
