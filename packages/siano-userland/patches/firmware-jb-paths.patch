@@ -1,0 +1,12 @@
+--- a/siano-ts.c
++++ b/siano-ts.c
+@@ -430,6 +430,9 @@
+         "isdbt_rio.inp",
+ #ifndef _WIN32
+         "/lib/firmware/isdbt_rio.inp",
++        /* rootless jailbreak (Procursus / Dopamine / palera1n) */
++        "/var/jb/lib/firmware/isdbt_rio.inp",
++        "/var/jb/usr/share/siano-ts/isdbt_rio.inp",
+ #endif
+     };
+ 

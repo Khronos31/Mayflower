@@ -1,0 +1,4 @@
+# Do not commit the Siano firmware blob (LICENCE.siano).
+# Place isdbt_rio.inp here, or let make.sh fetch+verify SHA-256.
+*
+!.gitignore

@@ -56,6 +56,7 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 | [ruby](docs/ruby.md) | 4.0.6 | インタプリタ。YJIT / ZJIT は建てない |
 | [lua](docs/lua.md) | 5.5.1 | `lua5.5` / `liblua5.5-0` / `liblua5.5-dev` / `lua-default` |
 | [luarocks](docs/luarocks.md) | 3.13.0 | Lua 5.5 用。ユーザートリーは `~/.luarocks` |
+| [siano-userland](docs/siano-userland.md) | 0.1.5 | `siano-ts`。Siano RIO (PX-S1UD) のユーザー空間 ISDB-T 受信 |
 
 Procursus と同じパッケージ名は使わない。あちらは
 `/var/jb/etc/apt/preferences.d/procursus` で `Package: *` を `Pin-Priority: 1001` に

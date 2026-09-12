@@ -1,0 +1,15 @@
+Package: siano-ts
+Name: siano-ts
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Utilities
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libusb-1.0-0
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/Khronos31/siano-userland
+Tag: purpose::console
+Description: Userland ISDB-T tuner capture for Siano RIO (PX-S1UD)
+ Captures MPEG-TS from Siano-based USB tuners (e.g. PLEX PX-S1UD) via libusb.
+ Built on-device for rootless jailbreaks. Firmware isdbt_rio.inp is installed
+ under /var/jb/usr/share/siano-ts and /var/jb/lib/firmware.

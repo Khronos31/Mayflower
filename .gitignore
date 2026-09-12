@@ -3,3 +3,6 @@ packages/*/arm64/
 packages/*/*.tar.*
 packages/*/*.tgz
 *.deb
+
+# Siano firmware blob (not redistributed via git)
+packages/siano-userland/firmware/isdbt_rio.inp
