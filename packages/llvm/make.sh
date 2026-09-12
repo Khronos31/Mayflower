@@ -10,11 +10,12 @@
 #   libllvm19, libclang-cpp19, libclang1-19, libclang-common-19-dev,
 #   llvm-19-linker-tools (libLTO; NOT lld), lld-19, lld,
 #   llvm-19, llvm-19-dev, llvm-dev,
+#   libc++-19-dev, libc++-dev,
 #   clang-19, clang-default, llvm-default
 
 pkgname=llvm
 pkgver=19.1.4
-pkgrel=6
+pkgrel=7
 # dist tarball 名に残っているだけ（Swift 同梱前の Mac 成果物）
 swiftver=6.1.1
 srcname=dist
@@ -30,6 +31,8 @@ subpkgs=(
   llvm19
   llvm19dev
   llvmdev
+  libcxx19dev
+  libcxxdev
   clang19
   clangdefault
   llvmdefault
@@ -396,6 +399,42 @@ package_llvmdev() {
   printf 'llvm-dev → llvm-%s-dev + llvm-%s-linker-tools (Provides liblto)\n' \
     "${llvm_major}" "${llvm_major}" \
     > "${pkgdir}${JB}/usr/share/doc/llvm-dev/README"
+}
+
+# --- libc++-19-dev (headers + pstl; no dylib) ---
+package_libcxx19dev() {
+  cd "${srcdir}" || return 1
+  local tree pref
+  tree="$(tree_name)"
+  pref="$(llvm_prefix)"
+
+  [ -d "${tree}/include/c++" ] || {
+    echo "libc++-19-dev: ${tree}/include/c++ missing (run build.sh libcxx / install)" >&2
+    return 1
+  }
+
+  install -d "${pkgdir}${pref}/include"
+  cp -a "${tree}/include/c++" "${pkgdir}${pref}/include/"
+
+  # Procursus ships include/*pstl* next to include/c++
+  local f
+  for f in "${tree}/include"/__pstl* "${tree}/include"/pstl; do
+    [ -e "${f}" ] || continue
+    cp -a "${f}" "${pkgdir}${pref}/include/"
+  done
+}
+
+# --- libc++-dev meta: /var/jb/usr/include/c++ → llvm-19 ---
+package_libcxxdev() {
+  install -d "${pkgdir}${JB}/usr/include" \
+    "${pkgdir}${JB}/usr/share/doc/libc++-dev"
+
+  ln -sfn "../lib/llvm-${llvm_major}/include/c++" \
+    "${pkgdir}${JB}/usr/include/c++"
+
+  printf 'libc++-dev → libc++-%s-dev headers under /var/jb/usr/lib/llvm-%s/include/c++\n' \
+    "${llvm_major}" "${llvm_major}" \
+    > "${pkgdir}${JB}/usr/share/doc/libc++-dev/README"
 }
 
 # --- clang-19 (frontend + wrappers; resources moved out) ---

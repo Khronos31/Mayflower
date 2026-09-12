@@ -1,0 +1,14 @@
+Package: libc++-19-dev
+Name: LLVM C++ Standard library 19 (headers)
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://libcxx.llvm.org/
+Tag: role::developer
+Description: Clang 19 libc++ headers (headers-only)
+ Headers under /var/jb/usr/lib/llvm-19/include/c++ (and __pstl* if present).
+ Does not ship a replacement libc++.dylib — Darwin/iOS uses Apple's runtime.
+ Headers-only: no Depends on libllvm16 or libllvm19.

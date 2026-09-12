@@ -22,8 +22,10 @@
 | `llvm-19` | 拡張ツール群；Depends `libllvm19`, `llvm-19-linker-tools` |
 | `llvm-19-dev` | `include/llvm`, `include/llvm-c`, static libs if any |
 | `llvm-dev` | メタ: Depends `llvm-19-dev` + `llvm-19-linker-tools`；Provides `liblto`；`usr/include/llvm{,-c}` と `usr/lib/libLTO.dylib` の symlink |
-| `clang-19` | frontend + wrappers；Depends lib\* + `libclang-common-19-dev` + `lld-19` + `ld64` + `ldid` |
-| `clang-default` | PATH の `clang` 等。`Provides: clang` で Procursus `clang` を置換 |
+| `libc++-19-dev` | `include/c++`（+ `__pstl*` / `pstl`）。ヘッダのみ。`libllvm16` に依存しない |
+| `libc++-dev` | メタ: Depends `libc++-19-dev`；`/var/jb/usr/include/c++` → llvm-19。Procursus 同名を置換 |
+| `clang-19` | frontend + wrappers；Depends lib\* + `libclang-common-19-dev` + `libc++-19-dev` + `lld-19` + `ld64` + `ldid` |
+| `clang-default` | PATH の `clang` 等。`Provides: clang`；Depends `libc++-dev` |
 | `llvm-default` | PATH の `llvm-ar` 等。`Provides: llvm` で Procursus `llvm` を置換 |
 
 ## 版ピン
@@ -32,7 +34,7 @@
 |---|---|
 | Swift | 6.1.1-RELEASE |
 | LLVM | 19.1.4（`swift-6.1.1-RELEASE` の CMake） |
-| Mayflower `pkgver` / `pkgrel` | 19.1.4-6 |
+| Mayflower `pkgver` / `pkgrel` | 19.1.4-7 |
 
 ## Mac ビルド
 
@@ -44,9 +46,14 @@ export WORKDIR="$HOME/dev/toolchain-swift-6.1"
 rm -rf "$WORKDIR/build/ios"
 ./tools/mac/llvm-swift/build.sh configure
 ninja -C "$WORKDIR/build/ios" …   # clang / lld / libLLVM など
-./tools/mac/llvm-swift/build.sh install   # DESTDIR=stage（selective install-*）
-./tools/mac/llvm-swift/build.sh pack      # dist/*.tar.xz
+./tools/mac/llvm-swift/build.sh libcxx    # ヘッダ専用 runtimes → stage/include/c++
+./tools/mac/llvm-swift/build.sh install   # DESTDIR=stage（selective install-* + libc++ headers）
+./tools/mac/llvm-swift/build.sh pack      # dist/*.tar.xz（include/c++ 含む）
 ```
+
+`libcxx` は `$WORKDIR/build/ios-libcxx` で `runtimes` (libcxx;libcxxabi) を
+ヘッダ専用に configure する。Darwin の `libc++.dylib` は置かない（Apple の
+ランタイムを使う）。`install` は stage を作り直したあと libc++ ヘッダをマージする。
 
 以前の cache（DYLIB 無し）のまま `install` しても `libLLVM.dylib` は出ない。
 README の reconfigure note を参照。
@@ -55,11 +62,18 @@ README の reconfigure note を参照。
 
 1. **先に versioned + lib\*** を入れる（`libllvm19`, `libclang-*19`, `llvm-19`,
    `lld-19`, `clang-19`, …）。Procursus 16 系と**同居**できる。
-2. 必要ならメタを置換: `clang-default` / `llvm-default` / `llvm-dev` / `lld`。
+2. 必要ならメタを置換: `clang-default` / `llvm-default` / `llvm-dev` / `lld` /
+   `libc++-dev`。
 3. **`libllvm16` は `swift-5.9.2` が入っている間は外さない。**
-4. **Conflict/Replace しないもの:** `libllvm16`, `clang-16`, `llvm-16*`, `swift-5.9.2`。
+4. **Conflict/Replace しないもの:** `libllvm16`, `clang-16`, `llvm-16*`,
+   `libc++-16-dev`, `swift-5.9.2`。
 5. メタ（同名）だけ Conflicts/Replaces してよい: `clang`（via clang-default）,
-   `llvm`（via llvm-default）, `llvm-dev`, `lld`。
+   `llvm`（via llvm-default）, `llvm-dev`, `lld`, `libc++-dev`。
+
+`libc++-19-dev` のあと `libc++-dev` メタを Mayflower に差し替えると、
+`/var/jb/usr/include/c++` が llvm-19 のヘッダを指すので、C++ は 16 の
+ヘッダに頼らなくなる。`libllvm16` は Swift 6.1 が出るまで
+`swift-5.9.2` 用に残す。`libc++-16-dev` 自体は消さない（外す指示が無い限り）。
 
 `clang` メタに依存する例: `rustc-1.98`, `nim`, `golang-*`, `libtool`。
 default 導入後は `clang-19` が PATH の `clang` になる。
@@ -77,13 +91,15 @@ sudo dpkg -i packages/llvm/arm64/libllvm19_*.deb \
              packages/llvm/arm64/llvm-19-linker-tools_*.deb \
              packages/llvm/arm64/lld-19_*.deb \
              packages/llvm/arm64/llvm-19_*.deb \
+             packages/llvm/arm64/libc++-19-dev_*.deb \
              packages/llvm/arm64/clang-19_*.deb
 # optional metas (replace Procursus metas):
 # sudo dpkg -i packages/llvm/arm64/lld_*.deb \
 #              packages/llvm/arm64/clang-default_*.deb \
 #              packages/llvm/arm64/llvm-default_*.deb \
 #              packages/llvm/arm64/llvm-dev_*.deb \
-#              packages/llvm/arm64/llvm-19-dev_*.deb
+#              packages/llvm/arm64/llvm-19-dev_*.deb \
+#              packages/llvm/arm64/libc++-dev_*.deb
 ```
 
 ## 参考

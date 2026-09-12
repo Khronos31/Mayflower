@@ -133,6 +133,166 @@ configure_target() {
   echo "    next: ninja -C ${t} … && ./tools/mac/llvm-swift/build.sh install"
 }
 
+
+# libc++ / libc++abi headers for Clang 19 (Darwin runtime dylib stays Apple's).
+# Separate runtimes configure: $WORKDIR/build/ios-libcxx
+# Success criterion: include/c++/v1 (+ pstl bits). No replacement system dylib.
+
+pick_libcxx_compilers() {
+  # build/ios clang is arm64-apple-ios — cannot execute on the Mac host.
+  # Prefer a host-runnable clang (native tree if present), else xcrun clang.
+  local cc="${HOST_CC}" cxx="${HOST_CXX}"
+  if [ -x "${BUILD}/native/bin/clang" ] \
+     && "${BUILD}/native/bin/clang" -dM -E -x c /dev/null >/dev/null 2>&1; then
+    cc="${BUILD}/native/bin/clang"
+    if [ -x "${BUILD}/native/bin/clang++" ]; then
+      cxx="${BUILD}/native/bin/clang++"
+    fi
+    echo "==> libcxx compiler: native tree ${cc}" >&2
+  else
+    echo "==> libcxx compiler: host ${cc} -target ${TRIPLE} (ios clang not runnable here)" >&2
+  fi
+  printf '%s\n%s\n' "${cc}" "${cxx}"
+}
+
+configure_libcxx() {
+  local t="${BUILD}/ios-libcxx"
+  local src_rt="${SRC}/llvm-project/runtimes"
+  [ -d "${src_rt}" ] || { echo "configure_libcxx: ${src_rt} が無い。先に fetch" >&2; exit 1; }
+  mkdir -p "${t}"
+
+  local cc cxx
+  { read -r cc; read -r cxx; } < <(pick_libcxx_compilers)
+
+  # Header-focused: do not ship a replacement libc++.dylib (Apple provides the
+  # Darwin runtime). LIBCXX_OVERRIDE_DARWIN_INSTALL like Procursus so headers
+  # still install under our prefix. Static is ON only because CMake requires
+  # shared or static; we never run install-cxx / install-cxxabi (libs).
+  cmake -G Ninja -S "${src_rt}" -B "${t}" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_SYSTEM_NAME=Darwin \
+    -DCMAKE_OSX_ARCHITECTURES=arm64 \
+    -DCMAKE_OSX_SYSROOT="${IPHONEOS_SDK}" \
+    -DCMAKE_C_COMPILER="${cc}" \
+    -DCMAKE_CXX_COMPILER="${cxx}" \
+    -DCMAKE_C_FLAGS="-target ${TRIPLE} -isysroot ${IPHONEOS_SDK}" \
+    -DCMAKE_CXX_FLAGS="-target ${TRIPLE} -isysroot ${IPHONEOS_SDK}" \
+    -DCMAKE_INSTALL_PREFIX="${PREFIX_IN_TAR}" \
+    -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi" \
+    -DLLVM_DEFAULT_TARGET_TRIPLE="${TRIPLE}" \
+    -DLLVM_INCLUDE_TESTS=OFF \
+    -DLIBCXX_OVERRIDE_DARWIN_INSTALL=ON \
+    -DLIBCXX_ENABLE_SHARED=OFF \
+    -DLIBCXX_ENABLE_STATIC=ON \
+    -DLIBCXX_INSTALL_LIBRARY=OFF \
+    -DLIBCXX_INSTALL_HEADERS=ON \
+    -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=OFF \
+    -DLIBCXX_INCLUDE_TESTS=OFF \
+    -DLIBCXX_INCLUDE_BENCHMARKS=OFF \
+    -DLIBCXX_INCLUDE_DOCS=OFF \
+    -DLIBCXXABI_ENABLE_SHARED=OFF \
+    -DLIBCXXABI_ENABLE_STATIC=ON \
+    -DLIBCXXABI_INSTALL_LIBRARY=OFF \
+    -DLIBCXXABI_INCLUDE_TESTS=OFF \
+    -DLIBCXXABI_ENABLE_NEW_DELETE_DEFINITIONS=ON
+  echo "==> configured libcxx runtimes at ${t}"
+  echo "    next: $0 libcxx   # or install (merges headers into stage)"
+}
+
+install_pstl_headers() {
+  # Procursus copies llvm-N/include/*pstl* next to include/c++.
+  # LLVM 19 also has __pstl inside c++/v1; still ship standalone pstl bits.
+  local dest="$1"
+  local pstl="${SRC}/llvm-project/pstl"
+  [ -d "${pstl}/include" ] || {
+    echo "==> no pstl/ tree; skip standalone pstl headers"
+    return 0
+  }
+  mkdir -p "${dest}"
+  # Headers only (exclude *.in templates)
+  if [ -d "${pstl}/include/pstl" ]; then
+    rm -rf "${dest}/pstl"
+    cp -a "${pstl}/include/pstl" "${dest}/"
+  fi
+  local f
+  for f in "${pstl}/include"/__pstl*; do
+    [ -e "${f}" ] || continue
+    case "${f}" in
+      *.in) continue ;;
+    esac
+    cp -a "${f}" "${dest}/"
+  done
+  # Generated site config (serial backend — headers-only, no TBB/OpenMP)
+  if [ ! -f "${dest}/__pstl_config_site" ]; then
+    if [ -f "${pstl}/include/__pstl_config_site.in" ]; then
+      sed -e 's/@_PSTL_PAR_BACKEND_SERIAL@/1/' \
+          -e 's/@_PSTL_PAR_BACKEND_TBB@//' \
+          -e 's/@_PSTL_PAR_BACKEND_OPENMP@//' \
+          -e 's/@_PSTL_HIDE_FROM_ABI_PER_TU@//' \
+          "${pstl}/include/__pstl_config_site.in" > "${dest}/__pstl_config_site" \
+        || true
+    fi
+    if [ ! -s "${dest}/__pstl_config_site" ]; then
+      cat > "${dest}/__pstl_config_site" <<'PSTL'
+#ifndef __PSTL_CONFIG_SITE
+#define __PSTL_CONFIG_SITE
+#define _PSTL_PAR_BACKEND_SERIAL
+#endif
+PSTL
+    fi
+  fi
+  echo "==> pstl headers in ${dest}"
+}
+
+do_install_libcxx() {
+  local t="${BUILD}/ios-libcxx"
+  local stage="${BUILD}/stage"
+  local inc="${stage}${PREFIX_IN_TAR}/include"
+  [ -f "${t}/CMakeCache.txt" ] || {
+    echo "do_install_libcxx: ${t} が無い。先に libcxx / configure" >&2
+    exit 1
+  }
+  mkdir -p "${stage}"
+  echo "==> DESTDIR=${stage} libc++ headers (no dylib) from ${t}"
+
+  if ninja -C "${t}" -t targets 2>/dev/null | awk -F: -v tgt=install-cxx-headers '$1 == tgt { found=1 } END { exit !found }'; then
+    DESTDIR="${stage}" ninja -C "${t}" install-cxx-headers
+  else
+    echo "do_install_libcxx: install-cxx-headers missing" >&2
+    ninja -C "${t}" -t targets 2>/dev/null | awk -F: '/install/ && /cxx|pstl/ { print $1 }' >&2 || true
+    exit 1
+  fi
+  # cxxabi headers (__cxxabi_config.h) if the target exists
+  ninja_install_one "${t}" install-cxxabi-headers 0
+
+  install_pstl_headers "${inc}"
+
+  local hdr="${inc}/c++/v1/string"
+  if [ ! -e "${hdr}" ]; then
+    echo "do_install_libcxx: ${hdr} missing after install-cxx-headers" >&2
+    echo "  tree:" >&2
+    find "${inc}" -maxdepth 3 -type d 2>/dev/null >&2 || true
+    exit 1
+  fi
+  echo "==> libc++ headers at ${inc}/c++"
+  ls "${inc}/c++/v1/string" "${inc}/c++/v1/__config" 2>/dev/null || true
+  ls "${inc}"/__pstl* "${inc}/pstl" 2>/dev/null || true
+}
+
+ensure_libcxx_in_stage() {
+  # Called from do_install after stage is (re)filled with llvm bits.
+  # Also the standalone `libcxx` command.
+  if [ ! -d "${SRC}/llvm-project/runtimes" ]; then
+    echo "==> no llvm-project/runtimes; skip libc++ headers" >&2
+    return 0
+  fi
+  if [ ! -f "${BUILD}/ios-libcxx/CMakeCache.txt" ]; then
+    echo "==> configuring header-focused libcxx (ios-libcxx)"
+    configure_libcxx
+  fi
+  do_install_libcxx
+}
+
 # Run matching install-* ninja targets that exist; skip missing optional ones.
 # Required targets fail hard so we never ship an incomplete Procursus replacement.
 ninja_install_one() {
@@ -226,9 +386,13 @@ do_install() {
   if [ -f "${ent}" ]; then
     install -m644 "${ent}" "${stage}${PREFIX_IN_TAR}/entitlements.plist"
   fi
+  # libc++ headers merge into the same stage (headers-only; Apple dylib stays)
+  ensure_libcxx_in_stage
+
   echo "==> installed to ${stage}${PREFIX_IN_TAR}"
   du -sh "${stage}${PREFIX_IN_TAR}"
   ls -la "${libdir}"/libLLVM*.dylib "${libdir}"/libclang*.dylib "${libdir}"/libLTO.dylib 2>/dev/null || true
+  ls "${stage}${PREFIX_IN_TAR}/include/c++/v1/string" 2>/dev/null || true
 }
 
 pack_dist() {
@@ -238,6 +402,9 @@ pack_dist() {
     echo "pack_dist: ${root} が無い。先に install すること" >&2
     exit 1
   }
+  if [ ! -e "${root}/include/c++/v1/string" ]; then
+    echo "pack_dist: warning: ${root}/include/c++/v1/string が無い。$0 libcxx を先に" >&2
+  fi
   mkdir -p "${DIST}"
   local out="${DIST}/${DIST_NAME}.tar.xz"
   local tmp="${BUILD}/pkg/${DIST_NAME}"
@@ -254,13 +421,14 @@ pack_dist() {
 
 usage() {
   cat <<USAGE
-Usage: $0 <fetch|native|configure|install|pack|all>
+Usage: $0 <fetch|native|configure|libcxx|install|pack|all>
 
   fetch      Swift ${SWIFT_VER} タグのソースを WORKDIR へ
   native     ホスト用 tblgen など
   configure  iphoneos 向け CMake（Clang/LLVM 中心。Swift は後続）
-  install    DESTDIR=${BUILD}/stage へ ninja install（entitlements 同梱）
-  pack       install 済みツリーを dist tarball に
+  libcxx     ヘッダ専用 runtimes (libcxx;libcxxabi) → stage の include/c++
+  install    DESTDIR=${BUILD}/stage へ ninja install（entitlements + libc++ headers）
+  pack       install 済みツリーを dist tarball に（include/c++ 含む）
   all        fetch + native + configure（ビルド/install/pack は手で）
 
 Env: WORKDIR SWIFT_VER LLVM_VER IOS_MIN IPHONEOS_SDK
@@ -272,6 +440,7 @@ case "${cmd}" in
   fetch) fetch ;;
   native) fetch; build_native ;;
   configure) fetch; apply_patches; build_native; configure_target ;;
+  libcxx) fetch; configure_libcxx; do_install_libcxx ;;
   install) do_install ;;
   pack) pack_dist ;;
   all) fetch; apply_patches; build_native; configure_target; echo "==> configure まで完了。ビルドは手動で ninja" ;;

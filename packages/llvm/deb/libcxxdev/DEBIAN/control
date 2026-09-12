@@ -1,0 +1,17 @@
+Package: libc++-dev
+Name: LLVM C++ Standard library (default)
+Version: @VERSION@
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libc++-19-dev (= @VERSION@)
+Conflicts: libc++-dev
+Replaces: libc++-dev
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://libcxx.llvm.org/
+Tag: role::developer
+Description: Default libc++ headers (Procursus libc++-dev replacement)
+ Same package name as Procursus libc++-dev; 19.1.4 upgrades it. Symlinks
+ /var/jb/usr/include/c++ → ../lib/llvm-19/include/c++. Does not touch
+ libllvm16, libc++-16-dev, or swift-5.9.2.

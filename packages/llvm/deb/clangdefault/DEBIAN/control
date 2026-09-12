@@ -5,7 +5,7 @@ Architecture: all
 Section: Development
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
-Depends: clang-19 (= @VERSION@), lld-19 (= @VERSION@)
+Depends: clang-19 (= @VERSION@), lld-19 (= @VERSION@), libc++-dev (= @VERSION@)
 Provides: clang (= @VERSION@), c-compiler, c++-compiler, objc-compiler
 Conflicts: clang
 Replaces: clang

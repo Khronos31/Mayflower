@@ -18,10 +18,30 @@ export WORKDIR="$HOME/dev/toolchain-swift-6.1"
 #   ninja -C "$WORKDIR/build/ios" -t targets | rg -i 'install.*(LLVM|clang|LTO|lld)'
 ninja -C "$WORKDIR/build/ios" clang lld libLLVM LLVM clang-cpp libclang LTO \
   llvm-ar llvm-nm llvm-ranlib llvm-config dsymutil opt llc
+./tools/mac/llvm-swift/build.sh libcxx    # headers-only runtimes → stage
 ./tools/mac/llvm-swift/build.sh install
 ./tools/mac/llvm-swift/build.sh pack
 # => $WORKDIR/dist/llvm-19.1.4-swift-6.1.1-aarch64-apple-ios.tar.xz
 ```
+
+### libc++ headers (`libcxx`)
+
+Darwin/iOS の `libc++.dylib` は Apple のものを使う。必要なのは **Clang 19 用
+ヘッダ**（`include/c++/v1`）。`build/ios` の既存 LLVM には runtimes ターゲットが
+無いので、別ディレクトリ `$WORKDIR/build/ios-libcxx` で
+`llvm-project/runtimes` を configure する:
+
+- triple: `arm64-apple-ios16.0`、iphoneos SDK（clang 本体と同じ）
+- コンパイラ: ホスト clang + `-target` + sysroot（`build/ios` の clang は
+  iOS バイナリなので Mac では実行できない）
+- `LIBCXX_OVERRIDE_DARWIN_INSTALL=ON`
+- `LIBCXX_ENABLE_SHARED=OFF` / `LIBCXX_INSTALL_LIBRARY=OFF`（dylib を置かない）
+- `DESTDIR=$WORKDIR/build/stage` へ `install-cxx-headers`（+ cxxabi / pstl）
+- prefix: `/var/jb/usr/lib/llvm-19` → 成果は `include/c++`（clang が
+  `InstalledDir/../include/c++/v1` を先に見る）
+
+`install` は LLVM 本体を stage に入れたあと、同じ stage に libc++ ヘッダを
+マージする。`pack` はそのまま tarball に含める。
 
 ### Reconfigure note (DYLIB)
 
@@ -56,6 +76,8 @@ Explicit `ninja install-*` (not full `install`):
   `install-LLVM` / `install-clang-cpp` / `install-libclang` / `install-LTO` or
   discovered aliases)
 - headers for llvm / llvm-c when install targets exist
+- libc++ headers under `include/c++` (+ `__pstl*` / `pstl` if generated)
+  via the separate `ios-libcxx` runtimes build (headers-only)
 
 Swift ランタイム同梱は後続。`patches-host/*.patch` は `configure` / `all` 時に当たる。
 
