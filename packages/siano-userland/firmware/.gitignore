@@ -1,0 +1,5 @@
+# Siano firmware blob (LICENCE.siano). Do not commit isdbt_rio.inp.
+# NOTICE is kept so redistributions ship the copyright notice.
+*
+!.gitignore
+!NOTICE
