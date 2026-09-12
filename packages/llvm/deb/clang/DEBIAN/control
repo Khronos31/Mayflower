@@ -12,6 +12,7 @@ Tag: role::developer
 Description: Clang/LLVM 19 for rootless iOS (Swift 6.1 companion)
  Versioned install under /var/jb/usr/lib/llvm-19 with clang-19 on PATH.
  The Darwin linker job runs ldid after link (driver patch) so
- ./a.out runs on jailbroken iOS without a manual sign step.
+ ./a.out runs without a manual sign. Set CLANG_NO_LDID to skip
+ (for Go/Rust/Nim final signing). CLANG_LDID_ENTITLEMENTS sets the plist.
  Built on Mac from Apple llvm-project @ Swift 6.1.x; packaged here.
  Does not replace Procursus clang-16. Install swift-6.1 for Swift.

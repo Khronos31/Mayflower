@@ -51,5 +51,10 @@ sudo dpkg -i packages/llvm/arm64/clang-19_*.deb \
 
 ラッパではない。`patches-host/clang_driver_darwin_ldid.patch` で
 `darwin::Linker::ConstructJob` の末尾に `ldid` を足している（dsymutil 別ジョブとは別経路）。
-entitlements は `CLANG_LDID_ENTITLEMENTS`、無ければ
-`/var/jb/usr/lib/llvm-19/entitlements.plist`、それも無ければ `ldid -S`。
+
+| 環境変数 | 意味 |
+|---|---|
+| （未設定） | リンク後に自動で `ldid` |
+| `CLANG_NO_LDID`（何か入っていれば） | 署名しない。Go/Rust/Nim など自前リンカが最後に署名するとき用 |
+| `CLANG_LDID_ENTITLEMENTS` | entitlements plist のパス。未設定なら `/var/jb/usr/lib/llvm-19/entitlements.plist`、それも無ければ `ldid -S` |
+
