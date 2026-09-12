@@ -30,6 +30,10 @@ prepare() {
 build() {
   cd "${srcdir}" || return 1
 
+  # getentropy は iOS ヘッダで API_UNAVAILABLE。configure のリンク試験は通るが
+  # コンパイルで未宣言になる（Python と同じ）。
+  ac_cv_func_getentropy=no \
+  ac_cv_func_clock_settime=no \
   "${CONFIG_SHELL}" configure \
     --build=aarch64-apple-darwin \
     --prefix="${JB}/usr" \

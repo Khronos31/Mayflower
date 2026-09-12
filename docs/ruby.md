@@ -30,6 +30,9 @@ CRuby を rootless 脱獄 iOS 上でセルフビルドする。
 iOS SDK に `sys/vnode.h` は無い。`dir.c` が使う定数だけ XNU の値を置く
 （`VT_HFS` 16、`VT_CIFS` 23、`VREG` 1、`VDIR` 2、`VLNK` 5）。
 
+`getentropy` はヘッダが `API_UNAVAILABLE(ios)` なので、configure に
+`ac_cv_func_getentropy=no` を渡す（`clock_settime` も同じ。Python と同じ）。
+
 ### シェル
 
 rootless に `/bin/sh` は無い。パッチで次を `/var/jb/bin/sh` に向ける。
