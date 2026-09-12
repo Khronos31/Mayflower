@@ -1,0 +1,15 @@
+Package: apple-a14
+Name: A14 (ARMv8.5-A)
+Version: @VERSION@
+Architecture: all
+Section: System
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: cy+model.iphone (>= 13.1) | cy+model.ipad (>= 13.1)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Tag: role::dummy
+Description: Gate for A14 / ARMv8.5-A or newer
+ Empty package. cy+model.iphone / cy+model.ipad version is the device
+ identifier with the comma turned into a dot (iPhone13,1 → 13.1).
+ iPhone 12 mini and iPad Air (4th generation) are the oldest A14 devices.
+ Claude Code will Depend on this package.
