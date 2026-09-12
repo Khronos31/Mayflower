@@ -1,0 +1,14 @@
+Package: ripgrep-15
+Name: ripgrep 15
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Utilities
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/BurntSushi/ripgrep
+Tag: purpose::console
+Description: Recursively search directories for a regex pattern
+ Built on-device with Mayflower rustc 1.98. Installs the versioned
+ command rg-15. Put rg on PATH with ripgrep-default, which replaces
+ Procursus ripgrep 12.1.1.
