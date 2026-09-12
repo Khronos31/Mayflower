@@ -75,7 +75,8 @@ check() {
     return 1
   }
   # Shared builds need libclang-cpp / libLLVM from the unpacked tree before install.
-  export DYLD_LIBRARY_PATH="${srcdir}/${treedir}/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+  # Do NOT export permanently — later wrapper compile uses host/procursus cc.
+  local _dyld="${srcdir}/${treedir}/lib"
   if command -v ldid >/dev/null 2>&1; then
     ldid -S"${ENTFILE}" "${clang}"
     local d
@@ -85,7 +86,7 @@ check() {
       ldid -S"${ENTFILE}" "${d}" || true
     done
   fi
-  "${clang}" --version
+  DYLD_LIBRARY_PATH="${_dyld}${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" "${clang}" --version
 }
 
 
