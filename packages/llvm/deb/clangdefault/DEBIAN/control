@@ -1,0 +1,18 @@
+Package: clang-default
+Name: Clang (default version)
+Version: @VERSION@
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: clang-19 (= @VERSION@), llvm-19-linker-tools (= @VERSION@)
+Provides: clang (= @VERSION@), c-compiler, c++-compiler, objc-compiler
+Conflicts: clang
+Replaces: clang
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://clang.llvm.org/
+Tag: role::developer
+Description: Clang 19 as the default clang on PATH
+ Puts clang / clang++ / clang-cpp (and cc / c++) on PATH pointing at
+ clang-19. Provides c-compiler and friends, and replaces Procursus clang
+ meta so packages depending on clang pick this up.

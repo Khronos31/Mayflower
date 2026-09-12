@@ -1,0 +1,15 @@
+Package: clang-19
+Name: Clang 19
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: ld64, ldid, llvm-19-linker-tools (= @VERSION@)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://clang.llvm.org/
+Tag: role::developer
+Description: Clang 19 frontend (versioned)
+ Installs under /var/jb/usr/lib/llvm-19 with clang-19 on PATH via a thin
+ wrapper (Procursus-style). Resource headers included. Does not take over
+ the unversioned clang name; install clang-default for that.

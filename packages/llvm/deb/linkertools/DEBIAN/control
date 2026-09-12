@@ -1,0 +1,15 @@
+Package: llvm-19-linker-tools
+Name: LLVM 19 linker tools
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: ldid
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://lld.llvm.org/
+Tag: role::developer
+Description: lld for LLVM 19 / Clang 19
+ Provides lld, ld64.lld and ld.lld under /var/jb/usr/lib/llvm-19 plus
+ versioned PATH links (lld-19, ld64.lld-19). Includes post-link ldid
+ signing after Mach-O write.

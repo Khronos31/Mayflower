@@ -1,17 +1,23 @@
-# llvm（Clang 19 / Swift 6.1）
+# llvm（Clang 19）
 
 ソースツリー: [`packages/llvm`](../packages/llvm)
 
 ## 方針
 
 - **端末ではソースビルドしない**（Node / Rust と同じ例外）。
-- Mac で Apple `llvm-project` + Swift **6.1.x** をクロスし、tarball を梱包。
-- 版付きのみ。Procursus の **clang-16 / Swift 5.9.2 を default 置換しない**。
+- Mac で Apple `llvm-project`（Swift 6.1.x タグの LLVM）をクロスし、tarball を梱包。
+- 版付きパッケージに加え、`clang-default` / `llvm-default` で Procursus の `clang` / `llvm` メタを置換できる。
+- Swift フロントエンドは別パッケージ。
 
 | パッケージ | 内容 |
 |---|---|
-| `clang-19` | `/var/jb/usr/lib/llvm-19` + `clang-19` など |
-| `swift-6.1` | `swift-6.1` / `swiftc-6.1`（本体は llvm-19 ツリー） |
+| `clang-19` | コンパイラ + resource headers + `clang-19` ラッパー |
+| `llvm-19-linker-tools` | `lld` / `ld64.lld`（ldid 署名込み） |
+| `llvm-19` | `llvm-ar` / `llvm-nm` / `llvm-ranlib` / `llvm-config` |
+| `clang-default` | PATH の `clang` 等。`Provides: clang` で Procursus `clang` を置換 |
+| `llvm-default` | PATH の `llvm-ar` / `lld` 等。`Provides: llvm` で Procursus `llvm` を置換 |
+
+Swift は別パッケージ（このツリーには含めない）。
 
 ## 版ピン
 
@@ -39,8 +45,11 @@ ninja -C "$WORKDIR/build/ios"   # clang / lld など
 ```sh
 export LLVM_DIST_DIR="$HOME/dev/toolchain-swift-6.1/dist"
 ./make.sh llvm
-sudo dpkg -i packages/llvm/arm64/clang-19_*.deb \
-             packages/llvm/arm64/swift-6.1_*.deb
+sudo dpkg -i packages/llvm/arm64/llvm-19-linker-tools_*.deb \
+             packages/llvm/arm64/llvm-19_*.deb \
+             packages/llvm/arm64/clang-19_*.deb \
+             packages/llvm/arm64/clang-default_*.deb \
+             packages/llvm/arm64/llvm-default_*.deb
 ```
 
 ## 参考
@@ -74,11 +83,10 @@ sudo dpkg -i packages/llvm/arm64/clang-19_*.deb \
 実体は `/var/jb/usr/lib/llvm-19/bin`。こうしないと `InstalledDir` が preboot 実パスになり、
 未指定時の `SDKROOT`（`iPhoneOS.sdk`）も入らない。
 
-## 同梱ツール（llvm-ar ほか）
+## 同梱ツール
 
-`clang-19` にコンパイラ＋リンカ＋ LLVM binutils 相当を入れる。`llvm-ar` / `llvm-nm` / `llvm-ranlib` / `llvm-config` は版付き symlink（`*-19`）。アーカイブ出力に ldid は不要。ツール本体の署名は梱包時。
-
-`clang-cl` / `wasm-ld` / `lld-link` は iOS 用途外だが、ツリーに残っていてもよい。
+コンパイラは `clang-19`、リンカは `llvm-19-linker-tools`、`llvm-ar` 等は `llvm-19`。
+アーカイブ出力に ldid は不要。ツール本体の署名は梱包時。
 
 ## 実機検証
 

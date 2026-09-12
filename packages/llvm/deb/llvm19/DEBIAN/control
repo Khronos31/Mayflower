@@ -1,0 +1,14 @@
+Package: llvm-19
+Name: LLVM 19
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: ldid
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://llvm.org/
+Tag: role::developer
+Description: llvm-ar / llvm-nm / llvm-ranlib / llvm-config (19)
+ Versioned tools under /var/jb/usr/lib/llvm-19 and *-19 on PATH.
+ Slim build for now (no shared libLLVM; no -dev package yet).

@@ -3,39 +3,40 @@
 #
 # Mayflower | packages/llvm/make.sh
 #
-# **これだけは端末で建てない。** LLVM + Swift の bootstrap は iPhone 8 では
-# 成立しない。Mac で Swift 6.1.x / Clang 19 をクロスし、出来た prefix を
-# ここへ渡して梱包する。建て方は tools/mac/llvm-swift/build.sh。
+# Mac で建てた dist を梱包。端末ではソースビルドしない。
+# Swift は別パッケージ（ここには含めない）。
 #
-# 出来上がるのは2つ（当面 default メタは作らない = Procursus clang-16 /
-# swift 5.9.2 を置換しない）:
-#   clang-19   /var/jb/usr/lib/llvm-19 と clang-19 / clang++-19 など
-#              （lld が主で ldid。clang は非 lld / dsymutil。patches-host/）
-#   swift-6.1  swiftc-6.1 と Swift ランタイム（llvm-19 ツリー内）
+# 分割:
+#   clang-19, llvm-19-linker-tools, llvm-19
+# 置換メタ（Procursus の clang / llvm を Provides + Conflicts/Replaces）:
+#   clang-default, llvm-default
 
 pkgname=llvm
-# Apple llvm-project @ swift-6.1.1-RELEASE → LLVM 19.1.4
 pkgver=19.1.4
-pkgrel=4
-# Debian 風に Swift を版に載せる（表示・依存用）。実体の tarball 名は dist。
+pkgrel=5
+# dist tarball 名に残っているだけ（Swift 同梱前の Mac 成果物）
 swiftver=6.1.1
 srcname=dist
 source=""
-subpkgs=(clang swift)
+subpkgs=(clang19 linkertools llvm19 clangdefault llvmdefault)
 export compress=xz
 
 llvm_major=19
-swift_series=6.1
 
 llvm_prefix() {
   echo "${JB}/usr/lib/llvm-${llvm_major}"
+}
+
+tree_name() {
+  echo "llvm-${pkgver}-swift-${swiftver}-aarch64-apple-ios"
 }
 
 prepare() {
   : "${LLVM_DIST_DIR:?Mac で建てた dist のあるディレクトリを渡すこと（tools/mac/llvm-swift/build.sh）}"
   mkdir -p "${srcdir}"
   cd "${srcdir}" || return 1
-  local t="llvm-${pkgver}-swift-${swiftver}-aarch64-apple-ios"
+  local t
+  t="$(tree_name)"
   if [ ! -d "${t}" ]; then
     [ -r "${LLVM_DIST_DIR}/${t}.tar.xz" ] || {
       echo "prepare: ${LLVM_DIST_DIR}/${t}.tar.xz が無い" >&2
@@ -46,84 +47,73 @@ prepare() {
 }
 
 build() {
-  : # 母艦で建ててある
+  :
 }
 
 check() {
   cd "${srcdir}" || return 1
-  local tree="llvm-${pkgver}-swift-${swiftver}-aarch64-apple-ios"
-  local clang="${tree}/bin/clang"
+  local clang
+  clang="$(tree_name)/bin/clang"
   [ -x "${clang}" ] || {
     echo "check: ${clang} が無い" >&2
     return 1
   }
-  # 母艦では未署名。ここでは --version だけ（端末の ldid 前提）。
   if command -v ldid >/dev/null 2>&1; then
     ldid -S"${ENTFILE}" "${clang}"
   fi
   "${clang}" --version
 }
 
-package_clang() {
+install_tool() {
+  local src="$1" dest="$2"
+  install -d "$(dirname "${dest}")"
+  if [ -L "${src}" ]; then
+    cp -a "${src}" "${dest}"
+  else
+    install -m755 "${src}" "${dest}"
+    ldid -S"${ENTFILE}" "${dest}" || true
+  fi
+}
+
+install_clang_wrapper() {
+  local outname="$1" toolname="$2" pref="$3"
+  local real="${pref}/bin/${toolname}"
+  [ -e "${pkgdir}${real}" ] || [ -L "${pkgdir}${real}" ] || return 0
+  "${CC}" -O2 -o "${pkgdir}${JB}/usr/bin/${outname}" \
+    "${PROJECTROOT}/files/toolchain-wrapper.c" \
+    -DTOOL="\"${real}\"" \
+    -DDEFAULT_SYSROOT="\"${JB}/usr/share/SDKs/iPhoneOS.sdk\"" \
+    -DEXTRA_CPATH="\"${JB}/usr/include\"" \
+    -DEXTRA_LIBRARY_PATH="\"${JB}/usr/lib\""
+  ldid -S"${ENTFILE}" "${pkgdir}${JB}/usr/bin/${outname}"
+}
+
+package_clang19() {
   cd "${srcdir}" || return 1
-  local tree="llvm-${pkgver}-swift-${swiftver}-aarch64-apple-ios"
-  local pref
+  local tree pref
+  tree="$(tree_name)"
   pref="$(llvm_prefix)"
 
-  install -d "${pkgdir}${pref}" \
+  install -d "${pkgdir}${pref}/bin" "${pkgdir}${pref}/lib" \
     "${pkgdir}${JB}/usr/bin" \
     "${pkgdir}${JB}/usr/share/doc/clang-${llvm_major}" \
     "${pkgdir}${JB}/usr/share/licenses/clang-${llvm_major}"
 
-  # prefix 丸ごとでは Swift も入るので、clang 側は bin/lib の Clang/LLVM 系を中心に。
-  # 実配布の切り方は dist の中身を見て調整する。初期はツリーを共有し、
-  # swift パッケージが同じ pref を Depends する前提で clang が本体を持つ。
-  cp -a "${tree}/." "${pkgdir}${pref}/"
+  install_tool "${tree}/bin/clang-19" "${pkgdir}${pref}/bin/clang-19"
+  ln -sf clang-19 "${pkgdir}${pref}/bin/clang"
+  ln -sf clang-19 "${pkgdir}${pref}/bin/clang++"
+  ln -sf clang-19 "${pkgdir}${pref}/bin/clang-cpp"
 
-  # entitlements（ドライバが $PREFIX/entitlements.plist を探す）
+  if [ -d "${tree}/lib/clang" ]; then
+    cp -a "${tree}/lib/clang" "${pkgdir}${pref}/lib/"
+  fi
+
   install -m644 "${PROJECTROOT}/files/entitlements.plist" \
     "${pkgdir}${pref}/entitlements.plist"
 
-  # ツール本体を梱包時に署名（母艦ビルドは未署名）
-  local bin
-  for bin in clang-19 lld llvm-ar llvm-nm llvm-config; do
-    if [ -f "${pkgdir}${pref}/bin/${bin}" ] && [ ! -L "${pkgdir}${pref}/bin/${bin}" ]; then
-      ldid -S"${ENTFILE}" "${pkgdir}${pref}/bin/${bin}" || true
-    fi
-  done
-
-  # clang 系は Procursus 同様、/usr/bin に薄いラッパーを置く。
-  # symlink 直結だと InstalledDir が preboot 実パスになり、また SDKROOT も入らない。
-  install_clang_wrapper() {
-    local outname="$1" toolname="$2"
-    local real="${pref}/bin/${toolname}"
-    [ -e "${pkgdir}${real}" ] || return 0
-    "${CC}" -O2 -o "${pkgdir}${JB}/usr/bin/${outname}" \
-      "${PROJECTROOT}/files/toolchain-wrapper.c" \
-      -DTOOL="\"${real}\"" \
-      -DDEFAULT_SYSROOT="\"${JB}/usr/share/SDKs/iPhoneOS.sdk\"" \
-      -DEXTRA_CPATH="\"${JB}/usr/include\"" \
-      -DEXTRA_LIBRARY_PATH="\"${JB}/usr/lib\""
-    ldid -S"${ENTFILE}" "${pkgdir}${JB}/usr/bin/${outname}"
-  }
-  install_clang_wrapper "clang-${llvm_major}" "clang-19"
-  install_clang_wrapper "clang++-${llvm_major}" "clang++"
-  install_clang_wrapper "clang-cpp-${llvm_major}" "clang-cpp"
-
-  # リンカ / binutils は版付き symlink のまま
-  local t
-  for t in lld llvm-ar llvm-ranlib llvm-nm llvm-config; do
-    if [ -e "${pkgdir}${pref}/bin/${t}" ]; then
-      ln -sf "../lib/llvm-${llvm_major}/bin/${t}" \
-        "${pkgdir}${JB}/usr/bin/${t}-${llvm_major}"
-    fi
-  done
-  for t in ld64.lld ld.lld; do
-    if [ -e "${pkgdir}${pref}/bin/${t}" ]; then
-      ln -sf "../lib/llvm-${llvm_major}/bin/${t}" \
-        "${pkgdir}${JB}/usr/bin/${t}-${llvm_major}"
-    fi
-  done
+  install_clang_wrapper "clang-${llvm_major}" "clang-19" "${pref}"
+  install_clang_wrapper "clang++-${llvm_major}" "clang++" "${pref}"
+  install_clang_wrapper "clang-cpp-${llvm_major}" "clang-cpp" "${pref}"
 
   if [ -r "${tree}/LICENSE.TXT" ]; then
     install -m644 "${tree}/LICENSE.TXT" \
@@ -131,24 +121,78 @@ package_clang() {
   fi
 }
 
-package_swift() {
-  # Swift の実体は clang パッケージが入れた llvm-19 ツリー内。
-  # ここでは版付きコマンドの symlink と doc だけ置く。
-  local pref
+package_linkertools() {
+  cd "${srcdir}" || return 1
+  local tree pref
+  tree="$(tree_name)"
   pref="$(llvm_prefix)"
-  install -d "${pkgdir}${JB}/usr/bin" \
-    "${pkgdir}${JB}/usr/share/doc/swift-${swift_series}" \
-    "${pkgdir}${JB}/usr/share/licenses/swift-${swift_series}"
+
+  install -d "${pkgdir}${pref}/bin" "${pkgdir}${JB}/usr/bin" \
+    "${pkgdir}${JB}/usr/share/doc/llvm-${llvm_major}-linker-tools"
+
+  install_tool "${tree}/bin/lld" "${pkgdir}${pref}/bin/lld"
+  ln -sf lld "${pkgdir}${pref}/bin/ld64.lld"
+  ln -sf lld "${pkgdir}${pref}/bin/ld.lld"
 
   local t
-  for t in swift swiftc; do
+  for t in lld ld64.lld ld.lld; do
     ln -sf "../lib/llvm-${llvm_major}/bin/${t}" \
-      "${pkgdir}${JB}/usr/bin/${t}-${swift_series}"
+      "${pkgdir}${JB}/usr/bin/${t}-${llvm_major}"
   done
-
-  # 空でも deb ができるようにプレースホルダ
-  printf 'Swift %s (packaged with Mayflower llvm %s)\n' \
-    "${swiftver}" "${pkgver}" \
-    > "${pkgdir}${JB}/usr/share/doc/swift-${swift_series}/README.Mayflower"
 }
 
+package_llvm19() {
+  cd "${srcdir}" || return 1
+  local tree pref
+  tree="$(tree_name)"
+  pref="$(llvm_prefix)"
+
+  install -d "${pkgdir}${pref}/bin" "${pkgdir}${JB}/usr/bin" \
+    "${pkgdir}${JB}/usr/share/doc/llvm-${llvm_major}"
+
+  local t
+  for t in llvm-ar llvm-nm llvm-config; do
+    [ -e "${tree}/bin/${t}" ] || continue
+    install_tool "${tree}/bin/${t}" "${pkgdir}${pref}/bin/${t}"
+  done
+  if [ -e "${tree}/bin/llvm-ranlib" ]; then
+    cp -a "${tree}/bin/llvm-ranlib" "${pkgdir}${pref}/bin/llvm-ranlib"
+  else
+    ln -sf llvm-ar "${pkgdir}${pref}/bin/llvm-ranlib"
+  fi
+
+  for t in llvm-ar llvm-nm llvm-ranlib llvm-config; do
+    [ -e "${pkgdir}${pref}/bin/${t}" ] || continue
+    ln -sf "../lib/llvm-${llvm_major}/bin/${t}" \
+      "${pkgdir}${JB}/usr/bin/${t}-${llvm_major}"
+  done
+}
+
+package_clangdefault() {
+  install -d "${pkgdir}${JB}/usr/bin" \
+    "${pkgdir}${JB}/usr/share/doc/clang-default"
+
+  ln -sf "clang-${llvm_major}" "${pkgdir}${JB}/usr/bin/clang"
+  ln -sf "clang++-${llvm_major}" "${pkgdir}${JB}/usr/bin/clang++"
+  ln -sf "clang-cpp-${llvm_major}" "${pkgdir}${JB}/usr/bin/clang-cpp"
+  ln -sf "clang-${llvm_major}" "${pkgdir}${JB}/usr/bin/cc"
+  ln -sf "clang++-${llvm_major}" "${pkgdir}${JB}/usr/bin/c++"
+
+  printf 'clang-default → clang-%s\n' "${llvm_major}" \
+    > "${pkgdir}${JB}/usr/share/doc/clang-default/README"
+}
+
+package_llvmdefault() {
+  install -d "${pkgdir}${JB}/usr/bin" \
+    "${pkgdir}${JB}/usr/share/doc/llvm-default"
+
+  local t
+  for t in llvm-ar llvm-nm llvm-ranlib llvm-config lld; do
+    ln -sf "${t}-${llvm_major}" "${pkgdir}${JB}/usr/bin/${t}"
+  done
+  ln -sf "ld64.lld-${llvm_major}" "${pkgdir}${JB}/usr/bin/ld64.lld"
+  ln -sf "ld.lld-${llvm_major}" "${pkgdir}${JB}/usr/bin/ld.lld"
+
+  printf 'llvm-default → llvm-%s tools\n' "${llvm_major}" \
+    > "${pkgdir}${JB}/usr/share/doc/llvm-default/README"
+}

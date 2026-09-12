@@ -1,0 +1,17 @@
+Package: llvm-default
+Name: LLVM (default version)
+Version: @VERSION@
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: llvm-19 (= @VERSION@), llvm-19-linker-tools (= @VERSION@)
+Provides: llvm (= @VERSION@)
+Conflicts: llvm
+Replaces: llvm
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://llvm.org/
+Tag: role::developer
+Description: LLVM 19 as the default llvm toolchain meta
+ Replaces Procursus llvm meta. Versioned tools remain llvm-*-19;
+ unversioned llvm-ar etc. are linked from llvm-default.

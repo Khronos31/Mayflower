@@ -1,7 +1,7 @@
 # Mayflower
 
 脱獄した iOS へパッケージを移植するためのビルドファイル集。原則として端末の上で
-（Mac を介さず）ソースからビルドし、`.deb` を作る。例外は Rust と Node と llvm（Clang 19 / Swift 6.1）
+（Mac を介さず）ソースからビルドし、`.deb` を作る。例外は Rust と Node と llvm（Clang 19）
 （ツールチェイン / V8 自身は Mac からクロスビルド、出来たバイナリは端末で動く）。
 
 `make.sh <パッケージ名>` を叩くと、取得・パッチ適用・ビルド・検証・パッケージング
@@ -57,7 +57,7 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 | [lua](docs/lua.md) | 5.5.1 | `lua5.5` / `liblua5.5-0` / `liblua5.5-dev` / `lua-default` |
 | [luarocks](docs/luarocks.md) | 3.13.0 | Lua 5.5 用。ユーザートリーは `~/.luarocks` |
 | [node](docs/node.md) | 24.21.0 | `nodejs-24` / `node-default`。ビルドだけ Mac。`--jitless` 既定。`node-default` が Procursus の npm 8.1.1 を置換 |
-| [llvm](docs/llvm.md) | 19.1.4 | `clang-19` / `swift-6.1`。**ビルドは Mac**（Swift 6.1.x）。default はまだ置換しない。Procursus 16 / 5.9.2 並立 |
+| [llvm](docs/llvm.md) | 19.1.4 | `clang-19` / `llvm-19` / `llvm-19-linker-tools` + `clang-default` / `llvm-default`。**ビルドは Mac**。default で Procursus `clang` / `llvm` を置換可。Swift は別パッケージ |
 | [siano-userland](docs/siano-userland.md) | 0.1.5 | `Name: Siano Driver`。バイナリは `siano-ts`。Siano RIO (PX-S1UD) の ISDB-T |
 | [ripgrep](docs/ripgrep.md) | 15.2.0 | `ripgrep-15` / `ripgrep-default`。端末の rustc で建てる。Procursus 12.1.1 を置換 |
 
