@@ -27,8 +27,8 @@ CRuby を rootless 脱獄 iOS 上でセルフビルドする。
 `MACOSX_DEPLOYMENT_TARGET` に iOS の版を入れ、clang が macOS モードになる
 （Python と同じ）。
 
-iOS SDK に `sys/vnode.h` は無い。`dir.c` は UTF-8 正規化の判定に `VT_HFS` /
-`VT_CIFS` だけ使うので、ヘッダが無いときは XNU の値（16 と 23）を置く。
+iOS SDK に `sys/vnode.h` は無い。`dir.c` が使う定数だけ XNU の値を置く
+（`VT_HFS` 16、`VT_CIFS` 23、`VREG` 1、`VDIR` 2、`VLNK` 5）。
 
 ### シェル
 
