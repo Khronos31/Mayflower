@@ -137,7 +137,8 @@ configure_target() {
 # Required targets fail hard so we never ship an incomplete Procursus replacement.
 ninja_install_one() {
   local t="$1" target="$2" required="${3:-0}"
-  if ninja -C "${t}" -t targets 2>/dev/null | awk '{print $1}' | grep -qx "${target}"; then
+  # Full scan (no grep -q): under pipefail, early pipe close yields 141 and looks like "missing".
+  if ninja -C "${t}" -t targets 2>/dev/null | awk -F: -v tgt="${target}" '$1 == tgt { found=1 } END { exit !found }'; then
     echo "==> ninja ${target}"
     DESTDIR="${BUILD}/stage" ninja -C "${t}" "${target}"
     return 0
@@ -188,9 +189,9 @@ do_install() {
   done
 
   # Shared libs — discover spelling, prefer install-LLVM / install-clang-cpp / install-libclang / install-LTO
-  if ninja -C "${t}" -t targets 2>/dev/null | awk '{print $1}' | grep -qx install-LLVM; then
+  if ninja -C "${t}" -t targets 2>/dev/null | awk -F: -v tgt=install-LLVM '$1 == tgt { found=1 } END { exit !found }'; then
     ninja_install_one "${t}" install-LLVM 1
-  elif ninja -C "${t}" -t targets 2>/dev/null | awk '{print $1}' | grep -qx install-libLLVM; then
+  elif ninja -C "${t}" -t targets 2>/dev/null | awk -F: -v tgt=install-libLLVM '$1 == tgt { found=1 } END { exit !found }'; then
     ninja_install_one "${t}" install-libLLVM 1
   else
     echo "do_install: neither install-LLVM nor install-libLLVM exists — reconfigure with DYLIB?" >&2
@@ -242,8 +243,11 @@ pack_dist() {
   local tmp="${BUILD}/pkg/${DIST_NAME}"
   rm -rf "${tmp}"
   mkdir -p "${tmp}"
-  cp -a "${root}/." "${tmp}/"
-  tar -C "${BUILD}/pkg" -cJf "${out}" "${DIST_NAME}"
+  # Strip Apple xattrs so GNU tar on jb iOS does not spam unknown header warnings.
+  COPYFILE_DISABLE=1 cp -a "${root}/." "${tmp}/"
+  COPYFILE_DISABLE=1 tar --no-xattr -C "${BUILD}/pkg" -cJf "${out}.partial" "${DIST_NAME}"
+  xz -t "${out}.partial"
+  mv "${out}.partial" "${out}"
   echo "==> wrote ${out}"
   ls -lh "${out}"
 }
