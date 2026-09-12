@@ -4,6 +4,7 @@
 
 ```sh
 export PATH="/var/jb/usr/lib/llvm-19/bin:$PATH"
+# 作業ファイルは $HOME/tmp（/tmp だと SIGKILL されることがある）
 bash packages/llvm/tests/ldid-matrix.sh
 # KEEP=1 で作業ディレクトリを残す
 ```
@@ -89,3 +90,8 @@ bash packages/llvm/tests/ldid-matrix.sh
 | その他 (`llvm-objdump` 等) | ツリー内にあれば同梱、必須 symlink は後回し | 必要になったら追加 |
 
 Swift 系は `swift-6.1`。`clang-cl` / `wasm-ld` / `lld-link` は iOS 用途外だが残してよい。
+
+## 既知のパッチ前提
+
+Apple `swift-6.1.1-RELEASE` の lld は Mach-O の platform check を常時エラーにする stub がある。
+`patches-host/lld_macho_ios_platform.patch` で外さないと `ld64.lld` は iOS をリンクできない。

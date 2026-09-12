@@ -1,0 +1,16 @@
+--- a/lld/MachO/InputFiles.cpp	2026-09-13 03:35:14
++++ b/lld/MachO/InputFiles.cpp	2026-09-13 03:35:14
+@@ -157,10 +157,9 @@
+   if (platformInfos.empty())
+     return true;
+ 
+-  // Swift LLVM fork downstream change start
+-  error("This version of lld does not support linking for platform " + getPlatformName(platformInfos.front().target.Platform));
+-  return false;
+-  // Swift LLVM fork downstream change end
++  // Mayflower: Apple's swift-6.1.1-RELEASE stub disabled the entire Mach-O
++  // platform check (always error). Restore upstream compatibility checks so
++  // ld64.lld can link iphoneos-arm64. (was: Swift LLVM fork downstream change)
+ 
+   auto it = find_if(platformInfos, [&](const PlatformInfo &info) {
+     return removeSimulator(info.target.Platform) ==
