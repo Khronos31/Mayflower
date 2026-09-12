@@ -106,3 +106,7 @@ caffeinate -i nohup "$MAYFLOWER/tools/mac/node/build.sh" > ~/node-ios/build.log 
 
 成果は `~/node-ios/dist/node-24.21.0-aarch64-apple-ios.tar.xz`。端末では
 `NODE_DIST_DIR` にその `dist` を渡す。
+
+## llvm-swift
+
+Clang 19 / Swift 6.1 クロス。詳細は [llvm-swift/README.md](llvm-swift/README.md)。

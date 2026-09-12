@@ -1,0 +1,14 @@
+Package: swift-6.1
+Name: Swift 6.1 (Mayflower)
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: clang-19 (= @VERSION@)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.swift.org/
+Tag: role::developer
+Description: Swift 6.1 compiler frontend (versioned)
+ Provides swift-6.1 / swiftc-6.1 pointing at /var/jb/usr/lib/llvm-19.
+ Does not replace Procursus swift 5.9.2 on PATH.
