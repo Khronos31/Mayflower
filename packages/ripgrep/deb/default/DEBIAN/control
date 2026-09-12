@@ -1,0 +1,16 @@
+Package: ripgrep-default
+Name: ripgrep (default version)
+Version: @VERSION@
+Architecture: all
+Section: Utilities
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: ripgrep-15 (>= @VERSION@)
+Provides: ripgrep (= @VERSION@)
+Conflicts: ripgrep
+Replaces: ripgrep
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/BurntSushi/ripgrep
+Tag: purpose::console
+Description: ripgrep 15 as the default rg on PATH
+ Puts rg on PATH, pointing at rg-15. Replaces Procursus ripgrep 12.1.1.
