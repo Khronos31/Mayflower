@@ -84,6 +84,14 @@ package_clang() {
   install -m644 "${PROJECTROOT}/files/entitlements.plist" \
     "${pkgdir}${pref}/entitlements.plist"
 
+  # ツール本体を梱包時に署名（母艦ビルドは未署名）
+  local bin
+  for bin in clang-19 lld llvm-ar llvm-nm llvm-config; do
+    if [ -f "${pkgdir}${pref}/bin/${bin}" ] && [ ! -L "${pkgdir}${pref}/bin/${bin}" ]; then
+      ldid -S"${ENTFILE}" "${pkgdir}${pref}/bin/${bin}" || true
+    fi
+  done
+
   # 版付き symlink（実体は llvm-19/bin）
   local t
   for t in clang clang++ clang-cpp lld llvm-ar llvm-ranlib llvm-nm llvm-config; do
