@@ -1,0 +1,14 @@
+Package: luarocks
+Name: LuaRocks
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: lua5.5, liblua5.5-0, liblua5.5-dev, unzip, curl
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://luarocks.org/
+Tag: purpose::console
+Description: Lua package manager for Lua 5.5
+ Built on-device for rootless jailbreaks. Rocks go to ~/.luarocks (user)
+ and /var/jb/usr/local (system).

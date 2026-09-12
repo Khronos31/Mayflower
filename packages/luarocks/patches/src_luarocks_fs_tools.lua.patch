@@ -1,0 +1,13 @@
+--- a/src/luarocks/fs/tools.lua
++++ b/src/luarocks/fs/tools.lua
+@@ -58,6 +58,10 @@
+          local pipe = io.popen(fs.quiet_stderr(vars.PWD))
+          current = pipe:read("*a"):gsub("^%s*", ""):gsub("%s*$", "")
+          pipe:close()
++         -- popen uses /bin/sh; rootless iOS has none, so pwd comes back empty.
++         if current == "" then
++            current = os.getenv("PWD") or os.getenv("HOME") or "/"
++         end
+          cache_pwd = current
+       end
+       for _, directory in ipairs(dir_stack) do

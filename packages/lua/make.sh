@@ -18,7 +18,7 @@
 
 pkgname=lua
 pkgver=5.5.1
-pkgrel=4
+pkgrel=3
 srcname="lua-${pkgver}"
 source="https://www.lua.org/ftp/lua-${pkgver}.tar.gz"
 subpkgs=(lib lua dev default)
