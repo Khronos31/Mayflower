@@ -79,7 +79,7 @@ packages/<名前>/
 `make.sh` が呼ぶ順序は `clean` → `download` → `prepare` → `applyPatch` → `build` →
 `check`（定義されていれば）→ `package` → `tidy` → `makedeb`。脱獄環境特有の
 署名・シェバン・ライブラリ探索への対処など、ビルドの勘所は [docs/building.md](docs/building.md)
-を参照。
+を参照。パッケージを足す・版を上げる手順は [docs/adding.md](docs/adding.md)。
 
 ## 追加予定
 

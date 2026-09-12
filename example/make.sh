@@ -4,6 +4,7 @@
 # Mayflower | example/make.sh
 #
 # 新しいパッケージの雛形。packages/<名前>/ にコピーして使う。
+# 枝の切り方と PR の題名は docs/adding.md。
 #
 # 使える変数（../../make.sh が export する）:
 #   JB        脱獄の接頭辞（/var/jb）
