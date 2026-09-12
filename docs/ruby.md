@@ -44,8 +44,9 @@ rootless に `/bin/sh` は無い。パッチで次を `/var/jb/bin/sh` に向け
 
 `Kernel#system` は Darwin では fork+exec なので `system(3)` を使わない。
 ただし `vm_dump.c` の `RUBY_ON_BUG` は `system(3)` を直呼びするので、
-`ios_compat=1` で `mayflower_system` に差し替える。miniruby は `MAINLIBS`
-経由でリンクする。
+`ios_compat=1` で `mayflower_system` に差し替える。`ios_compat.c` は
+`COMMONOBJS` に入れて `libruby-static` に含める。mkmf の `have_func` が
+`-lruby-static` でリンクするため。
 
 `ext/strscan` は `HAVE_RB_REG_ONIG_MATCH` が立たないと `ruby/re.h` の宣言と
 衝突する。in-tree の 3.3 以降ではヘッダを正とする。

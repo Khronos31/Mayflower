@@ -48,6 +48,11 @@ build() {
     --disable-install-doc \
     --disable-install-rdoc
 
+  # mkmf の have_func は -lruby-static でリンクする。mayflower_system が
+  # 静的ライブラリに入っていないと、拡張の HAVE_* が全部落ちる。
+  cp "${ROOTDIR}/compat/ios_compat.c" .
+  printf '\nCOMMONOBJS += ios_compat.$(OBJEXT)\n' >> Makefile
+
   make -j"$(/usr/sbin/sysctl -n hw.ncpu 2>/dev/null || echo 4)"
 }
 
