@@ -13,7 +13,9 @@ CRuby を rootless 脱獄 iOS 上でセルフビルドする。
 - Depends: `libssl3`, `libyaml-0-2`, `libffi8`, `libgmp10`, `libreadline8`,
   `libncursesw6`
 
-端末でのビルドはまだ通していない。
+iPhone 8 / iOS 16.7.14 / palera1n rootless で `./make.sh ruby` が通り、
+`ruby_4.0.6-1_iphoneos-arm64.deb` を `dpkg -i` した。`ruby -v` は
+`ruby 4.0.6 ... +PRISM [arm64-darwin]`。YJIT は付かない。
 
 ## ビルドの要点
 
