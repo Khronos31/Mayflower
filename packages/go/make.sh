@@ -7,7 +7,7 @@
 #
 # **クロスビルドした bootstrap ツールチェインが要る。** 端末に入っている go
 # （Procursus 版）は使えない: 出力を無署名のまま吐くため、make.bash の途中で
-# 実行される中間バイナリが起動できない。用意の仕方は README を見ること。
+# 実行される中間バイナリが起動できない。用意の仕方は docs/go.md を見ること。
 #
 # 出来上がるのは Debian 流に分けた3つ:
 #   golang-1.26-go   GOROOT 本体（bin・pkg・api・go.env・entitlements.plist）
@@ -51,7 +51,7 @@ prepare() {
   if ! "${GOROOT_BOOTSTRAP}/bin/go" version >/dev/null 2>&1; then
     echo "prepare: ${GOROOT_BOOTSTRAP}/bin/go が動かない。" >&2
     echo "  darwin/arm64 としてクロスビルドし、フレームワークのパスを iOS 用に" >&2
-    echo "  書き換えて ldid で署名したものが要る（README 参照）。" >&2
+    echo "  書き換えて ldid で署名したものが要る（docs/go.md 参照）。" >&2
     return 1
   fi
   cd "${srcdir}" || return 1
