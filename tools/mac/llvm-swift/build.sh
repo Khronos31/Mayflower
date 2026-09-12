@@ -194,7 +194,8 @@ configure_libcxx() {
     -DLIBCXXABI_ENABLE_STATIC=ON \
     -DLIBCXXABI_INSTALL_LIBRARY=OFF \
     -DLIBCXXABI_INCLUDE_TESTS=OFF \
-    -DLIBCXXABI_ENABLE_NEW_DELETE_DEFINITIONS=ON
+    -DLIBCXXABI_ENABLE_NEW_DELETE_DEFINITIONS=ON \
+    -DLIBCXXABI_USE_LLVM_UNWINDER=OFF
   echo "==> configured libcxx runtimes at ${t}"
   echo "    next: $0 libcxx   # or install (merges headers into stage)"
 }
