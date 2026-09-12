@@ -1,0 +1,12 @@
+Package: libjq1
+Name: jq shared library
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Libraries
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libiosexec1 (>= 1.2.2), libonig5
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://jqlang.github.io/jq/
+Description: jq 1.8 shared library
+ Built on-device. Provides libjq.1.dylib.

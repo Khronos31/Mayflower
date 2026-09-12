@@ -1,0 +1,14 @@
+Package: jq-1.8
+Name: jq 1.8
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Utilities
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libiosexec1 (>= 1.2.2), libjq1 (>= @VERSION@)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://jqlang.github.io/jq/
+Tag: purpose::console
+Description: Command-line JSON processor
+ Built on-device. Installs jq-1.8. Put jq on PATH with jq-default,
+ which replaces Procursus jq 1.6.
