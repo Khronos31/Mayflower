@@ -10,7 +10,7 @@
 # 出来上がるのは2つ（当面 default メタは作らない = Procursus clang-16 /
 # swift 5.9.2 を置換しない）:
 #   clang-19   /var/jb/usr/lib/llvm-19 と clang-19 / clang++-19 など
-#              （ドライバがリンク後に ldid。patches-host/）
+#              （lld が主で ldid。clang は非 lld / dsymutil。patches-host/）
 #   swift-6.1  swiftc-6.1 と Swift ランタイム（llvm-19 ツリー内）
 
 pkgname=llvm
@@ -84,9 +84,16 @@ package_clang() {
   install -m644 "${PROJECTROOT}/files/entitlements.plist" \
     "${pkgdir}${pref}/entitlements.plist"
 
-  # 版付き symlink（実体は llvm-19/bin。ldid はドライバ内）
+  # 版付き symlink（実体は llvm-19/bin）
   local t
-  for t in clang clang++ clang-cpp; do
+  for t in clang clang++ clang-cpp lld llvm-ar llvm-ranlib llvm-nm llvm-config; do
+    if [ -e "${pkgdir}${pref}/bin/${t}" ]; then
+      ln -sf "../lib/llvm-${llvm_major}/bin/${t}" \
+        "${pkgdir}${JB}/usr/bin/${t}-${llvm_major}"
+    fi
+  done
+  # Darwin / ELF 風の lld フロントも版付きで残す（lld-19 とは別名）
+  for t in ld64.lld ld.lld; do
     if [ -e "${pkgdir}${pref}/bin/${t}" ]; then
       ln -sf "../lib/llvm-${llvm_major}/bin/${t}" \
         "${pkgdir}${JB}/usr/bin/${t}-${llvm_major}"
