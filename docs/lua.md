@@ -24,7 +24,8 @@ iPhone 8 / iOS 16.7.14 で `./make.sh lua` が通り、`lua5.5` / `liblua5.5-0` 
 ## ビルドの要点
 
 上流 Makefile に `ios` ターゲットがある。`LUA_USE_IOS` で POSIX と dlopen を
-付ける。`os.execute` は SDK の `system(3)` ではなく `mayflower_system` を呼ぶ。
+付ける。`os.execute` は `mayflower_system`、`io.popen` は `mayflower_popen`
+（どちらも `/var/jb/bin/sh`。SDK の `system`/`popen` は `/bin/sh` を呼ぶ）。
 共有ライブラリは上流が出さないので、同じ `.o` から `liblua5.5.0.dylib` をリンクし、
 `lua` だけそれへ付け替える。`luac` は `luaU_dump` など `LUAI_FUNC`（非公開）を
 使うので `liblua.a` のまま。

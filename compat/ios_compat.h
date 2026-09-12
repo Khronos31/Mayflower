@@ -28,6 +28,7 @@
 #ifndef MAYFLOWER_IOS_COMPAT_H
 #define MAYFLOWER_IOS_COMPAT_H
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #ifdef __cplusplus
@@ -35,6 +36,8 @@ extern "C" {
 #endif
 
 int mayflower_system(const char *command);
+FILE *mayflower_popen(const char *command, const char *mode);
+int mayflower_pclose(FILE *fp);
 
 #ifdef __cplusplus
 }
