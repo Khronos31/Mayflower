@@ -28,8 +28,10 @@
 ```sh
 export WORKDIR="$HOME/dev/toolchain-swift-6.1"
 ./tools/mac/llvm-swift/build.sh all
-# 案内に従い ninja / install のあと:
-./tools/mac/llvm-swift/build.sh pack
+# patches-host 適用済みソースで:
+ninja -C "$WORKDIR/build/ios"   # clang / lld など
+./tools/mac/llvm-swift/build.sh install   # DESTDIR=stage（slim）
+./tools/mac/llvm-swift/build.sh pack      # dist/*.tar.xz
 ```
 
 ## 端末で梱包
@@ -53,6 +55,7 @@ sudo dpkg -i packages/llvm/arm64/clang-19_*.deb \
 
 | パッチ | 場所 | いつ動く |
 | --- | --- | --- |
+| `lld_macho_ios_platform.patch` | `lld/MachO/InputFiles.cpp` | Swift フォークの「iOS 未対応」stub を外す（必須） |
 | `lld_macho_writer_ldid.patch` | `lld/MachO/Writer.cpp` `writeOutputFile` 直後 | `MH_EXECUTE` / `MH_DYLIB` / `MH_BUNDLE` を書いたあと |
 | `clang_driver_darwin_ldid.patch` | `darwin::Linker` | **lld 以外**のリンカ（例: Apple `ld64`）のときだけ |
 | 同上 | `darwin::Dsymutil` | `-g` で dsymutil がイメージを触ったあと、リンク成果物を再署名 |
@@ -78,6 +81,7 @@ sudo dpkg -i packages/llvm/arm64/clang-19_*.deb \
 
 ```sh
 export PATH="/var/jb/usr/lib/llvm-19/bin:$PATH"
+# 作業ファイルは $HOME/tmp（/tmp だと SIGKILL されることがある）
 bash packages/llvm/tests/ldid-matrix.sh
 ```
 

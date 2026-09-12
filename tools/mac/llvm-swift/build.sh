@@ -125,6 +125,25 @@ configure_target() {
   echo "    next: ninja -C ${t} && DESTDIR=${BUILD}/stage ninja -C ${t} install"
 }
 
+do_install() {
+  local t="${BUILD}/ios"
+  local stage="${BUILD}/stage"
+  [ -d "${t}" ] || { echo "do_install: ${t} が無い" >&2; exit 1; }
+  rm -rf "${stage}"
+  mkdir -p "${stage}"
+  # Full `ninja install` pulls ORC/JIT/lldb and rebuilds for hours.
+  # Ship the clang-19 smoke set first; widen later when Swift lands.
+  echo "==> DESTDIR=${stage} ninja install-clang (+ resource headers, lld, llvm-ar/nm/ranlib/config)"
+  DESTDIR="${stage}" ninja -C "${t}"     install-clang install-clang-resource-headers install-lld     install-llvm-ar install-llvm-nm install-llvm-ranlib install-llvm-config
+  # Mayflower entitlements beside prefix (clang driver looks here)
+  local ent="${ROOT}/packages/llvm/files/entitlements.plist"
+  if [ -f "${ent}" ]; then
+    install -m644 "${ent}" "${stage}${PREFIX_IN_TAR}/entitlements.plist"
+  fi
+  echo "==> installed to ${stage}${PREFIX_IN_TAR}"
+  du -sh "${stage}${PREFIX_IN_TAR}"
+}
+
 pack_dist() {
   local stage="${BUILD}/stage"
   local root="${stage}${PREFIX_IN_TAR}"
@@ -145,12 +164,13 @@ pack_dist() {
 
 usage() {
   cat <<USAGE
-Usage: $0 <fetch|native|configure|pack|all>
+Usage: $0 <fetch|native|configure|install|pack|all>
 
   fetch      Swift ${SWIFT_VER} タグのソースを WORKDIR へ
   native     ホスト用 tblgen など
   configure  iphoneos 向け CMake（Clang/LLVM 中心。Swift は後続）
-  pack       DESTDIR install 済みツリーを dist tarball に
+  install    DESTDIR=${BUILD}/stage へ ninja install（entitlements 同梱）
+  pack       install 済みツリーを dist tarball に
   all        fetch + native + configure（ビルド/install/pack は手で）
 
 Env: WORKDIR SWIFT_VER LLVM_VER IOS_MIN IPHONEOS_SDK
@@ -162,6 +182,7 @@ case "${cmd}" in
   fetch) fetch ;;
   native) fetch; build_native ;;
   configure) fetch; apply_patches; build_native; configure_target ;;
+  install) do_install ;;
   pack) pack_dist ;;
   all) fetch; apply_patches; build_native; configure_target; echo "==> configure まで完了。ビルドは手動で ninja" ;;
   -h|--help|help) usage ;;

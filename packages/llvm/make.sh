@@ -16,7 +16,7 @@
 pkgname=llvm
 # Apple llvm-project @ swift-6.1.1-RELEASE → LLVM 19.1.4
 pkgver=19.1.4
-pkgrel=2
+pkgrel=3
 # Debian 風に Swift を版に載せる（表示・依存用）。実体の tarball 名は dist。
 swiftver=6.1.1
 srcname=dist

@@ -13,9 +13,15 @@ iPhone 上では建てない。ここでクロスして tarball を作り、端�
 
 ```sh
 export WORKDIR="$HOME/dev/toolchain-swift-6.1"
-./tools/mac/llvm-swift/build.sh
+./tools/mac/llvm-swift/build.sh all
+ninja -C "$WORKDIR/build/ios"
+./tools/mac/llvm-swift/build.sh install
+./tools/mac/llvm-swift/build.sh pack
 # => $WORKDIR/dist/llvm-19.1.4-swift-6.1.1-aarch64-apple-ios.tar.xz
 ```
+
+`install` は当面 slim（clang / resource headers / lld / llvm-ar·nm·ranlib·config）。
+Swift ランタイム同梱は後続。`patches-host/*.patch` は `configure` / `all` 時に当たる。
 
 端末（または Mac から `LLVM_DIST_DIR` を渡して）:
 
