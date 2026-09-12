@@ -60,15 +60,20 @@ build() {
   cd "${srcdir}" || return 1
   export ENTFILE="${PROJECTROOT}/entitlements.plist"
 
+  # libusb.h は include/libusb-1.0/ 配下。pkg-config が無い環境向けに JB パスも足す。
+  local usb_cflags usb_libs
+  usb_cflags="$(pkg-config --cflags libusb-1.0 2>/dev/null || echo "-I${JB}/usr/include/libusb-1.0")"
+  usb_libs="$(pkg-config --libs libusb-1.0 2>/dev/null || echo "-L${JB}/usr/lib -lusb-1.0")"
+
   # Theos 実機 Makefile 相当: IOKit/CF/Security + 大きめスタック
-  "${CC}" ${CFLAGS} ${CPPFLAGS} \
+  "${CC}" ${CFLAGS} ${CPPFLAGS} ${usb_cflags} \
     -std=c11 -Wall -Wextra -Wpedantic \
     -D_POSIX_C_SOURCE=200809L -D_FILE_OFFSET_BITS=64 \
     -c siano-ts.c protocol.c stream-state.c
 
-  "${CC}" ${CFLAGS} ${LDFLAGS} \
+  "${CC}" ${CFLAGS} ${LDFLAGS} ${usb_cflags} \
     -o siano-ts siano-ts.o protocol.o stream-state.o \
-    -lusb-1.0 \
+    ${usb_libs} \
     -framework IOKit -framework CoreFoundation -framework Security \
     -Wl,-stack_size,0x800000
 }
