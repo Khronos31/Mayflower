@@ -49,19 +49,20 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 
 | パッケージ | 版 | 備考 |
 |---|---|---|
-| [nim](docs/nim.md) | 2.2.12 | コンパイラ・nimble・atlas・nimsuggest・nimgrep・nimpretty・testament |
+| [apple-a14](docs/apple-a14.md) | 1.0 | 空のゲート。`cy+model.iphone (>= 13.1) \| cy+model.ipad (>= 13.1)`。Claude Code が依存する |
+| [git](docs/git.md) | 2.55.0 | `git-2.55` / `git-default`。端末で建てる。Procursus 2.39.1 を置換 |
 | [go](docs/go.md) | 1.26.8 | `golang-1.26-go` / `golang-1.26-src` / `golang-default` |
-| [python](docs/python.md) | 3.14.7 | `python3.14` / `python3-default` |
-| [rust](docs/rust.md) | 1.98.1 | `rustc-1.98` / `rust-std-1.98` / `cargo-1.98` / `rust-default`。ツールチェインのビルドだけ Mac |
-| [ruby](docs/ruby.md) | 4.0.6 | インタプリタ。YJIT / ZJIT は建てない |
+| [llvm](docs/llvm.md) | 19.1.4 | `clang-19` / `llvm-19` / `llvm-19-linker-tools` + `clang-default` / `llvm-default`。**ビルドは Mac**。default で Procursus `clang` / `llvm` を置換可。Swift は別パッケージ |
 | [lua](docs/lua.md) | 5.5.1 | `lua5.5` / `liblua5.5-0` / `liblua5.5-dev` / `lua-default` |
 | [luarocks](docs/luarocks.md) | 3.13.0 | Lua 5.5 用。ユーザートリーは `~/.luarocks` |
+| [nim](docs/nim.md) | 2.2.12 | コンパイラ・nimble・atlas・nimsuggest・nimgrep・nimpretty・testament |
 | [node](docs/node.md) | 24.21.0 | `nodejs-24` / `node-default`。ビルドだけ Mac。`--jitless` 既定。`node-default` が Procursus の npm 8.1.1 を置換 |
-| [swift](docs/swift.md) | 6.1.1 | `swift-6.1`。**ビルドは Mac**。Depends `clang-19`。Procursus swift は当面並立 |
-| [llvm](docs/llvm.md) | 19.1.4 | `clang-19` / `llvm-19` / `llvm-19-linker-tools` + `clang-default` / `llvm-default`。**ビルドは Mac**。default で Procursus `clang` / `llvm` を置換可。Swift は別パッケージ |
-| [siano-userland](docs/siano-userland.md) | 0.1.5 | `Name: Siano Driver`。バイナリは `siano-ts`。Siano RIO (PX-S1UD) の ISDB-T |
+| [python](docs/python.md) | 3.14.7 | `python3.14` / `python3-default` |
 | [ripgrep](docs/ripgrep.md) | 15.2.0 | `ripgrep-15` / `ripgrep-default`。端末の rustc で建てる。Procursus 12.1.1 を置換 |
-| [apple-a14](docs/apple-a14.md) | 1.0 | 空のゲート。`cy+model.iphone (>= 13.1) \| cy+model.ipad (>= 13.1)`。Claude Code が依存する |
+| [ruby](docs/ruby.md) | 4.0.6 | インタプリタ。YJIT / ZJIT は建てない |
+| [rust](docs/rust.md) | 1.98.1 | `rustc-1.98` / `rust-std-1.98` / `cargo-1.98` / `rust-default`。ツールチェインのビルドだけ Mac |
+| [siano-userland](docs/siano-userland.md) | 0.1.5 | `Name: Siano Driver`。バイナリは `siano-ts`。Siano RIO (PX-S1UD) の ISDB-T |
+| [swift](docs/swift.md) | 6.1.1 | `swift-6.1`。**ビルドは Mac**。Depends `clang-19`。Procursus swift は当面並立 |
 
 Procursus と同じパッケージ名は使わない。あちらは
 `/var/jb/etc/apt/preferences.d/procursus` で `Package: *` を `Pin-Priority: 1001` に
