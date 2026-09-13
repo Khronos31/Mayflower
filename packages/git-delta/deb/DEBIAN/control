@@ -1,0 +1,14 @@
+Package: git-delta
+Name: git-delta
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Utilities
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libonig5
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/dandavison/delta
+Tag: purpose::console
+Description: A syntax-highlighting pager for git
+ Built on-device with Mayflower rustc 1.98. Installs /usr/bin/delta.
+ Not in Procursus rootless apt.
