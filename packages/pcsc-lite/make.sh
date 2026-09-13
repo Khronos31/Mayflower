@@ -12,7 +12,7 @@
 
 pkgname=pcsc-lite
 pkgver=2.5.1
-pkgrel=1
+pkgrel=2
 srcname="pcsc-lite-${pkgver}"
 source="https://pcsclite.apdu.fr/files/pcsc-lite-${pkgver}.tar.xz"
 subpkgs=(libpcsclite pcscd dev)
@@ -170,10 +170,14 @@ package_pcscd() {
     "${pkgdir}${JB}/etc/reader.conf.d" \
     "${pkgdir}${JB}/usr/lib/pcsc/drivers" \
     "${pkgdir}${JB}/var/run/pcscd" \
+    "${pkgdir}${JB}/var/log" \
+    "${pkgdir}${JB}/Library/LaunchDaemons" \
     "${pkgdir}${JB}/usr/share/man/man8" \
     "${pkgdir}${JB}/usr/share/man/man5"
   install -m755 "${d}${JB}/usr/sbin/pcscd" "${pkgdir}${JB}/usr/sbin/pcscd"
   ldid -S"${ENTFILE}" "${pkgdir}${JB}/usr/sbin/pcscd"
+  install -m644 "${PROJECTROOT}/files/fr.apdu.pcscd.plist" \
+    "${pkgdir}${JB}/Library/LaunchDaemons/fr.apdu.pcscd.plist"
   if [ -f "${d}${JB}/usr/share/man/man8/pcscd.8" ]; then
     install -m644 "${d}${JB}/usr/share/man/man8/pcscd.8" \
       "${pkgdir}${JB}/usr/share/man/man8/"

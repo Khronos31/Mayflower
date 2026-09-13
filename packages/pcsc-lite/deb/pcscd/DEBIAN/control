@@ -11,4 +11,4 @@ Homepage: https://pcsclite.apdu.fr/
 Description: PC/SC smart card daemon
  Built on-device. Loads IFD handlers from /usr/lib/pcsc/drivers and
  serial configs from /etc/reader.conf.d (px4-userland IFD).
- No libudev/libusb hotplug; start pcscd yourself (no systemd).
+ No libudev/libusb hotplug. launchd job: fr.apdu.pcscd.

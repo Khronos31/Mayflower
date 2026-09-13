@@ -1,0 +1,11 @@
+#!/var/jb/bin/bash
+set -e
+plist=/var/jb/Library/LaunchDaemons/fr.apdu.pcscd.plist
+label=system/fr.apdu.pcscd
+case "$1" in
+remove|upgrade|deconfigure)
+	launchctl bootout "$label" >/dev/null 2>&1 || true
+	launchctl unload "$plist" >/dev/null 2>&1 || true
+	;;
+esac
+exit 0

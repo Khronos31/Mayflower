@@ -6,7 +6,7 @@
 
 ## パッケージ情報
 
-- 版: 2.5.1-1
+- 版: 2.5.1-2
 - `libpcsclite1`: `libpcsclite.1.dylib`
 - `pcscd`: デーモン `/usr/sbin/pcscd`
 - `libpcsclite-dev`: `PCSC/*.h` と `libpcsclite.pc`
@@ -30,7 +30,7 @@ Procursus の `ninja` は `posix_spawn("/bin/sh")` するため rootless では�
 
 USB ホットプラグは切る。`reader.conf.d` 経由の IFD（px4-userland）が先。
 uname が Darwin なので meson は macOS 用 `hotplug_macosx.c` を足そうとするが、
-iOS SDK に `IOCFPlugIn.h` が無い。IFD の dlopen 用 `dyn_macosx.c` だけ残す。
+iOS SDK に `IOCFPlugIn.h` が無い。IFD は `dyn_unix.c` の `dlopen`。
 
 ## 端末
 
@@ -43,5 +43,8 @@ sudo dpkg -i packages/pcsc-lite/arm64/libpcsclite1_*.deb \
 pcscd --version
 ```
 
-systemd は無いので `pcscd` は手動起動。Q3U4 内蔵リーダーは、このあと
-px4-userland の IFD を ON にして `reader.conf.d` に載せる。
+`pcscd` は systemd ではなく launchd（`fr.apdu.pcscd`、`--foreground`）。
+plist は `/var/jb/Library/LaunchDaemons/`。postinst が `launchctl bootstrap system` する。
+ログは `/var/jb/var/log/pcscd.log`。
+
+Q3U4 内蔵リーダーは、このあと px4-userland の IFD を ON にして `reader.conf.d` に載せる。
