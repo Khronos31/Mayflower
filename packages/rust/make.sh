@@ -82,11 +82,16 @@ package_rustc() {
   # 脱獄 prefix の外で走らせるバイナリには entitlements が要るので、付けて署名する。
   install -m644 "${ENTFILE}" "${dest}/lib/rustlib/entitlements.plist"
 
-  # rust-objcopy は rustc の dist に入り、リンカパッチを通らない。
+  # rust-objcopy は rustc の dist に入り、リンカパッチを通らない。未署名のまま
+  # 梱包すると、cargo が release の strip に呼んだ瞬間 SIGKILL する（A11 で実測）。
+  #
+  # **署名の失敗は握りつぶさない。** ここは Mach-O しか置かれない場所なので、
+  # ldid が失敗するのは本物の異常である。|| true で流すと、直したはずの
+  # 「無署名のまま配られる」状態が黙って戻ってくる。
   local b
   for b in "${dest}/lib/rustlib/"*/bin/*; do
     [ -f "${b}" ] && [ -x "${b}" ] || continue
-    ldid -S"${ENTFILE}" "${b}" || true
+    ldid -S"${ENTFILE}" "${b}"
   done
 
   install -d "${pkgdir}${JB}/usr/share/licenses/rustc-${rustseries}"
@@ -106,13 +111,6 @@ package_std() {
   cp -R "rust-std-${pkgver}-aarch64-apple-ios/rust-std-aarch64-apple-ios/lib/rustlib/aarch64-apple-ios" \
      "${dest}/"
 
-  # rust-objcopy 等は rustc のリンク時 ldid を通らない。未署名のまま梱包すると
-  # cargo が strip に呼んだ瞬間 SIGKILL する（A11 で実測）。
-  local b
-  for b in "${dest}/aarch64-apple-ios/bin/"*; do
-    [ -f "${b}" ] && [ -x "${b}" ] || continue
-    ldid -S"${ENTFILE}" "${b}" || true
-  done
 }
 
 package_cargo() {
