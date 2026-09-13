@@ -178,7 +178,7 @@ def find_existing_issue(pkg: str, ver: str) -> str | None:
             "--repo",
             "Khronos31/Mayflower",
             "--state",
-            "open",
+            "all",
             "--search",
             f"upstream-watch {pkg} in:body",
             "--json",
@@ -300,7 +300,7 @@ def main() -> int:
             continue
         existing = find_existing_issue(pkg, new)
         if existing:
-            print(f"  already tracked as issue #{existing}")
+            print(f"  already tracked as issue #{existing} (open or closed — same ver ignored)")
             continue
         print(f"  NEWER → issue for {new}")
         if args.dry_run:

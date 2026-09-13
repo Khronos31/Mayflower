@@ -21,3 +21,11 @@ GitHub Actions: `.github/workflows/upstream-watch.yml`（毎日 + `workflow_disp
 ## 監視リスト
 
 `manifest.yml`。`packages/<id>/make.sh` の `pkgver=` が現行版。
+
+## 特定バージョンを無視したいとき
+
+その版の Issue を **close** すればよい（例: go 1.27.1 に既知バグがあり 1.27.2 待ち）。
+
+- 同じ `pkg` + `ver` は open / closed どちらでも再作成しない
+- さらに新しい版（1.27.2 など）が出たら、別 Issue が新しく開く
+
