@@ -6,6 +6,7 @@ Section: Utilities
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
 Depends: libusb-1.0-0
+Recommends: pcscd
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://github.com/Khronos31/px4-userland
 Tag: purpose::console
@@ -18,6 +19,10 @@ Description: Userland PX-Q3U4 tuner and card driver
  2169-byte blob whose SHA-256 is
  5213a5a38872661277a2cc1b2dfdfe88faf06f41205f460f3b51857f0568b484.
  iOS has no XDG_RUNTIME_DIR; pass --runtime-dir as well.
+ .
+ Ships libpx4-userland-ifd.dylib for pcscd (dlopen). Register with
+ px4-pcsc-register BASE_SERIAL RUNTIME_DIR; run px4d as the same
+ user as pcscd (root on launchd).
  .
  Signed with IOKit USB entitlements (same set as Siano Driver).
  GPL-2.0-only.

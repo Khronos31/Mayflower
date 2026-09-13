@@ -11,8 +11,8 @@ PLEX PX-Q3U4（USB ID `0511:084a`）向けのユーザー空間ドライバ。
 - ディレクトリ / `Package:`: `px4-userland`
 - Sileo の `Name:`: PX4 Driver
 - バイナリ: `px4d` / `px4-ts` / `px4ctl`
-- 版: 0.1.3-1
-- Depends: `libusb-1.0-0`
+- 版: 0.1.3-2
+- Depends: `libusb-1.0-0`（Recommends: `pcscd`）
 - 置き場所: `/var/jb/usr/bin/px4d` ほか
 
 Siano Driver（`siano-userland` / `siano-ts`）と対になる命名。
@@ -48,8 +48,10 @@ user-client 列。`prepare` / `build` / `check` / `package` で `ENTFILE` を
 
 ### CMake
 
-`PX4_BUILD_TESTS=OFF`、`PX4_BUILD_TOOLS=OFF`、`PX4_BUILD_PCSC_IFD=OFF`。
-PC/SC IFD は iOS 初回対象外。開発用 `px4-usb-probe` はパッケージに入れない。
+`PX4_BUILD_TESTS=OFF`、`PX4_BUILD_TOOLS=OFF`、`PX4_BUILD_PCSC_IFD=ON`。
+IFD は macOS bundle ではなく `libpx4-userland-ifd.dylib`。pcsc-lite の
+`dlopen` が読む。`ifdhandler.h` はビルド時に `libpcsclite-dev` から取る。
+開発用 `px4-usb-probe` はパッケージに入れない。
 
 リンクは `-lusb-1.0`、`-framework IOKit -framework CoreFoundation -framework Security`、
 `-Wl,-stack_size,0x800000`（Siano と同じ）。`LDFLAGS` の `-rpath ${JB}/usr/lib` は
@@ -72,3 +74,15 @@ px4-ts --device '<14-digit-base-serial>' --runtime-dir "$runtime_dir" \
 ```
 
 `--help` はチューナー未接続でも動く。
+
+内蔵カードを PC/SC にするときは、`pcscd`（launchd、root）と同じユーザーで
+`px4d` を上げてから登録する。ソケットは `access=user`（0600）。
+
+```sh
+sudo px4d --device '<serial>' --firmware /path/to/firmware.bin \
+  --runtime-dir "$runtime_dir"
+sudo px4-pcsc-register '<serial>' "$runtime_dir"
+```
+
+conf は `/var/jb/etc/reader.conf.d/px4-userland.conf`。serial と runtime-dir は
+plist に焼かない。
