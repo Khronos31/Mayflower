@@ -1,0 +1,16 @@
+Package: grok
+Name: Grok Build
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libiosexec1 (>= 1.2.2), ripgrep-15 | ripgrep-default | ripgrep
+Recommends: git-2.55 | git-default | git
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/xai-org/grok-build
+Tag: role::developer
+Description: Grok Build TUI
+ On-device build of xai-grok-pager 1.0.24 (jemalloc off). Commands grok
+ and agent (symlink).
+ Ripgrep is required on PATH (Mayflower ripgrep-15 / ripgrep-default).

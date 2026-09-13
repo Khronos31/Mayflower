@@ -43,7 +43,8 @@ applyPatch() {
   for p in "${PROJECTROOT}"/patches/*.patch; do
     [ -e "$p" ] || continue
     echo "==> patch: $(basename "$p")"
-    patch -p1 -d "${srcdir}" -i "$p"
+    # -N/--forward: 既に当たっている hunk は聞かない。resume で二度当てない。
+    patch -p1 -N --batch -d "${srcdir}" -i "$p"
   done
 }
 
