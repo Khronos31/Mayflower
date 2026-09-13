@@ -71,6 +71,7 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 | [pcsc-lite](docs/pcsc-lite.md) | 2.5.1-4 | `libpcsclite1` / `pcscd` / `libpcsclite-dev`。端末で建てる。Procursus に無し。Dopamine 向け再署名 |
 | [px4-userland](docs/px4-userland.md) | 0.1.6 | `Name: PX4 Driver`。`px4d` / `px4-ts` / `px4ctl` + IFD dylib。ファーム非同梱 |
 | [python](docs/python.md) | 3.14.7 | `python3.14` / `python3-default` |
+| [recisdb](docs/recisdb.md) | 1.2.4 | decode-only。ソースは Khronos31 fork（#188）ピン。次の公式タグで差し替え |
 | [ripgrep](docs/ripgrep.md) | 15.2.0 | `ripgrep-15` / `ripgrep-default`。端末の rustc で建てる。Procursus 12.1.1 を置換 |
 | [ruby](docs/ruby.md) | 4.0.6 | インタプリタ。YJIT / ZJIT は建てない。subprocess は palera1n で建て Dopamine で確認 |
 | [ruff](docs/ruff.md) | 0.16.7 | Python linter/formatter。端末の rustc で建てる。Procursus に無し |

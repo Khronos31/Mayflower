@@ -1,0 +1,17 @@
+diff -u --label a/b25-sys/externals/libaribb25/aribb25/b_cas_card.c --label b/b25-sys/externals/libaribb25/aribb25/b_cas_card.c
+--- a/b25-sys/externals/libaribb25/aribb25/b_cas_card.c
++++ b/b25-sys/externals/libaribb25/aribb25/b_cas_card.c
+@@ -21,6 +21,13 @@
+ #  define _tcscpy strcpy
+ #  define _T(x) x
+ #endif
++
++#ifndef LPTSTR
++typedef LPSTR LPTSTR;
++#endif
++#ifndef LPCTSTR
++typedef LPCSTR LPCTSTR;
++#endif
+ 
+ #if defined(_WIN32)
+ 	// ref: https://stackoverflow.com/a/6924293/17124142
