@@ -233,7 +233,7 @@ Upstream **{github}** has **{new}** (Mayflower currently packages **{current}**)
 ## Policy
 Mayflower prioritizes filling Procursus gaps over routine version bumps. This issue is a **notification only** — act if useful, otherwise close / ignore.
 
-LLVM/Clang are intentionally **not** covered by upstream-watch.
+LLVM/Clang/Swift are intentionally **not** covered by upstream-watch.
 
 ---
 *Opened by `tools/upstream-watch` (GitHub Actions).*
@@ -284,7 +284,7 @@ def main() -> int:
     opened = 0
     for entry in pkgs:
         pkg = entry["id"]
-        if pkg == "llvm" or "clang" in pkg:
+        if pkg in ("llvm", "swift") or "clang" in pkg:
             print(f"skip: {pkg} (excluded)")
             continue
         current = read_pkgver(pkg)

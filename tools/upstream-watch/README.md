@@ -3,7 +3,7 @@
 上流 GitHub の release / tag を見て、Mayflower の `pkgver` より新しければ Issue を開く。
 
 - **通知だけ**（自動 bump / 自動 PR はしない）
-- **LLVM / Clang は監視しない**
+- **LLVM / Clang / Swift は監視しない**
 - 版上げより Procursus 穴埋め優先、の方針はそのまま
 
 ## 使い方

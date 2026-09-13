@@ -1,5 +1,5 @@
 # Mayflower upstream release watchlist.
-# LLVM/Clang intentionally absent — watch separately if ever needed.
+# LLVM/Clang/Swift intentionally absent — toolchains watched separately if ever needed.
 # Policy: Issues are notifications only (gaps-first; bumps optional).
 
 packages:
@@ -72,13 +72,6 @@ packages:
     github: nim-lang/Nim
     tag_prefix: "v"
 
-  - id: swift
-    github: swiftlang/swift
-    # tags like swift-6.1.1-RELEASE
-    tag_prefix: "swift-"
-    tag_suffix: "-RELEASE"
-    strip_prefix: "swift-"
-    strip_suffix: "-RELEASE"
 
   - id: px4-userland
     github: Khronos31/px4-userland
