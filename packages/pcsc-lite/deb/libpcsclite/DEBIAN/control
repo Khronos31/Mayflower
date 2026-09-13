@@ -1,0 +1,12 @@
+Package: libpcsclite1
+Name: PC/SC Lite library
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Libraries
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libiosexec1 (>= 1.2.2)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://pcsclite.apdu.fr/
+Description: PC/SC smart card middleware (client library)
+ Built on-device. Provides libpcsclite.1.dylib for recisdb and friends.
