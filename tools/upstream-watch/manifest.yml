@@ -1,0 +1,89 @@
+# Mayflower upstream release watchlist.
+# LLVM/Clang intentionally absent — watch separately if ever needed.
+# Policy: Issues are notifications only (gaps-first; bumps optional).
+
+packages:
+  - id: ast-grep
+    github: ast-grep/ast-grep
+    # tags are bare versions (0.45.3)
+    tag_prefix: ""
+
+  - id: fd
+    github: sharkdp/fd
+    tag_prefix: "v"
+
+  - id: git-delta
+    github: dandavison/delta
+    tag_prefix: ""
+
+  - id: glow
+    github: charmbracelet/glow
+    tag_prefix: "v"
+
+  - id: sd
+    github: chmln/sd
+    tag_prefix: "v"
+
+  - id: ripgrep
+    github: BurntSushi/ripgrep
+    tag_prefix: ""
+
+  - id: jq
+    github: jqlang/jq
+    # releases named jq-1.8.2
+    tag_prefix: "jq-"
+
+  - id: tmux
+    github: tmux/tmux
+    tag_prefix: ""
+
+  - id: git
+    github: git/git
+    tag_prefix: "v"
+
+  - id: go
+    github: golang/go
+    # tags like go1.26.8 (releases are sparse; tags are the source of truth)
+    tag_prefix: "go"
+    strip_prefix: "go"
+
+  - id: rust
+    github: rust-lang/rust
+    tag_prefix: ""
+
+  - id: node
+    github: nodejs/node
+    tag_prefix: "v"
+
+  - id: python
+    github: python/cpython
+    tag_prefix: "v"
+
+  - id: ruby
+    github: ruby/ruby
+    # tags like v4_0_6
+    tag_prefix: "v"
+
+  - id: luarocks
+    github: luarocks/luarocks
+    tag_prefix: "v"
+
+  - id: nim
+    github: nim-lang/Nim
+    tag_prefix: "v"
+
+  - id: swift
+    github: swiftlang/swift
+    # tags like swift-6.1.1-RELEASE
+    tag_prefix: "swift-"
+    tag_suffix: "-RELEASE"
+    strip_prefix: "swift-"
+    strip_suffix: "-RELEASE"
+
+  - id: px4-userland
+    github: Khronos31/px4-userland
+    tag_prefix: "v"
+
+  - id: siano-userland
+    github: Khronos31/siano-userland
+    tag_prefix: "v"
