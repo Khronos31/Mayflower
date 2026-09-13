@@ -1,0 +1,11 @@
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -16,6 +16,7 @@
+     not(target_os = "windows"),
+     not(target_os = "openbsd"),
+     not(target_os = "aix"),
+     not(target_os = "android"),
++    not(target_os = "ios"),
+     any(
+         target_arch = "x86_64",
+         target_arch = "aarch64",
