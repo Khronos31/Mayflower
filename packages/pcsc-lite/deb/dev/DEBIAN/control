@@ -1,0 +1,13 @@
+Package: libpcsclite-dev
+Name: PC/SC Lite development files
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libpcsclite1 (>= @VERSION@)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://pcsclite.apdu.fr/
+Tag: role::developer
+Description: PC/SC Lite headers and pkg-config
+ Built on-device. pkg-config name is libpcsclite.

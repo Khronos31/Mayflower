@@ -1,0 +1,18 @@
+#!/var/jb/bin/bash
+set -e
+plist=/var/jb/Library/LaunchDaemons/fr.apdu.pcscd.plist
+label=system/fr.apdu.pcscd
+mkdir -p /var/jb/var/run/pcscd /var/jb/var/log
+case "$1" in
+configure)
+	launchctl bootout "$label" >/dev/null 2>&1 || true
+	if launchctl bootstrap system "$plist" >/dev/null 2>&1; then
+		:
+	elif launchctl load -w "$plist" >/dev/null 2>&1; then
+		:
+	else
+		echo "pcscd: launchctl に載せられなかった。再脱獄後に LaunchDaemons から上がる。" >&2
+	fi
+	;;
+esac
+exit 0

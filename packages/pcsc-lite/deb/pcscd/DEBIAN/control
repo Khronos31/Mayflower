@@ -1,0 +1,14 @@
+Package: pcscd
+Name: PC/SC Lite daemon
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Utilities
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libpcsclite1 (>= @VERSION@), libiosexec1 (>= 1.2.2)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://pcsclite.apdu.fr/
+Description: PC/SC smart card daemon
+ Built on-device. Loads IFD handlers from /usr/lib/pcsc/drivers and
+ serial configs from /etc/reader.conf.d (px4-userland IFD).
+ No libudev/libusb hotplug. launchd job: fr.apdu.pcscd.
