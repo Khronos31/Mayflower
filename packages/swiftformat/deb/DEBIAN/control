@@ -1,0 +1,14 @@
+Package: swiftformat
+Name: SwiftFormat
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Utilities
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/nicklockwood/SwiftFormat
+Tag: purpose::console, role::program
+Description: Format Swift source on the CLI
+ SwiftFormat by Nick Lockwood. Built on-device with Mayflower
+ swiftc-6.1 (direct swiftc, no SPM). Not in Procursus rootless apt.
+ Runtime uses the system Swift stdlib under /usr/lib/swift.
