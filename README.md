@@ -71,6 +71,7 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 | [sd](docs/sd.md) | 1.1.0 | 直感的な find & replace。端末の rustc で建てる。Procursus に無し |
 | [siano-userland](docs/siano-userland.md) | 0.1.5 | `Name: Siano Driver`。バイナリは `siano-ts`。Siano RIO (PX-S1UD) の ISDB-T |
 | [swift](docs/swift.md) | 6.1.1 | `swift-6.1`。**ビルドは Mac**。Depends `clang-19`。Procursus swift は当面並立 |
+| [tmux](docs/tmux.md) | 3.7c | `tmux-3.7` / `tmux-default`。端末で建てる。Procursus 3.4 を置換 |
 Procursus と同じパッケージ名は使わない。あちらは
 `/var/jb/etc/apt/preferences.d/procursus` で `Package: *` を `Pin-Priority: 1001` に
 固定しており、同名では `apt upgrade` で戻されるためである。`preferences.d` を配って

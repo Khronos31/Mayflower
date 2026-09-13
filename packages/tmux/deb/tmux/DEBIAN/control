@@ -1,0 +1,15 @@
+Package: tmux-3.7
+Name: tmux 3.7
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Terminal_Support
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libevent-2.1-7, libncursesw6, libiosexec1 (>= 1.2.2)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/tmux/tmux
+Tag: purpose::console, interface::text-mode
+Description: terminal multiplexer (versioned)
+ Built on-device. Installs the versioned command tmux-3.7.
+ Put tmux on PATH with tmux-default, which replaces Procursus tmux 3.4.
+ Default shell for run-shell is /var/jb/bin/sh (dash).
