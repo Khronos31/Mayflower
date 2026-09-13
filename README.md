@@ -65,7 +65,7 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 | [nim](docs/nim.md) | 2.2.12 | コンパイラ・nimble・atlas・nimsuggest・nimgrep・nimpretty・testament |
 | [node](docs/node.md) | 24.21.0 | `nodejs-24` / `node-default`。ビルドだけ Mac。`--jitless` 既定。`node-default` が Procursus の npm 8.1.1 を置換 |
 | [pcsc-lite](docs/pcsc-lite.md) | 2.5.1 | `libpcsclite1` / `pcscd` / `libpcsclite-dev`。端末で建てる。Procursus に無し |
-| [px4-userland](docs/px4-userland.md) | 0.1.3 | `Name: PX4 Driver`。バイナリは `px4d` / `px4-ts` / `px4ctl`。PX-Q3U4。ファーム非同梱 |
+| [px4-userland](docs/px4-userland.md) | 0.1.3 | `Name: PX4 Driver`。`px4d` / `px4-ts` / `px4ctl` + IFD dylib。ファーム非同梱 |
 | [python](docs/python.md) | 3.14.7 | `python3.14` / `python3-default` |
 | [ripgrep](docs/ripgrep.md) | 15.2.0 | `ripgrep-15` / `ripgrep-default`。端末の rustc で建てる。Procursus 12.1.1 を置換 |
 | [ruby](docs/ruby.md) | 4.0.6 | インタプリタ。YJIT / ZJIT は建てない |

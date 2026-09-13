@@ -9,11 +9,12 @@
 # USB のため packages/px4-userland/entitlements.plist（IOKit USB）を使う。
 # ルートの薄い entitlements.plist では libusb がデバイスを開けない（siano と同じ）。
 #
-# ファームウェアは同梱しない。PC/SC IFD は iOS 初回は建てない。
+# ファームウェアは同梱しない。PC/SC IFD は libpcsclite-dev のヘッダで建て、
+# dylib を pcscd が dlopen する（macOS bundle は使わない）。
 
 pkgname=px4-userland
 pkgver=0.1.3
-pkgrel=1
+pkgrel=2
 srcname="px4-userland-${pkgver}"
 source="https://github.com/Khronos31/px4-userland/archive/refs/tags/v${pkgver}.tar.gz"
 
@@ -36,20 +37,24 @@ build() {
   # （-l の .a だと未定義が出る前に捨てられる）。
   local abort_o
   abort_o="${BUILDROOT}/libcpp_verbose_abort.o"
-  "${CXX}" ${CXXFLAGS} -std=c++17 -fno-exceptions -fno-rtti \
+  "${CXX}" ${CXXFLAGS} -std=c++17 -fno-exceptions -fno-rtti -fPIC \
     -c "${PROJECTROOT}/files/libcpp_verbose_abort.cpp" -o "${abort_o}"
 
   export PKG_CONFIG_PATH="${JB}/usr/lib/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
 
   cmake -S . -B build \
     -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_MAKE_PROGRAM="${ROOTDIR}/bin/make" \
     -DCMAKE_CXX_COMPILER="${CXX}" \
+    -DCMAKE_PREFIX_PATH="${JB}/usr" \
     -DPX4_BUILD_TESTS=OFF \
     -DPX4_BUILD_TOOLS=OFF \
-    -DPX4_BUILD_PCSC_IFD=OFF \
-    -DCMAKE_EXE_LINKER_FLAGS="${LDFLAGS} ${abort_o} -lobjc -Wl,-framework,IOKit -Wl,-framework,CoreFoundation -Wl,-framework,Security -Wl,-stack_size,0x800000"
+    -DPX4_BUILD_PCSC_IFD=ON \
+    -DPX4_REQUIRE_PCSC_IFD=ON \
+    -DCMAKE_EXE_LINKER_FLAGS="${LDFLAGS} ${abort_o} -lobjc -Wl,-framework,IOKit -Wl,-framework,CoreFoundation -Wl,-framework,Security -Wl,-stack_size,0x800000" \
+    -DCMAKE_SHARED_LINKER_FLAGS="${LDFLAGS} ${abort_o}"
 
-  cmake --build build --target px4d px4-ts px4ctl
+  cmake --build build --target px4d px4-ts px4ctl px4_ifdhandler
 }
 
 check() {
@@ -58,16 +63,26 @@ check() {
   ./px4d --help >/dev/null
   ./px4-ts --help >/dev/null
   ./px4ctl --help >/dev/null
+  test -f ./libpx4-userland-ifd.dylib
 }
 
 package() {
   cd "${srcdir}" || return 1
   _set_ent
 
-  install -d "${pkgdir}${JB}/usr/bin"
+  install -d "${pkgdir}${JB}/usr/bin" \
+    "${pkgdir}${JB}/usr/lib/px4-userland" \
+    "${pkgdir}${JB}/usr/share/px4-userland"
   install -m755 build/px4d "${pkgdir}${JB}/usr/bin/px4d"
   install -m755 build/px4-ts "${pkgdir}${JB}/usr/bin/px4-ts"
   install -m755 build/px4ctl "${pkgdir}${JB}/usr/bin/px4ctl"
+  install -m755 build/libpx4-userland-ifd.dylib \
+    "${pkgdir}${JB}/usr/lib/px4-userland/libpx4-userland-ifd.dylib"
+  ldid -S"${ENTFILE}" "${pkgdir}${JB}/usr/lib/px4-userland/libpx4-userland-ifd.dylib"
+  install -m644 packaging/pcsc/reader.conf.d/px4-userland.conf.in \
+    "${pkgdir}${JB}/usr/share/px4-userland/px4-userland.conf.in"
+  install -m755 "${PROJECTROOT}/files/px4-pcsc-register" \
+    "${pkgdir}${JB}/usr/bin/px4-pcsc-register"
 
   install -d "${pkgdir}${JB}/usr/share/licenses/px4-userland"
   install -m644 LICENSE "${pkgdir}${JB}/usr/share/licenses/px4-userland/"
