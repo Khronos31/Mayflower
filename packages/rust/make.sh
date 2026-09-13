@@ -22,7 +22,7 @@
 
 pkgname=rust
 pkgver=1.98.1
-pkgrel=1
+pkgrel=2
 srcname=dist
 source=""
 subpkgs=(rustc std cargo default)
@@ -98,6 +98,14 @@ package_std() {
   install -d "${dest}"
   cp -R "rust-std-${pkgver}-aarch64-apple-ios/rust-std-aarch64-apple-ios/lib/rustlib/aarch64-apple-ios" \
      "${dest}/"
+
+  # rust-objcopy 等は rustc のリンク時 ldid を通らない。未署名のまま梱包すると
+  # cargo が strip に呼んだ瞬間 SIGKILL する（A11 で実測）。
+  local b
+  for b in "${dest}/aarch64-apple-ios/bin/"*; do
+    [ -f "${b}" ] && [ -x "${b}" ] || continue
+    ldid -S"${ENTFILE}" "${b}" || true
+  done
 }
 
 package_cargo() {
