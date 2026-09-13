@@ -7,7 +7,7 @@ AST ベースの検索・書き換え（`ast-grep` / `sg`）。
 ## パッケージ情報
 
 - 版: 0.45.3
-- パッケージ: `ast-grep`
+- パッケージ: `ast-grep`（`/usr/bin/sg` は `ast-grep` への symlink）
 - ビルド: **端末**（Mayflower rustc、`--offline` + `vendor.tar.gz`）
 - Procursus: 無し
 

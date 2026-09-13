@@ -47,22 +47,22 @@ build() {
 }
 
 check() {
-  local bin="${BUILDROOT}/ag-target/release/sg"
-  ldid -S"${ENTFILE}" "${bin}"
-  ldid -S"${ENTFILE}" "${BUILDROOT}/ag-target/release/ast-grep"
-  "${bin}" --version
+  # sg 上流は PATH 上の ast-grep を再実行する薄いラッパ（未インストールだと NotFound）。
+  # チェックは本体だけ。パッケージでは sg を symlink にする。
+  local ag="${BUILDROOT}/ag-target/release/ast-grep"
+  ldid -S"${ENTFILE}" "${ag}"
+  "${ag}" --version
 }
 
 package() {
-  local sg="${BUILDROOT}/ag-target/release/sg"
   local ag="${BUILDROOT}/ag-target/release/ast-grep"
-  ldid -S"${ENTFILE}" "${sg}"
   ldid -S"${ENTFILE}" "${ag}"
   install -d "${pkgdir}${JB}/usr/bin" \
     "${pkgdir}${JB}/usr/share/doc/ast-grep" \
     "${pkgdir}${JB}/usr/share/licenses/ast-grep"
   install -m755 "${ag}" "${pkgdir}${JB}/usr/bin/ast-grep"
-  install -m755 "${sg}" "${pkgdir}${JB}/usr/bin/sg"
+  # 上流 sg ラッパはインストール前チェックで落ちるので、同名エイリアスにする
+  ln -sf ast-grep "${pkgdir}${JB}/usr/bin/sg"
   cd "${srcdir}" || return 1
   install -m644 README.md "${pkgdir}${JB}/usr/share/doc/ast-grep/"
   if [ -f LICENSE ]; then
