@@ -49,9 +49,11 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 
 | パッケージ | 版 | 備考 |
 |---|---|---|
+
 | [apple-a14](docs/apple-a14.md) | 1.0 | 空のゲート。`cy+model.iphone (>= 13.1) \| cy+model.ipad (>= 13.1)`。Claude Code が依存する |
 | [git](docs/git.md) | 2.55.0 | `git-2.55` / `git-default`。端末で建てる。Procursus 2.39.1 を置換 |
 | [go](docs/go.md) | 1.26.8 | `golang-1.26-go` / `golang-1.26-src` / `golang-default` |
+| [grok](docs/grok.md) | 1.0.24 | `grok`。端末の rustc。jemalloc オフ。vendor は git 外 |
 | [jq](docs/jq.md) | 1.8.2 | `jq-1.8` / `libjq1` / `libjq-dev` / `jq-default`。端末で建てる。Procursus 1.6 を置換 |
 | [llvm](docs/llvm.md) | 19.1.4 | `clang-19` / `llvm-19` / `llvm-19-linker-tools` + `clang-default` / `llvm-default`。**ビルドは Mac**。default で Procursus `clang` / `llvm` を置換可。Swift は別パッケージ |
 | [lua](docs/lua.md) | 5.5.1 | `lua5.5` / `liblua5.5-0` / `liblua5.5-dev` / `lua-default` |
@@ -65,7 +67,6 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 | [rust](docs/rust.md) | 1.98.1 | `rustc-1.98` / `rust-std-1.98` / `cargo-1.98` / `rust-default`。ツールチェインのビルドだけ Mac |
 | [siano-userland](docs/siano-userland.md) | 0.1.5 | `Name: Siano Driver`。バイナリは `siano-ts`。Siano RIO (PX-S1UD) の ISDB-T |
 | [swift](docs/swift.md) | 6.1.1 | `swift-6.1`。**ビルドは Mac**。Depends `clang-19`。Procursus swift は当面並立 |
-
 Procursus と同じパッケージ名は使わない。あちらは
 `/var/jb/etc/apt/preferences.d/procursus` で `Package: *` を `Pin-Priority: 1001` に
 固定しており、同名では `apt upgrade` で戻されるためである。`preferences.d` を配って

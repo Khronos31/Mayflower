@@ -1,0 +1,320 @@
+diff --git a/crates/build/xai-proto-build/src/lib.rs b/crates/build/xai-proto-build/src/lib.rs
+index 60fbc0a..7fce7af 100644
+--- a/crates/build/xai-proto-build/src/lib.rs
++++ b/crates/build/xai-proto-build/src/lib.rs
+@@ -151,10 +151,14 @@ impl XaiProtoBuilder {
+         }
+ 
+         // Can only process one input file when using --dependency_out=FILE.
++        // iOS has no /dev/stdout (Linux symlink to fd 1); write the depfile
++        // to a tempfile. /dev/null exists on Darwin and is used as the dummy
++        // --descriptor_set_out so the depfile prefix stays `/dev/null:`.
+         for proto in protos {
++            let dep_file = tempfile::NamedTempFile::new().context("protoc depfile tempfile")?;
+             let mut command = Command::new(protoc.unwrap_or(Path::new("protoc")));
+             command
+-                .arg("--dependency_out=/dev/stdout")
++                .arg(format!("--dependency_out={}", dep_file.path().display()))
+                 .arg("--descriptor_set_out=/dev/null");
+ 
+             // Add protoc's well-known types include directory first (if found).
+@@ -174,15 +178,15 @@ impl XaiProtoBuilder {
+             command.arg(proto);
+ 
+             command.stdin(Stdio::null());
++            command.stdout(Stdio::null());
+             command.stderr(Stdio::inherit());
+ 
+-            let output = command.output().context("protoc command failed")?;
+-            if !output.status.success() {
++            let status = command.status().context("protoc command failed")?;
++            if !status.success() {
+                 return Err(anyhow::anyhow!("protoc command failed"));
+             }
+ 
+-            let output =
+-                String::from_utf8(output.stdout).context("protoc command output not UTF-8")?;
++            let output = fs::read_to_string(dep_file.path()).context("protoc depfile not UTF-8")?;
+ 
+             let mut lines = output.lines();
+             let first_line = lines.next().context("protoc command output is empty")?;
+diff --git a/crates/codegen/xai-codebase-graph/Cargo.toml b/crates/codegen/xai-codebase-graph/Cargo.toml
+index 6274486..25f171f 100644
+--- a/crates/codegen/xai-codebase-graph/Cargo.toml
++++ b/crates/codegen/xai-codebase-graph/Cargo.toml
+@@ -36,8 +36,6 @@ num_cpus = { workspace = true }
+ ignore = { workspace = true }
+ # Git repository access
+ git2 = { version = "0.20", default-features = false }
+-# Fast allocators for multi-threaded workloads
+-mimalloc = "0.1"
+ # Fast hash for better HashMap performance
+ ahash = { version = "0.8", features = ["serde"] }
+ # Additional hash utilities for StringInterner
+@@ -64,6 +62,11 @@ tree-sitter-python = "0.25.0"
+ tree-sitter-go = "0.25.0"
+ tree-sitter-javascript = "0.25.0"
+ 
++# mimalloc uses __thread TLS; iOS clang rejects that at iphoneos-version-min=7.0
++# (cc-rs default) and iOS has no initial-exec TLS model for this target.
++[target.'cfg(not(target_os = "ios"))'.dependencies]
++mimalloc = "0.1"
++
+ # Unix process checking for lock staleness detection
+ [target.'cfg(unix)'.dependencies]
+ libc = { workspace = true }
+diff --git a/crates/codegen/xai-file-utils/src/workspace_classifier.rs b/crates/codegen/xai-file-utils/src/workspace_classifier.rs
+index 9409ae9..0978973 100644
+--- a/crates/codegen/xai-file-utils/src/workspace_classifier.rs
++++ b/crates/codegen/xai-file-utils/src/workspace_classifier.rs
+@@ -67,7 +67,7 @@ fn is_platform_system_dir(cwd: &Path) -> bool {
+         return true;
+     }
+ 
+-    #[cfg(target_os = "macos")]
++    #[cfg(any(target_os = "macos", target_os = "ios"))]
+     if cwd == Path::new("/private/tmp")
+         || cwd.starts_with("/private/tmp/")
+         || cwd == Path::new("/private/var/tmp")
+@@ -108,7 +108,7 @@ fn is_platform_system_dir(cwd: &Path) -> bool {
+     false
+ }
+ 
+-#[cfg(target_os = "macos")]
++#[cfg(any(target_os = "macos", target_os = "ios"))]
+ fn is_platform_home_excluded(cwd: &Path, home: &Path) -> bool {
+     if cwd.starts_with(home.join("Library"))
+         && !cwd.starts_with(home.join("Library/Mobile Documents"))
+diff --git a/crates/codegen/xai-grok-pager-render/src/theme/system_appearance.rs b/crates/codegen/xai-grok-pager-render/src/theme/system_appearance.rs
+index cf14394..c163a83 100644
+--- a/crates/codegen/xai-grok-pager-render/src/theme/system_appearance.rs
++++ b/crates/codegen/xai-grok-pager-render/src/theme/system_appearance.rs
+@@ -81,10 +81,18 @@ fn resolve_appearance_chain(
+ /// Desktop APIs only. `grok wrap` stamps the local OS theme before SSH; env hints may be a previous hop's snapshot.
+ #[must_use]
+ pub fn detect_desktop() -> Option<SystemAppearance> {
+-    match dark_light::detect() {
+-        Ok(dark_light::Mode::Dark) => Some(SystemAppearance::Dark),
+-        Ok(dark_light::Mode::Light) => Some(SystemAppearance::Light),
+-        // Mode::Unspecified or Err: no system preference detected
++    // macOS/Windows/Linux: Result<Mode, _>. iOS falls through to a stub that
++    // returns Mode directly (unix-not-macos is not Linux here).
++    #[cfg(target_os = "ios")]
++    let mode = dark_light::detect();
++    #[cfg(not(target_os = "ios"))]
++    let mode = match dark_light::detect() {
++        Ok(m) => m,
++        Err(_) => return None,
++    };
++    match mode {
++        dark_light::Mode::Dark => Some(SystemAppearance::Dark),
++        dark_light::Mode::Light => Some(SystemAppearance::Light),
+         _ => None,
+     }
+ }
+diff --git a/crates/codegen/xai-grok-shared/Cargo.toml b/crates/codegen/xai-grok-shared/Cargo.toml
+index f9b2be5..4ffe1de 100644
+--- a/crates/codegen/xai-grok-shared/Cargo.toml
++++ b/crates/codegen/xai-grok-shared/Cargo.toml
+@@ -39,19 +39,16 @@ libc = { workspace = true }
+ [target.'cfg(target_os = "macos")'.dependencies]
+ objc2 = "0.6.3"
+ 
+-# arboard for clipboard on non-macOS platforms. On macOS we use pbcopy/pbpaste
+-# subprocesses to avoid linking AppKit, which causes ~2 GB IOAccelerator GPU
+-# memory overhead in headless processes (see clipboard.rs).
+-# `wayland-data-control` makes arboard set the Wayland selection through the
+-# compositor-side data-control protocol (no surface, no focus) instead of the
+-# focus-mediated XWayland bridge; no-op off Linux (target-gated inside arboard).
+-[target.'cfg(not(target_os = "macos"))'.dependencies]
+-arboard = { workspace = true, features = ["wayland-data-control"] }
+-
+-# Already in-graph via arboard's wayland-data-control; direct dep for the
+-# data-control probe in clipboard.rs (`is_primary_selection_supported`).
++# arboard for clipboard on Linux/Windows. macOS uses pbcopy/pbpaste (no AppKit).
++# iOS is neither: arboard treats unix-not-macos as Linux and pulls Wayland/X11.
++# `wayland-data-control` is Linux-only (arboard's own target gate is incomplete
++# and compiles wayland-backend on iOS).
+ [target.'cfg(target_os = "linux")'.dependencies]
++arboard = { workspace = true, features = ["wayland-data-control"] }
+ wl-clipboard-rs = { workspace = true }
+ 
++[target.'cfg(windows)'.dependencies]
++arboard = { workspace = true }
++
+ [lints]
+ workspace = true
+diff --git a/crates/codegen/xai-grok-shared/src/clipboard.rs b/crates/codegen/xai-grok-shared/src/clipboard.rs
+index 92d95dc..afc63f6 100644
+--- a/crates/codegen/xai-grok-shared/src/clipboard.rs
++++ b/crates/codegen/xai-grok-shared/src/clipboard.rs
+@@ -987,10 +987,50 @@ mod platform {
+     }
+ }
+ 
++// ---------------------------------------------------------------------------
++// iOS: no UIPasteboard from a CLI; OSC 52 is the only write path.
++// ---------------------------------------------------------------------------
++#[cfg(target_os = "ios")]
++mod platform {
++    use super::{ClipboardAttachments, ImageData, NativeWriteOutcome, WaylandDataControlProbe};
++
++    pub(super) fn clipboard_image_snapshot() -> (Option<u64>, bool) {
++        (None, false)
++    }
++    pub(super) fn clipboard_change_count() -> Option<u64> {
++        None
++    }
++    pub(super) fn clipboard_prewarm() {}
++    pub fn get_text() -> anyhow::Result<Option<String>> {
++        Ok(None)
++    }
++    pub fn get_image() -> anyhow::Result<Option<ImageData>> {
++        Ok(None)
++    }
++    pub fn get_file_urls() -> anyhow::Result<Option<String>> {
++        Ok(None)
++    }
++    pub fn get_attachments() -> anyhow::Result<ClipboardAttachments> {
++        Ok(ClipboardAttachments::default())
++    }
++    pub fn set_text_with_outcome(_text: &str) -> NativeWriteOutcome {
++        NativeWriteOutcome::default()
++    }
++    pub fn set_image_file(_path: &std::path::Path) -> anyhow::Result<()> {
++        anyhow::bail!("clipboard image write is not supported on iOS")
++    }
++    pub(super) fn wayland_data_control_supported() -> bool {
++        false
++    }
++    pub(super) fn probe_wayland_data_control() -> WaylandDataControlProbe {
++        WaylandDataControlProbe::Unavailable
++    }
++}
++
+ // ---------------------------------------------------------------------------
+ // Linux / Windows: arboard with CLI-tool fallback on Linux
+ // ---------------------------------------------------------------------------
+-#[cfg(not(target_os = "macos"))]
++#[cfg(not(any(target_os = "macos", target_os = "ios")))]
+ mod platform {
+     use super::ImageData;
+     use std::process::{Command, Stdio};
+diff --git a/crates/codegen/xai-grok-shell/build.rs b/crates/codegen/xai-grok-shell/build.rs
+index bc9191a..024be44 100644
+--- a/crates/codegen/xai-grok-shell/build.rs
++++ b/crates/codegen/xai-grok-shell/build.rs
+@@ -42,7 +42,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
+     // Returning before `cargo:rustc-cfg=bundle_rg` keeps the include_bytes! macros compiled out The runtime then falls back to `rg` on PATH (see src/util/ripgrep.rs::rg_path)
+     // Users install via `winget install BurntSushi.ripgrep.MSVC` or `scoop install ripgrep` An explicit GROK_SHELL_BUNDLE_RG_PATH still bundles on Windows; the override branch below copies any binary regardless of target
+     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+-    if target_os == "windows" && path_override.is_none() {
++    // iOS has no BurntSushi ios-aarch64 asset; Mayflower already ships `rg` on PATH.
++    if (target_os == "windows" || target_os == "ios") && path_override.is_none() {
+         return Ok(());
+     }
+ 
+diff --git a/crates/codegen/xai-grok-tools/build.rs b/crates/codegen/xai-grok-tools/build.rs
+index 49953ed..48af275 100644
+--- a/crates/codegen/xai-grok-tools/build.rs
++++ b/crates/codegen/xai-grok-tools/build.rs
+@@ -61,9 +61,9 @@ fn bundle_fd() -> Result<(), Box<dyn std::error::Error>> {
+     fs::create_dir_all(&gen_dir)?;
+ 
+     // The consuming vendor extraction is unix-only — never bundle on
+-    // Windows targets, mirroring the bfs/ugrep skip.
++    // Windows targets, mirroring the bfs/ugrep skip. iOS has no fd release asset.
+     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+-    if target_os == "windows" {
++    if target_os == "windows" || target_os == "ios" {
+         return Ok(());
+     }
+ 
+@@ -263,8 +263,9 @@ fn bundle_rg() -> Result<(), Box<dyn std::error::Error>> {
+     // Skip auto-bundling on Windows: ripgrep ships .zip on Windows (not .tar.gz) and we have no zip-extraction path. Returning here BEFORE
+     // emitting `cargo:rustc-cfg=bundle_rg` keeps include_bytes! macros gated on cfg(bundle_rg) compiled-out, so the runtime falls back to `rg` on
+     // PATH. Users install ripgrep separately (winget / scoop). An explicit GROK_TOOLS_BUNDLE_RG_PATH still bundles regardless of target.
++    // iOS has no BurntSushi release asset (ios-aarch64). Mayflower already ships `rg` on PATH.
+     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+-    if target_os == "windows" && path_override.is_none() {
++    if (target_os == "windows" || target_os == "ios") && path_override.is_none() {
+         return Ok(());
+     }
+ 
+diff --git a/crates/codegen/xai-grok-voice/Cargo.toml b/crates/codegen/xai-grok-voice/Cargo.toml
+index be26f22..2d852d7 100644
+--- a/crates/codegen/xai-grok-voice/Cargo.toml
++++ b/crates/codegen/xai-grok-voice/Cargo.toml
+@@ -46,7 +46,7 @@ audio = ["dep:cpal"]
+ # cpal is only used by the non-Linux capture backend. Gating it to non-Linux
+ # keeps `alsa-sys` (a NEEDED `libasound.so.2`) out of the static musl build; on
+ # Linux the `audio` feature compiles the subprocess recorder backend instead.
+-[target.'cfg(not(target_os = "linux"))'.dependencies.cpal]
++[target.'cfg(any(target_os = "macos", windows))'.dependencies.cpal]
+ version = "0.15"
+ optional = true
+ 
+diff --git a/crates/codegen/xai-grok-voice/src/audio/mod.rs b/crates/codegen/xai-grok-voice/src/audio/mod.rs
+index 5914f30..e432209 100644
+--- a/crates/codegen/xai-grok-voice/src/audio/mod.rs
++++ b/crates/codegen/xai-grok-voice/src/audio/mod.rs
+@@ -15,20 +15,20 @@
+ //! - Windows: `capture::CaptureHandle` (in-process cpal stream).
+ 
+ // cpal-based capture: the Windows backend, the macOS fallback, and the macOS `__mic-capture` child implementation
+-#[cfg(not(target_os = "linux"))]
++#[cfg(any(target_os = "macos", windows))]
+ mod capture;
+ // Wire protocol shared by the `__mic-capture` child (writer, in `capture`) and the macOS parent (parser, in `capture_subprocess`)
+-#[cfg(not(target_os = "linux"))]
++#[cfg(any(target_os = "macos", windows))]
+ mod protocol;
+-#[cfg(not(target_os = "linux"))]
++#[cfg(any(target_os = "macos", windows))]
+ pub use capture::capture_pcm_for_duration;
+-#[cfg(not(target_os = "linux"))]
++#[cfg(any(target_os = "macos", windows))]
+ pub(crate) use capture::run_capture_child_cli;
+ #[cfg(target_os = "windows")]
+ pub use capture::{CaptureHandle, input_device_info, spawn_pcm_capture};
+ 
+ // Shared PCM-over-pipe handling for the two subprocess backends
+-#[cfg(any(target_os = "linux", target_os = "macos"))]
++#[cfg(any(target_os = "linux", target_os = "macos", target_os = "ios"))]
+ mod pipe;
+ 
+ #[cfg(target_os = "macos")]
+@@ -36,9 +36,9 @@ mod capture_subprocess;
+ #[cfg(target_os = "macos")]
+ pub use capture_subprocess::{CaptureHandle, input_device_info, spawn_pcm_capture};
+ 
+-#[cfg(target_os = "linux")]
++#[cfg(any(target_os = "linux", target_os = "ios"))]
+ mod capture_linux;
+-#[cfg(target_os = "linux")]
++#[cfg(any(target_os = "linux", target_os = "ios"))]
+ pub use capture_linux::{
+     CaptureHandle, capture_pcm_for_duration, input_device_info, spawn_pcm_capture,
+ };
+diff --git a/crates/codegen/xai-grok-voice/src/lib.rs b/crates/codegen/xai-grok-voice/src/lib.rs
+index 2cc387d..7adf02b 100644
+--- a/crates/codegen/xai-grok-voice/src/lib.rs
++++ b/crates/codegen/xai-grok-voice/src/lib.rs
+@@ -50,7 +50,7 @@ pub fn maybe_run_capture_subprocess() -> Option<i32> {
+     if !is_capture_subcommand(&argv) {
+         return None;
+     }
+-    #[cfg(all(feature = "audio", not(target_os = "linux")))]
++    #[cfg(all(feature = "audio", any(target_os = "macos", windows)))]
+     {
+         // Skip argv[0] (binary) and argv[1] (subcommand); the rest are flags.
+         let args: Vec<String> = argv
+@@ -60,7 +60,7 @@ pub fn maybe_run_capture_subprocess() -> Option<i32> {
+             .collect();
+         Some(audio::run_capture_child_cli(args))
+     }
+-    #[cfg(not(all(feature = "audio", not(target_os = "linux"))))]
++    #[cfg(not(all(feature = "audio", any(target_os = "macos", windows))))]
+     {
+         // This build's own parent backend never spawns the helper (Linux uses system recorders; no-audio builds have no capture)
+         // Only a hand-typed invocation reaches here
