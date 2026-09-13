@@ -1,0 +1,16 @@
+Package: tmux-default
+Name: tmux (default version)
+Version: @VERSION@
+Architecture: all
+Section: Terminal_Support
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: tmux-3.7 (>= @VERSION@)
+Provides: tmux (= @VERSION@)
+Conflicts: tmux
+Replaces: tmux
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/tmux/tmux
+Tag: purpose::console, interface::text-mode
+Description: tmux 3.7 as the default tmux on PATH
+ Puts tmux on PATH, pointing at tmux-3.7. Replaces Procursus tmux 3.4.
