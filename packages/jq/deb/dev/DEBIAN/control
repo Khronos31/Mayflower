@@ -1,0 +1,12 @@
+Package: libjq-dev
+Name: jq development files
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libjq1 (>= @VERSION@)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://jqlang.github.io/jq/
+Description: jq 1.8 headers and pkg-config
+ Headers and libjq.dylib symlink for building against libjq1.

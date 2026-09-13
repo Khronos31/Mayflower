@@ -1,0 +1,16 @@
+Package: jq-default
+Name: jq (default version)
+Version: @VERSION@
+Architecture: all
+Section: Utilities
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: jq-1.8 (>= @VERSION@)
+Provides: jq (= @VERSION@)
+Conflicts: jq
+Replaces: jq
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://jqlang.github.io/jq/
+Tag: purpose::console
+Description: jq 1.8 as the default jq on PATH
+ Puts jq on PATH, pointing at jq-1.8. Replaces Procursus jq 1.6.
