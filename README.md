@@ -50,6 +50,7 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 | パッケージ | 版 | 備考 |
 |---|---|---|
 | [apple-a14](docs/apple-a14.md) | 1.0 | 空のゲート。`cy+model.iphone (>= 13.1) \| cy+model.ipad (>= 13.1)`。Claude Code が依存する |
+| [fd](docs/fd.md) | 10.5.0 | `fd-10` / `fd-default`。端末の rustc で建てる。Procursus 8.6.0 を置換 |
 | [git](docs/git.md) | 2.55.0 | `git-2.55` / `git-default`。端末で建てる。Procursus 2.39.1 を置換 |
 | [go](docs/go.md) | 1.26.8 | `golang-1.26-go` / `golang-1.26-src` / `golang-default` |
 | [jq](docs/jq.md) | 1.8.2 | `jq-1.8` / `libjq1` / `libjq-dev` / `jq-default`。端末で建てる。Procursus 1.6 を置換 |
