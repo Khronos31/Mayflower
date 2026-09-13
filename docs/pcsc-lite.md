@@ -6,7 +6,7 @@
 
 ## パッケージ情報
 
-- 版: 2.5.1-2
+- 版: 2.5.1-3
 - `libpcsclite1`: `libpcsclite.1.dylib`
 - `pcscd`: デーモン `/usr/sbin/pcscd`
 - `libpcsclite-dev`: `PCSC/*.h` と `libpcsclite.pc`

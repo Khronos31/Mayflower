@@ -12,7 +12,7 @@
 
 pkgname=pcsc-lite
 pkgver=2.5.1
-pkgrel=2
+pkgrel=3
 srcname="pcsc-lite-${pkgver}"
 source="https://pcsclite.apdu.fr/files/pcsc-lite-${pkgver}.tar.xz"
 subpkgs=(libpcsclite pcscd dev)
