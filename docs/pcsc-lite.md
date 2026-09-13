@@ -47,4 +47,7 @@ pcscd --version
 plist は `/var/jb/Library/LaunchDaemons/`。postinst が `launchctl bootstrap system` する。
 ログは `/var/jb/var/log/pcscd.log`。
 
+クライアントは Linux SONAME `libpcsclite_real.so.1` を `dlopen` するので、
+Darwin の `libpcsclite_real.1.dylib` へ symlink を置く。
+
 Q3U4 内蔵リーダーは、このあと px4-userland の IFD を ON にして `reader.conf.d` に載せる。

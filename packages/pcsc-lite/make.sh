@@ -160,7 +160,9 @@ package_libpcsclite() {
   if [ -f "${d}${JB}/usr/lib/libpcsclite_real.1.dylib" ]; then
     install -m755 "${d}${JB}/usr/lib/libpcsclite_real.1.dylib" "${pkgdir}${JB}/usr/lib/"
     ln -s libpcsclite_real.1.dylib "${pkgdir}${JB}/usr/lib/libpcsclite_real.dylib"
+    ln -s libpcsclite_real.1.dylib "${pkgdir}${JB}/usr/lib/libpcsclite_real.so.1"
   fi
+  ln -s libpcsclite.1.dylib "${pkgdir}${JB}/usr/lib/libpcsclite.so.1"
 }
 
 package_pcscd() {
