@@ -46,3 +46,10 @@ Go の `GOROOT_BOOTSTRAP` と同様の扱いで、母艦のビルド事情は `m
   持っているため通る）。
 - **sysroot 探索**: iOS でも `_NSGetExecutablePath` は機能するため、Go の GOROOT の
   ような探索失敗は起きず、sysroot の解決コードを修正する必要はない。
+
+## rust-objcopy の署名
+
+`lib/rustlib/aarch64-apple-ios/bin/rust-objcopy` は **rustc の dist** に入る
+（rust-std ではない）。rustc のリンカパッチを通らないので、梱包時に
+`ldid` しないと cargo の release strip が SIGKILL する。`package_rustc` が
+ここの Mach-O を署名する。`pkgrel=2`。

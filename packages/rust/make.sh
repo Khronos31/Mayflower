@@ -22,7 +22,7 @@
 
 pkgname=rust
 pkgver=1.98.1
-pkgrel=1
+pkgrel=2
 srcname=dist
 source=""
 subpkgs=(rustc std cargo default)
@@ -82,6 +82,13 @@ package_rustc() {
   # 脱獄 prefix の外で走らせるバイナリには entitlements が要るので、付けて署名する。
   install -m644 "${ENTFILE}" "${dest}/lib/rustlib/entitlements.plist"
 
+  # rust-objcopy は rustc の dist に入り、リンカパッチを通らない。
+  local b
+  for b in "${dest}/lib/rustlib/"*/bin/*; do
+    [ -f "${b}" ] && [ -x "${b}" ] || continue
+    ldid -S"${ENTFILE}" "${b}" || true
+  done
+
   install -d "${pkgdir}${JB}/usr/share/licenses/rustc-${rustseries}"
   local l
   for l in "rustc-${pkgver}-aarch64-apple-ios"/LICENSE-* \
@@ -98,6 +105,14 @@ package_std() {
   install -d "${dest}"
   cp -R "rust-std-${pkgver}-aarch64-apple-ios/rust-std-aarch64-apple-ios/lib/rustlib/aarch64-apple-ios" \
      "${dest}/"
+
+  # rust-objcopy 等は rustc のリンク時 ldid を通らない。未署名のまま梱包すると
+  # cargo が strip に呼んだ瞬間 SIGKILL する（A11 で実測）。
+  local b
+  for b in "${dest}/aarch64-apple-ios/bin/"*; do
+    [ -f "${b}" ] && [ -x "${b}" ] || continue
+    ldid -S"${ENTFILE}" "${b}" || true
+  done
 }
 
 package_cargo() {
