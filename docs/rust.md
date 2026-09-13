@@ -49,7 +49,7 @@ Go の `GOROOT_BOOTSTRAP` と同様の扱いで、母艦のビルド事情は `m
 
 ## rust-objcopy の署名
 
-`rust-std` に入る `lib/rustlib/aarch64-apple-ios/bin/rust-objcopy` は
-rustc のリンカパッチを通らない。梱包時に `ldid` しないと、cargo が
-release strip で呼んだ瞬間に SIGKILL する。`package_std` がここの Mach-O
-を署名する。`pkgrel=2`。
+`lib/rustlib/aarch64-apple-ios/bin/rust-objcopy` は **rustc の dist** に入る
+（rust-std ではない）。rustc のリンカパッチを通らないので、梱包時に
+`ldid` しないと cargo の release strip が SIGKILL する。`package_rustc` が
+ここの Mach-O を署名する。`pkgrel=2`。

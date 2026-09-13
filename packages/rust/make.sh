@@ -82,6 +82,13 @@ package_rustc() {
   # 脱獄 prefix の外で走らせるバイナリには entitlements が要るので、付けて署名する。
   install -m644 "${ENTFILE}" "${dest}/lib/rustlib/entitlements.plist"
 
+  # rust-objcopy は rustc の dist に入り、リンカパッチを通らない。
+  local b
+  for b in "${dest}/lib/rustlib/"*/bin/*; do
+    [ -f "${b}" ] && [ -x "${b}" ] || continue
+    ldid -S"${ENTFILE}" "${b}" || true
+  done
+
   install -d "${pkgdir}${JB}/usr/share/licenses/rustc-${rustseries}"
   local l
   for l in "rustc-${pkgver}-aarch64-apple-ios"/LICENSE-* \
