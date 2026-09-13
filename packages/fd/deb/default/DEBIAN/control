@@ -1,0 +1,16 @@
+Package: fd-default
+Name: fd (default version)
+Version: @VERSION@
+Architecture: all
+Section: Utilities
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: fd-10 (>= @VERSION@)
+Provides: fd (= @VERSION@)
+Conflicts: fd
+Replaces: fd
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/sharkdp/fd
+Tag: purpose::console
+Description: fd 10 as the default fd on PATH
+ Puts fd on PATH, pointing at fd-10. Replaces Procursus fd 8.6.0.

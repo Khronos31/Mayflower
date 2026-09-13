@@ -1,0 +1,14 @@
+Package: fd-10
+Name: fd 10
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Utilities
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/sharkdp/fd
+Tag: purpose::console
+Description: Simple, fast and user-friendly alternative to find
+ Built on-device with Mayflower rustc 1.98. Installs the versioned
+ command fd-10. Put fd on PATH with fd-default, which replaces
+ Procursus fd 8.6.0.
