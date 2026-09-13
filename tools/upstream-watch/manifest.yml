@@ -54,10 +54,13 @@ packages:
   - id: node
     github: nodejs/node
     tag_prefix: "v"
+    # Current vs LTS ship in parallel — only watch the major we package
+    same_major: true
 
   - id: python
     github: python/cpython
     tag_prefix: "v"
+    same_major: true
 
   - id: ruby
     github: ruby/ruby

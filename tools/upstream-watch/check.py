@@ -76,6 +76,11 @@ def normalize_ruby_tag(ver: str) -> str:
     return ver
 
 
+def major_of(ver: str) -> str | None:
+    m = re.match(r"(\d+)", ver.strip().lstrip("v"))
+    return m.group(1) if m else None
+
+
 def is_newer(upstream: str, current: str) -> bool:
     if is_prerelease(upstream) and not is_prerelease(current):
         return False
@@ -113,7 +118,7 @@ def name_to_ver(entry: dict, name: str) -> str | None:
     return ver
 
 
-def latest_upstream(entry: dict) -> tuple[str, str] | None:
+def latest_upstream(entry: dict, current: str | None = None) -> tuple[str, str] | None:
     repo = entry["github"]
     pkg_id = entry.get("id")
     prefix = entry.get("tag_prefix") or ""
@@ -161,6 +166,11 @@ def latest_upstream(entry: dict) -> tuple[str, str] | None:
                 ver = name_to_ver(entry, name.strip())
                 if ver:
                     candidates.append((ver, f"https://github.com/{repo}/releases/tag/{name.strip()}"))
+
+    if entry.get("same_major") and current:
+        maj = major_of(current)
+        if maj is not None:
+            candidates = [(v, u) for v, u in candidates if major_of(v) == maj]
 
     if not candidates:
         print(f"warn: {repo}: no matching stable tag/release", file=sys.stderr)
@@ -291,7 +301,7 @@ def main() -> int:
         if not current:
             print(f"skip: {pkg} (no pkgver)")
             continue
-        latest = latest_upstream(entry)
+        latest = latest_upstream(entry, current=current)
         if not latest:
             continue
         new, url = latest

@@ -29,3 +29,8 @@ GitHub Actions: `.github/workflows/upstream-watch.yml`（毎日 + `workflow_disp
 - 同じ `pkg` + `ver` は open / closed どちらでも再作成しない
 - さらに新しい版（1.27.2 など）が出たら、別 Issue が新しく開く
 
+## 並走リリース（Node など）
+
+`same_major: true` を付けると、Mayflower の `pkgver` と同じメジャーだけを見る。
+Node の Current (26) と LTS (24) のように並走している上流で、別トラックを「更新」と誤検知しないため。
+
