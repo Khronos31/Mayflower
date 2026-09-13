@@ -1,0 +1,14 @@
+Package: glow
+Name: Glow
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Utilities
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libiosexec1 (>= 1.2.2)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/charmbracelet/glow
+Tag: purpose::console, role::program
+Description: Render markdown on the CLI
+ Terminal Markdown reader/renderer from Charmbracelet. Built on-device
+ with Mayflower Go. Not in Procursus rootless apt.
