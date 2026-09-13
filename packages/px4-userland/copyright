@@ -1,0 +1,12 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: px4-userland
+Upstream-Contact: Khronos31
+Source: https://github.com/Khronos31/px4-userland
+Comment: Mayflower on-device build of px4d / px4-ts / px4ctl for
+ rootless jailbroken iOS. IT930x firmware is not redistributed.
+
+Files: *
+Copyright: Khronos31 and contributors (see upstream)
+License: GPL-2.0-only
+ This package is licensed under GPL-2.0-only. See
+ /var/jb/usr/share/licenses/px4-userland/LICENSE.
