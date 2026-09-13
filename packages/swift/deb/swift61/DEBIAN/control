@@ -1,15 +1,15 @@
 Package: swift-6.1
-Name: Swift 6.1
+Name: Swift 6.1 compiler
 Version: @VERSION@
 Architecture: @ARCH@
 Section: Development
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
-Depends: clang-19 (>= 19.1.4), ldid
+Depends: libswift-6.1 (= @VERSION@), clang-19 (>= 19.1.4), ldid, profile.d
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://www.swift.org/
 Tag: role::developer
 Description: Swift 6.1 compiler (versioned)
- Versioned swift-6.1 / swiftc-6.1. Does not replace Procursus swift 5.9.2
- on PATH; install a future swift-default for that. Runtime libraries ship
- in this package when the Mac dist includes them.
+ Versioned swift-6.1 / swiftc-6.1 on PATH. Installs into the llvm-19
+ prefix. Ships mayflower-swift-ld for post-link ldid (independent of
+ CLANG_NO_LDID / LLD_NO_LDID). Does not include fat IDE/test tools.

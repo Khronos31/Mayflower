@@ -1,0 +1,14 @@
+Package: libswift-6.1
+Name: Swift 6.1 runtime
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Libraries
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: ldid
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.swift.org/
+Tag: role::shared-lib
+Description: Swift 6.1 runtime libraries (iphoneos)
+ Shared Swift stdlib / concurrency / … dylibs under llvm-19.
+ Required to run binaries built with swift-6.1.

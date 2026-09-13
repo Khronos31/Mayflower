@@ -1,0 +1,17 @@
+Package: swift-default
+Name: Swift (default version)
+Version: @VERSION@
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: swift-6.1 (= @VERSION@), libswift-6.1 (= @VERSION@), swift-6.1-dev (= @VERSION@)
+Provides: swift (= @VERSION@)
+Conflicts: swift
+Replaces: swift
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.swift.org/
+Tag: role::developer
+Description: Swift 6.1 as the default swift on PATH
+ Puts swift / swiftc on PATH pointing at swift-6.1. Replaces the
+ Procursus swift meta only (not swift-5.9.2 itself).

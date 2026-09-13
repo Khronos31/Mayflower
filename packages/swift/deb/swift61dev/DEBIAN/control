@@ -1,0 +1,14 @@
+Package: swift-6.1-dev
+Name: Swift 6.1 development files
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libswift-6.1 (= @VERSION@), swift-6.1 (= @VERSION@)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.swift.org/
+Tag: role::devel-lib
+Description: Swift 6.1 modules and headers
+ .swiftmodule / shims / clang overlays needed to compile Swift code
+ against the Mayflower stdlib. Runtime dylibs live in libswift-6.1.

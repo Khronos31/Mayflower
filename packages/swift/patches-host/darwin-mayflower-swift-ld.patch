@@ -1,0 +1,20 @@
+--- a/lib/Driver/DarwinToolChains.cpp	2026-09-13 20:50:30
++++ b/lib/Driver/DarwinToolChains.cpp	2026-09-13 20:52:30
+@@ -771,6 +771,17 @@
+   // Configure the toolchain.
+   // By default, use the system `ld` to link.
+   const char *LD = "ld";
++
++  // Mayflower: prefer mayflower-swift-ld next to swift (real ld, then ldid).
++  // Wrapper skips only on SWIFT_NO_LDID (CLANG_NO_LDID/LLD_NO_LDID are llvm-only).
++  {
++    llvm::SmallString<256> Wrap(getDriver().getSwiftProgramPath());
++    llvm::sys::path::remove_filename(Wrap);
++    llvm::sys::path::append(Wrap, "mayflower-swift-ld");
++    if (llvm::sys::fs::can_execute(Wrap))
++      LD = context.Args.MakeArgString(Wrap);
++  }
++
+   if (const Arg *A = context.Args.getLastArg(options::OPT_tools_directory)) {
+     StringRef toolchainPath(A->getValue());
+ 

@@ -1,0 +1,115 @@
+#!/var/jb/bin/sh
+# Mayflower | mayflower-swift-ld
+# Drop-in for Darwin Swift driver link: run real ld, then ldid.
+# Env:
+#   SWIFT_NO_LDID — skip signing (CLANG_NO_LDID / LLD_NO_LDID are llvm-only)
+#   CLANG_LDID_ENTITLEMENTS / SWIFT_LDID_ENTITLEMENTS — entitlements plist
+#   MAYFLOWER_REAL_LD — override real linker path
+set -e
+OUT=""
+PREV=""
+for a in "$@"; do
+  if [ "$PREV" = "-o" ]; then
+    OUT=$a
+  fi
+  PREV=$a
+done
+
+find_real_ld() {
+  if [ -n "${MAYFLOWER_REAL_LD:-}" ] && [ -x "$MAYFLOWER_REAL_LD" ]; then
+    printf '%s\n' "$MAYFLOWER_REAL_LD"
+    return 0
+  fi
+  self=$(command -v "$0" 2>/dev/null || true)
+  selfdir=
+  [ -n "$self" ] && selfdir=$(cd "$(dirname "$self")" 2>/dev/null && pwd -P)
+  # Prefer jb alternatives ld, then PATH entries that are not this wrapper.
+  for cand in /var/jb/usr/bin/ld /usr/bin/ld; do
+    [ -x "$cand" ] || continue
+    real=$(cd "$(dirname "$cand")" 2>/dev/null && pwd -P)/$(basename "$cand")
+    # resolve symlink once
+    if [ -L "$cand" ]; then
+      # readlink -f may be missing; use python/fallback
+      if command -v readlink >/dev/null 2>&1; then
+        target=$(readlink "$cand" 2>/dev/null || true)
+        case "$target" in
+          /*) real=$target ;;
+          *) real="$(dirname "$cand")/$target" ;;
+        esac
+      fi
+    fi
+    case "$real" in
+      *mayflower-swift*) continue ;;
+    esac
+    # skip if cand resolves into our tools dir
+    if [ -n "$selfdir" ]; then
+      case "$cand" in
+        "$selfdir"/*) continue ;;
+      esac
+    fi
+    printf '%s\n' "$cand"
+    return 0
+  done
+  # PATH search skipping our directory
+  OLDIFS=$IFS
+  IFS=:
+  for d in $PATH; do
+    [ -n "$d" ] || continue
+    [ -x "$d/ld" ] || continue
+    if [ -n "$selfdir" ] && [ "$d" = "$selfdir" ]; then
+      continue
+    fi
+    case "$d/ld" in
+      *mayflower-swift-tools*) continue ;;
+    esac
+    printf '%s\n' "$d/ld"
+    IFS=$OLDIFS
+    return 0
+  done
+  IFS=$OLDIFS
+  return 1
+}
+
+REAL_LD=$(find_real_ld) || {
+  echo "mayflower-swift-ld: real ld not found" >&2
+  exit 127
+}
+
+"$REAL_LD" "$@"
+rc=$?
+[ "$rc" -eq 0 ] || exit "$rc"
+
+# Skip signing when disabled (same knobs as Mayflower clang/lld).
+if [ -n "${SWIFT_NO_LDID:-}" ]; then
+  exit 0
+fi
+[ -n "$OUT" ] || exit 0
+[ -f "$OUT" ] || exit 0
+
+if ! command -v ldid >/dev/null 2>&1; then
+  echo "mayflower-swift-ld: ldid not on PATH; left $OUT unsigned" >&2
+  exit 0
+fi
+
+ENT="${SWIFT_LDID_ENTITLEMENTS:-${CLANG_LDID_ENTITLEMENTS:-}}"
+if [ -z "$ENT" ]; then
+  # Prefer entitlements next to this tools dir, then llvm-19 prefix.
+  here=$(cd "$(dirname "$0")" 2>/dev/null && pwd -P)
+  for cand in \
+    "$here/../entitlements.plist" \
+    "$here/../../entitlements.plist" \
+    /var/jb/usr/lib/llvm-19/entitlements.plist \
+    /var/jb/usr/share/ldid/entitlements.plist
+  do
+    if [ -f "$cand" ]; then
+      ENT=$cand
+      break
+    fi
+  done
+fi
+
+if [ -n "$ENT" ]; then
+  ldid -S"$ENT" "$OUT"
+else
+  ldid -S "$OUT"
+fi

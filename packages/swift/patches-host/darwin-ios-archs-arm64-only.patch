@@ -1,0 +1,6 @@
+--- a/cmake/modules/DarwinSDKs.cmake
++++ b/cmake/modules/DarwinSDKs.cmake
+@@ -1,4 +1,4 @@
+-set(SUPPORTED_IOS_ARCHS "arm64;arm64e")
++set(SUPPORTED_IOS_ARCHS "arm64")  # Mayflower: jb iPhone is arm64-only
+ set(SUPPORTED_IOS_SIMULATOR_ARCHS "x86_64;arm64")
