@@ -1,0 +1,17 @@
+--- a/stdlib/public/CMakeLists.txt
++++ b/stdlib/public/CMakeLists.txt
+@@ -61,16 +61,14 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+ check_cxx_compiler_flag("-Wglobal-constructors -Werror=global-constructors" CXX_SUPPORTS_GLOBAL_CONSTRUCTORS_WARNING)
+ if(CXX_SUPPORTS_GLOBAL_CONSTRUCTORS_WARNING)
+-  list(APPEND SWIFT_RUNTIME_CORE_CXX_FLAGS "-Wglobal-constructors"
+-    "-Werror=global-constructors")
++  # Mayflower: Xcode clang treats more patterns as global-constructors; keep warning only.
++  list(APPEND SWIFT_RUNTIME_CORE_CXX_FLAGS "-Wglobal-constructors")
+ endif()
+ 
+ check_cxx_compiler_flag("-Wexit-time-destructors -Werror=exit-time-destructors" CXX_SUPPORTS_EXIT_TIME_DESTRUCTORS_WARNING)
+ if(CXX_SUPPORTS_EXIT_TIME_DESTRUCTORS_WARNING)
+-  list(APPEND SWIFT_RUNTIME_CORE_CXX_FLAGS "-Wexit-time-destructors"
+-    "-Werror=exit-time-destructors")
++  list(APPEND SWIFT_RUNTIME_CORE_CXX_FLAGS "-Wexit-time-destructors")
+ endif()

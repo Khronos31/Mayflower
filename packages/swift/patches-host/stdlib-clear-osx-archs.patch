@@ -1,0 +1,11 @@
+--- a/stdlib/CMakeLists.txt
++++ b/stdlib/CMakeLists.txt
+@@ -11,6 +11,8 @@
+ 
+ include(AddSwiftStdlib)
+ 
++set(CMAKE_OSX_ARCHITECTURES "")
++
+ # Create convenience targets for the Swift standard library.
+ 
+ # NOTE(compnerd) this will pass the *build* configuration to the *host*

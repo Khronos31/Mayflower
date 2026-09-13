@@ -79,7 +79,20 @@ Explicit `ninja install-*` (not full `install`):
 - libc++ headers under `include/c++` (+ `__pstl*` / `pstl` if generated)
   via the separate `ios-libcxx` runtimes build (headers-only)
 
-Swift ランタイム同梱は後続。`patches-host/*.patch` は `configure` / `all` 時に当たる。
+## Swift（別ツリー）
+
+Clang 梱包の `build/ios` は触らない。`build/native-swift` → `build/ios-swift` → `pack-swift`。
+
+```sh
+CMAKE_BUILD_PARALLEL_LEVEL=2 ./tools/mac/llvm-swift/build.sh native-swift
+./tools/mac/llvm-swift/build.sh configure-swift
+./tools/mac/llvm-swift/build.sh ninja-swift
+./tools/mac/llvm-swift/build.sh install-swift
+./tools/mac/llvm-swift/build.sh pack-swift
+# => dist/swift-6.1.1-aarch64-apple-ios.tar.xz → packages/swift/make.sh
+```
+
+Swift ランタイム同梱は上記パス。`patches-host/*.patch` は `configure` / `all` 時に当たる。
 
 端末（または Mac から `LLVM_DIST_DIR` を渡して）:
 

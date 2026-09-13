@@ -1,0 +1,27 @@
+--- a/lib/Driver/ToolChains.cpp
++++ b/lib/Driver/ToolChains.cpp
+@@ -1368,8 +1368,23 @@ ToolChain::constructInvocation(const GenerateDSYMJobAction &job,
+   Arguments.push_back("-o");
+   Arguments.push_back(
+       context.Args.MakeArgString(context.Output.getPrimaryOutputFilename()));
+-
+-  return {"dsymutil", Arguments};
++
++  // Mayflower: dsymutil can rewrite the image; prefer wrapper that re-signs.
++  const char *Dsym = "dsymutil";
++  {
++    llvm::SmallString<256> Wrap(getDriver().getSwiftProgramPath());
++    llvm::sys::path::remove_filename(Wrap);
++    llvm::sys::path::append(Wrap, "mayflower-swift-dsymutil");
++    if (llvm::sys::fs::can_execute(Wrap))
++      Dsym = context.Args.MakeArgString(Wrap);
++  }
++  if (const Arg *A = context.Args.getLastArg(options::OPT_tools_directory)) {
++    if (auto P = llvm::sys::findProgramByName("dsymutil", {A->getValue()}))
++      Dsym = context.Args.MakeArgString(P.get());
++  }
++  return {Dsym, Arguments};
+ }
+ 
+ ToolChain::InvocationInfo
+ ToolChain::constructInvocation(const VerifyDebugInfoJobAction &job,

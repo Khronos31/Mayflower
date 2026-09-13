@@ -50,7 +50,32 @@ fetch() {
     tar xzf "${st}"
     mv "swift-${tag}" swift
   fi
-  # cmark / swift-syntax は Swift ビルドが要求したら足す
+  if [ ! -d cmark ]; then
+    local ct="cmark-${tag}.tar.gz"
+    echo "==> download swiftlang/swift-cmark @ ${tag}"
+    curl -fL --retry 3 -o "${ct}" \
+      "https://github.com/swiftlang/swift-cmark/archive/refs/tags/${tag}.tar.gz"
+    tar xzf "${ct}"
+    # archive top dir is swift-cmark-${tag}
+    mv "swift-cmark-${tag}" cmark
+  fi
+  if [ ! -d swift-syntax ]; then
+    local sst="swift-syntax-${tag}.tar.gz"
+    echo "==> download swiftlang/swift-syntax @ ${tag}"
+    curl -fL --retry 3 -o "${sst}" \
+      "https://github.com/swiftlang/swift-syntax/archive/refs/tags/${tag}.tar.gz"
+    tar xzf "${sst}"
+    mv "swift-syntax-${tag}" swift-syntax
+  fi
+  # ASTGen Regex bridge needs _RegexParser sources from ESP
+  if [ ! -d swift-experimental-string-processing ]; then
+    local esp="swift-experimental-string-processing-${tag}.tar.gz"
+    echo "==> download swiftlang/swift-experimental-string-processing @ ${tag}"
+    curl -fL --retry 3 -o "${esp}" \
+      "https://github.com/swiftlang/swift-experimental-string-processing/archive/refs/tags/${tag}.tar.gz"
+    tar xzf "${esp}"
+    mv "swift-experimental-string-processing-${tag}" swift-experimental-string-processing
+  fi
 }
 
 apply_patches() {
@@ -69,6 +94,343 @@ apply_patches() {
     fi
   done
 }
+
+apply_swift_patches() {
+  local patchdir="${ROOT}/packages/swift/patches-host"
+  [ -d "${patchdir}" ] || return 0
+  [ -d "${SRC}/swift" ] || return 0
+  cd "${SRC}/swift"
+  local p
+  for p in "${patchdir}"/*.patch; do
+    [ -f "${p}" ] || continue
+    if patch -p1 --dry-run -N < "${p}" >/dev/null 2>&1; then
+      echo "==> apply swift $(basename "${p}")"
+      patch -p1 -N < "${p}"
+    else
+      echo "==> skip swift (already applied?) $(basename "${p}")"
+    fi
+  done
+  # iPhone jb: skip arm64e stdlib
+  if [ -f "${ROOT}/packages/swift/patches-host/darwin-ios-archs-arm64-only.patch" ]; then
+    patch -d "${SRC}/swift" -p1 -N < "${ROOT}/packages/swift/patches-host/darwin-ios-archs-arm64-only.patch" || true
+  fi
+  if [ -f "${ROOT}/packages/swift/patches-host/metadata-global-ctors-warning.patch" ]; then
+    patch -d "${SRC}/swift" -p1 -N < "${ROOT}/packages/swift/patches-host/metadata-global-ctors-warning.patch" || true
+  fi
+
+}
+
+# Host tools that can emit Swift (needed to cross-build the stdlib / compiler).
+# Separate tree from build/native (tblgen-only) so Clang packaging stays untouched.
+# Swift 6.1 in-tree (LLVM_EXTERNAL swift) needs find_package(cmark-gfm).
+# SWIFT_PATH_TO_CMARK_BUILD skips find_package but only wires includes for
+# standalone Swift — so we install cmark to a prefix and pass cmark-gfm_DIR.
+build_cmark_host() {
+  local c="${BUILD}/cmark-host"
+  local prefix="${BUILD}/cmark-host-install"
+  if [ -f "${prefix}/.done" ] && [ -f "${prefix}/lib/cmake/cmark-gfm-config.cmake" ]; then
+    echo "==> cmark-host-install already ready (${prefix})"
+    return 0
+  fi
+  [ -d "${SRC}/cmark" ] || { echo "build_cmark_host: cmark が無い" >&2; exit 1; }
+  cmake -G Ninja -S "${SRC}/cmark" -B "${c}" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_COMPILER="${HOST_CC}" \
+    -DCMAKE_OSX_SYSROOT="${MACOSX_SDK}" \
+    -DCMAKE_INSTALL_PREFIX="${prefix}" \
+    -DCMARK_TESTS=OFF \
+    -DCMARK_SHARED=OFF \
+    -DCMARK_STATIC=ON
+  ninja -C "${c}" -j "${CMAKE_BUILD_PARALLEL_LEVEL:-$(sysctl -n hw.ncpu)}"
+  # Avoid inheriting DESTDIR from an earlier llvm stage install.
+  unset DESTDIR
+  rm -rf "${prefix}"
+  cmake --install "${c}" --prefix "${prefix}"
+  if [ ! -f "${prefix}/lib/cmake/cmark-gfm-config.cmake" ]; then
+    echo "build_cmark_host: missing ${prefix}/lib/cmake/cmark-gfm-config.cmake" >&2
+    exit 1
+  fi
+  if [ ! -f "${prefix}/include/cmark_gfm/cmark-gfm.h" ]; then
+    echo "build_cmark_host: missing cmark-gfm.h under install include" >&2
+    exit 1
+  fi
+  touch "${prefix}/.done"
+  touch "${c}/.done"
+  echo "==> cmark-host-install done (${prefix})"
+}
+
+
+# iOS-targeted cmark for linking into the cross-compiled Swift tools/runtime.
+build_cmark_ios() {
+  local c="${BUILD}/cmark-ios"
+  local prefix="${BUILD}/cmark-ios-install"
+  if [ -f "${prefix}/.done" ] && [ -f "${prefix}/lib/cmake/cmark-gfm-config.cmake" ]; then
+    echo "==> cmark-ios-install already ready (${prefix})"
+    return 0
+  fi
+  [ -d "${SRC}/cmark" ] || { echo "build_cmark_ios: cmark が無い" >&2; exit 1; }
+  cmake -G Ninja -S "${SRC}/cmark" -B "${c}" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_SYSTEM_NAME=Darwin \
+    -DCMAKE_OSX_ARCHITECTURES=arm64 \
+    -DCMAKE_OSX_SYSROOT="${IPHONEOS_SDK}" \
+    -DCMAKE_C_COMPILER="${HOST_CC}" \
+    -DCMAKE_C_FLAGS="-target ${TRIPLE} -isysroot ${IPHONEOS_SDK}" \
+    -DCMAKE_INSTALL_PREFIX="${prefix}" \
+    -DBUILD_TESTING=OFF \
+    -DCMARK_TESTS=OFF \
+    -DCMARK_SHARED=OFF \
+    -DCMARK_STATIC=ON
+  # BUILD_TESTING=OFF skips api_test (uses unavailable system() on iOS);
+  # still need cmark-gfm CLI target so cmake --install succeeds.
+  ninja -C "${c}" -j "${CMAKE_BUILD_PARALLEL_LEVEL:-$(sysctl -n hw.ncpu)}"
+  unset DESTDIR
+  rm -rf "${prefix}"
+  cmake --install "${c}" --prefix "${prefix}"
+  [ -f "${prefix}/lib/libcmark-gfm.a" ] || { echo "build_cmark_ios: missing libcmark-gfm.a" >&2; exit 1; }
+  # Sanity: must be iOS, not macOS
+  if otool -l "${prefix}/lib/libcmark-gfm.a" 2>/dev/null | rg -q 'platform 2|IOS'; then
+    :
+  else
+    # archive: check a member via lipo/file
+    local tmp; tmp="$(mktemp -d)"
+    (cd "${tmp}" && ar x "${prefix}/lib/libcmark-gfm.a" blocks.c.o 2>/dev/null || ar x "${prefix}/lib/libcmark-gfm.a")
+    local obj; obj="$(find "${tmp}" -name '*.o' | head -1)"
+    if [ -n "${obj}" ] && ! otool -l "${obj}" | rg -q 'platform 2'; then
+      echo "build_cmark_ios: warning: could not confirm iOS platform on ${obj}" >&2
+      otool -l "${obj}" | rg -n 'platform|minos|sdk' | head -10 >&2 || true
+    fi
+    rm -rf "${tmp}"
+  fi
+  touch "${prefix}/.done" "${c}/.done"
+  echo "==> cmark-ios-install done (${prefix})"
+}
+
+build_native_swift() {
+  local n="${BUILD}/native-swift"
+  if [ -f "${n}/.done" ]; then
+    echo "==> native-swift already built (${n})"
+    return 0
+  fi
+  [ -d "${SRC}/swift" ] || { echo "build_native_swift: fetch が先" >&2; exit 1; }
+  [ -d "${SRC}/cmark" ] || { echo "build_native_swift: cmark が無い" >&2; exit 1; }
+  [ -d "${SRC}/swift-syntax" ] || { echo "build_native_swift: swift-syntax が無い" >&2; exit 1; }
+  [ -d "${SRC}/swift-experimental-string-processing/Sources/_RegexParser" ] || {
+    echo "build_native_swift: experimental-string-processing が無い" >&2
+    exit 1
+  }
+  apply_swift_patches
+  build_cmark_host
+  local cmark_prefix="${BUILD}/cmark-host-install"
+  # Keep existing object files when reconfiguring after a cmark fix.
+  mkdir -p "${n}/lib/swift" "${n}/share/swift"
+  local host_swiftc
+  host_swiftc="$(xcrun --find swiftc)"
+  cmake -G Ninja -S "${SRC}/llvm-project/llvm" -B "${n}" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_COMPILER="${HOST_CC}" \
+    -DCMAKE_CXX_COMPILER="${HOST_CXX}" \
+    -DCMAKE_OSX_SYSROOT="${MACOSX_SDK}" \
+    -DCMAKE_PREFIX_PATH="${cmark_prefix}" \
+    -Dcmark-gfm_DIR="${cmark_prefix}/lib/cmake" \
+    -USWIFT_PATH_TO_CMARK_BUILD \
+    -USWIFT_PATH_TO_CMARK_SOURCE \
+    -DLLVM_TARGETS_TO_BUILD="AArch64;X86" \
+    -DLLVM_ENABLE_PROJECTS="clang" \
+    -DLLVM_INCLUDE_TESTS=OFF \
+    -DLLVM_INCLUDE_EXAMPLES=OFF \
+    -DCLANG_INCLUDE_TESTS=OFF \
+    -DSWIFT_INCLUDE_TESTS=OFF \
+    -DSWIFT_BUILD_RUNTIME_WITH_HOST_COMPILER=ON \
+    -DLLVM_EXTERNAL_PROJECTS="swift" \
+    -DLLVM_EXTERNAL_SWIFT_SOURCE_DIR="${SRC}/swift" \
+    -DSWIFT_BUILD_REMOTE_MIRROR=FALSE \
+    -DSWIFT_BUILD_DYNAMIC_STDLIB=FALSE \
+    -DSWIFT_BUILD_STDLIB_EXTRA_TOOLCHAIN_CONTENT=FALSE \
+    -DSWIFT_BUILD_SWIFT_SYNTAX=TRUE \
+    -DSWIFT_PATH_TO_SWIFT_SYNTAX_SOURCE="${SRC}/swift-syntax" \
+    -DBRIDGING_MODE:STRING=PURE \
+    -DSWIFT_BUILD_REGEX_PARSER_IN_COMPILER=ON \
+    -DSWIFT_PATH_TO_STRING_PROCESSING_SOURCE="${SRC}/swift-experimental-string-processing" \
+    -DSWIFT_ENABLE_EXPERIMENTAL_STRING_PROCESSING=ON \
+    -DCMAKE_Swift_COMPILER="${host_swiftc}"
+  # Parallelism: Mac mini 8GB — keep jobs modest
+  local jobs="${CMAKE_BUILD_PARALLEL_LEVEL:-2}"
+  echo "==> ninja native swift-components -j${jobs}"
+  ninja -C "${n}" -j "${jobs}" swift-components
+  touch "${n}/.done"
+  echo "==> native-swift done"
+}
+
+# Separate ios tree so packages/llvm's build/ios stays intact.
+configure_target_swift() {
+  local t="${BUILD}/ios-swift"
+  local native="${BUILD}/native-swift"
+  [ -x "${native}/bin/swiftc" ] || [ -x "${native}/bin/swift" ] || {
+    echo "configure_target_swift: native-swift が無い。先に: $0 native-swift" >&2
+    exit 1
+  }
+  [ -x "${BUILD}/native/bin/llvm-tblgen" ] || {
+    echo "configure_target_swift: build/native tblgen が無い。先に: $0 native" >&2
+    exit 1
+  }
+  build_cmark_host
+  build_cmark_ios
+  apply_patches
+  apply_swift_patches
+  mkdir -p "${t}/lib/swift" "${t}/share/swift" "${t}/lib/swift_static"
+  local host_swiftc
+  host_swiftc="$(xcrun --find swiftc)"
+  cmake -G Ninja -S "${SRC}/llvm-project/llvm" -B "${t}" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_SYSTEM_NAME=Darwin \
+    -DCMAKE_OSX_ARCHITECTURES=arm64 \
+    -DCMAKE_OSX_SYSROOT="${IPHONEOS_SDK}" \
+    -DCMAKE_C_COMPILER="${HOST_CC}" \
+    -DCMAKE_CXX_COMPILER="${HOST_CXX}" \
+    -DCMAKE_C_FLAGS="-target ${TRIPLE} -isysroot ${IPHONEOS_SDK}" \
+    -DCMAKE_CXX_FLAGS="-target ${TRIPLE} -isysroot ${IPHONEOS_SDK}" \
+    -DCMAKE_INSTALL_PREFIX="${PREFIX_IN_TAR}" \
+    -DLLVM_HOST_TRIPLE="${TRIPLE}" \
+    -DLLVM_DEFAULT_TARGET_TRIPLE="${TRIPLE}" \
+    -DLLVM_TARGETS_TO_BUILD="AArch64" \
+    -DLLVM_ENABLE_PROJECTS="clang;lld" \
+    -DLLVM_TABLEGEN="${BUILD}/native/bin/llvm-tblgen" \
+    -DCLANG_TABLEGEN="${BUILD}/native/bin/clang-tblgen" \
+    -DLLVM_INCLUDE_TESTS=OFF \
+    -DLLVM_INCLUDE_EXAMPLES=OFF \
+    -DCLANG_INCLUDE_TESTS=OFF \
+    -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
+    -DLLVM_BUILD_LLVM_DYLIB=ON \
+    -DLLVM_LINK_LLVM_DYLIB=ON \
+    -DCLANG_LINK_CLANG_DYLIB=ON \
+    -DLLVM_ENABLE_ZSTD=OFF \
+    -DCMAKE_INSTALL_NAME_DIR=/var/jb/usr/lib/llvm-19/lib \
+    -DCMAKE_INSTALL_RPATH=/var/jb/usr/lib/llvm-19/lib \
+    -DCMAKE_PREFIX_PATH="${BUILD}/cmark-ios-install" \
+    -Dcmark-gfm_DIR="${BUILD}/cmark-ios-install/lib/cmake" \
+    -DLLVM_ENABLE_LIBEDIT=OFF \
+    -DLLVM_EXTERNAL_PROJECTS="swift" \
+    -DLLVM_EXTERNAL_SWIFT_SOURCE_DIR="${SRC}/swift" \
+    -DSWIFT_PRIMARY_VARIANT_ARCH=arm64 \
+    -DSWIFT_PRIMARY_VARIANT_SDK=IOS \
+    -DSWIFT_HOST_VARIANT=iphoneos \
+    -DSWIFT_HOST_VARIANT_ARCH=arm64 \
+    -DSWIFT_HOST_VARIANT_SDK=IOS \
+    -DSWIFT_ENABLE_IOS32=OFF \
+    -DSWIFT_ENABLE_EXPERIMENTAL_CONCURRENCY=ON \
+    -DSWIFT_ENABLE_EXPERIMENTAL_DIFFERENTIABLE_PROGRAMMING=ON \
+    -DSWIFT_ENABLE_EXPERIMENTAL_DISTRIBUTED=ON \
+    -DSWIFT_ENABLE_EXPERIMENTAL_STRING_PROCESSING=ON \
+    -DSWIFT_INCLUDE_TESTS=OFF \
+    -DSWIFT_BUILD_RUNTIME_WITH_HOST_COMPILER=ON \
+    -DSWIFT_NATIVE_SWIFT_TOOLS_PATH="${native}/bin" \
+    -DSWIFT_NATIVE_CLANG_TOOLS_PATH="${native}/bin" \
+    -DSWIFT_NATIVE_LLVM_TOOLS_PATH="${native}/bin" \
+    -DSWIFT_DARWIN_DEPLOYMENT_VERSION_IOS="${IOS_MIN}" \
+    -DSWIFT_BUILD_REMOTE_MIRROR=FALSE \
+    -DSWIFT_BUILD_SOURCEKIT=OFF \
+    -DSWIFT_ENABLE_EXPERIMENTAL_CXX_INTEROP=OFF \
+    -DBUILD_SOURCEKIT_XPC_SERVICE=OFF \
+    -DSWIFT_ENABLE_SOURCEKIT_TESTS=OFF \
+    -DSWIFT_BUILD_DYNAMIC_STDLIB=TRUE \
+    -DSWIFT_BUILD_STATIC_STDLIB=FALSE \
+    -DSWIFT_SDKS=IOS \
+    -DSWIFT_SDK_IOS_PATH="${IPHONEOS_SDK}" \
+    -DSWIFT_BUILD_STDLIB_EXTRA_TOOLCHAIN_CONTENT=TRUE \
+    -DSWIFT_STDLIB_EXTRA_SWIFT_COMPILE_FLAGS="-Xllvm;-sil-disable-pass=dead-store-elimination" \
+    -DSWIFT_STDLIB_SUPPORT_BACK_DEPLOYMENT=TRUE \
+    -DSWIFT_BUILD_SWIFT_SYNTAX=TRUE \
+    -DSWIFT_PATH_TO_SWIFT_SYNTAX_SOURCE="${SRC}/swift-syntax" \
+    -DBRIDGING_MODE:STRING=PURE \
+    -DSWIFT_BUILD_REGEX_PARSER_IN_COMPILER=ON \
+    -DSWIFT_PATH_TO_STRING_PROCESSING_SOURCE="${SRC}/swift-experimental-string-processing" \
+    -DSWIFT_ENABLE_EXPERIMENTAL_STRING_PROCESSING=ON \
+    -DCMAKE_Swift_COMPILER="${host_swiftc}" \
+    -DCMAKE_Swift_FLAGS="-O --target=${TRIPLE} -sdk ${IPHONEOS_SDK}"
+  echo "==> configured ios-swift at ${t}"
+  echo "    next: ninja -C ${t} -j2 swift  # or $0 ninja-swift"
+}
+
+SWIFT_DIST_NAME="swift-${SWIFT_VER}-aarch64-apple-ios"
+
+
+# Xcode 26 SDK DarwinFoundation1.modulemap rejects LLVM 19's float.h include_next
+# path (triggers _c_standard_library_obsolete). Overlays need Xcode clang headers.
+sync_xcode_clang_resource_headers() {
+  local dest="${BUILD}/ios-swift/lib/swift/clang"
+  local clang_bin xc_root ver
+  clang_bin="$(xcrun --find clang)"
+  xc_root="$(cd "$(dirname "${clang_bin}")/../lib/clang" && pwd)"
+  ver="$(ls "${xc_root}" | sort -V | tail -1)"
+  [ -d "${xc_root}/${ver}/include" ] || {
+    echo "sync_xcode_clang_resource_headers: missing ${xc_root}/${ver}/include" >&2
+    exit 1
+  }
+  mkdir -p "${dest}"
+  rsync -a --delete "${xc_root}/${ver}/include/" "${dest}/include/"
+  echo "==> synced Xcode clang ${ver} headers -> ${dest}/include"
+}
+
+ninja_swift() {
+  local t="${BUILD}/ios-swift"
+  [ -f "${t}/build.ninja" ] || { echo "ninja_swift: 先に $0 configure-swift" >&2; exit 1; }
+  local jobs="${CMAKE_BUILD_PARALLEL_LEVEL:-2}"
+  sync_xcode_clang_resource_headers
+  echo "==> ninja ios-swift -j${jobs} (long)"
+  ninja -C "${t}" -j "${jobs}" swift-components
+  echo "==> NINJA_SWIFT_OK $(date)"
+}
+
+install_swift() {
+  local t="${BUILD}/ios-swift"
+  local stage="${BUILD}/stage-swift"
+  [ -f "${t}/build.ninja" ] || { echo "install_swift: configure-swift が先" >&2; exit 1; }
+  rm -rf "${stage}"
+  mkdir -p "${stage}"
+  # Prefer component installs when present; fall back to full install then prune.
+  DESTDIR="${stage}" ninja -C "${t}" install-swift-components 2>/dev/null \
+    || DESTDIR="${stage}" ninja -C "${t}" install-swift 2>/dev/null \
+    || DESTDIR="${stage}" ninja -C "${t}" install
+  local root="${stage}${PREFIX_IN_TAR}"
+  if [ ! -x "${root}/bin/swiftc" ] && [ ! -x "${root}/bin/swift" ]; then
+    echo "install_swift: ${root}/bin/swiftc が無い" >&2
+    ls -la "${root}/bin" 2>/dev/null | head -40 >&2 || true
+    exit 1
+  fi
+  echo "==> swift staged at ${root}"
+  du -sh "${root}"
+}
+
+pack_swift() {
+  local stage="${BUILD}/stage-swift"
+  local root="${stage}${PREFIX_IN_TAR}"
+  [ -d "${root}" ] || { echo "pack_swift: 先に $0 install-swift" >&2; exit 1; }
+  mkdir -p "${DIST}"
+  local out="${DIST}/${SWIFT_DIST_NAME}.tar.xz"
+  local tmp="${BUILD}/pkg-swift/${SWIFT_DIST_NAME}"
+  rm -rf "${tmp}"
+  mkdir -p "${tmp}"
+  COPYFILE_DISABLE=1 cp -a "${root}/." "${tmp}/"
+  # swift-frontend LC_LOAD_DYLIB expects /var/jb/usr/lib/llvm-19/lib/lib_Compiler*.dylib
+  # but install puts them under lib/swift/host/compiler/.
+  local hostc="${tmp}/lib/swift/host/compiler"
+  if [ -d "${hostc}" ]; then
+    mkdir -p "${tmp}/lib"
+    local f base
+    for f in "${hostc}"/lib_Compiler*.dylib; do
+      [ -e "${f}" ] || continue
+      base="$(basename "${f}")"
+      ln -sfn "swift/host/compiler/${base}" "${tmp}/lib/${base}"
+    done
+  fi
+  COPYFILE_DISABLE=1 tar --no-xattr -C "${BUILD}/pkg-swift" -cJf "${out}.partial" "${SWIFT_DIST_NAME}"
+  xz -t "${out}.partial"
+  mv "${out}.partial" "${out}"
+  echo "==> wrote ${out}"
+  ls -lh "${out}"
+}
+
 
 build_native() {
   # tblgen 等ホストツール
@@ -422,17 +784,21 @@ pack_dist() {
 
 usage() {
   cat <<USAGE
-Usage: $0 <fetch|native|configure|libcxx|install|pack|all>
+Usage: $0 <fetch|native|configure|libcxx|install|pack|all|
+         native-swift|configure-swift|ninja-swift|install-swift|pack-swift>
 
-  fetch      Swift ${SWIFT_VER} タグのソースを WORKDIR へ
-  native     ホスト用 tblgen など
-  configure  iphoneos 向け CMake（Clang/LLVM 中心。Swift は後続）
-  libcxx     ヘッダ専用 runtimes (libcxx;libcxxabi) → stage の include/c++
-  install    DESTDIR=${BUILD}/stage へ ninja install（entitlements + libc++ headers）
-  pack       install 済みツリーを dist tarball に（include/c++ 含む）
-  all        fetch + native + configure（ビルド/install/pack は手で）
+  fetch            Swift ${SWIFT_VER} + cmark + swift-syntax を WORKDIR へ
+  native           ホスト用 tblgen（Clang 梱包用）
+  configure        iphoneos Clang/LLVM（build/ios）
+  libcxx / install / pack   Clang 梱包パス（従来どおり）
 
-Env: WORKDIR SWIFT_VER LLVM_VER IOS_MIN IPHONEOS_SDK
+  native-swift     ホスト swift-components（build/native-swift）
+  configure-swift  iphoneos Swift 同梱 CMake（build/ios-swift・build/ios は触らない）
+  ninja-swift      ios-swift をビルド
+  install-swift    DESTDIR=stage-swift
+  pack-swift       dist/swift-${SWIFT_VER}-aarch64-apple-ios.tar.xz
+
+Env: WORKDIR SWIFT_VER LLVM_VER IOS_MIN IPHONEOS_SDK CMAKE_BUILD_PARALLEL_LEVEL
 USAGE
 }
 
@@ -444,6 +810,11 @@ case "${cmd}" in
   libcxx) fetch; configure_libcxx; do_install_libcxx ;;
   install) do_install ;;
   pack) pack_dist ;;
+  native-swift) fetch; apply_swift_patches; build_native; build_native_swift ;;
+  configure-swift) fetch; apply_swift_patches; build_native; build_native_swift; configure_target_swift ;;
+  ninja-swift) ninja_swift ;;
+  install-swift) install_swift ;;
+  pack-swift) pack_swift ;;
   all) fetch; apply_patches; build_native; configure_target; echo "==> configure まで完了。ビルドは手動で ninja" ;;
   -h|--help|help) usage ;;
   *) usage; exit 1 ;;

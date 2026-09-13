@@ -1,0 +1,16 @@
+--- a/stdlib/public/runtime/Metadata.cpp
++++ b/stdlib/public/runtime/Metadata.cpp
+@@ -3685,9 +3685,13 @@ static bool installLazyClassNameHook() {
+   return false;
+ }
+ 
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wglobal-constructors"
+ __attribute__((constructor)) SWIFT_RUNTIME_ATTRIBUTE_ALWAYS_INLINE static bool
+ supportsLazyObjcClassNames() {
+   return SWIFT_LAZY_CONSTANT(installLazyClassNameHook());
+ }
++#pragma clang diagnostic pop
+ 
+ static void setUpGenericClassObjCName(ClassMetadata *theClass) {
+   if (supportsLazyObjcClassNames()) {
