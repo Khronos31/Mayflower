@@ -34,7 +34,7 @@
 # CFBundleCopyBundleURL に残す形。**Go1.27.2 が出たらそこへ移る。**
 pkgname=go
 pkgver=1.26.8
-pkgrel=1
+pkgrel=2
 srcname=go
 source="https://go.dev/dl/go${pkgver}.src.tar.gz"
 subpkgs=(go src bin)

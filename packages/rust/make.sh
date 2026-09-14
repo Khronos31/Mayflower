@@ -22,7 +22,7 @@
 
 pkgname=rust
 pkgver=1.98.1
-pkgrel=2
+pkgrel=3
 srcname=dist
 source=""
 subpkgs=(rustc std cargo default)

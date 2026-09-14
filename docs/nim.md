@@ -7,9 +7,9 @@ Nim を rootless 脱獄 iOS 上でセルフビルドする。
 ## パッケージ情報
 
 - パッケージ名: `nim`
-- 版: 2.2.12-1
+- 版: 2.2.12-2
 - 含まれるもの: コンパイラ、`nimble`、`atlas`、`nimsuggest`、`nimgrep`、`nimpretty`、`testament`
-- Depends: `clang`, `ldid`, `libiosexec1 (>= 1.3.1)`
+- Depends: `build-essential`, `clang`, `ldid`, `libiosexec1 (>= 1.3.1)`
 - Recommends: `libpcre1`
 
 ## ビルドの要点
