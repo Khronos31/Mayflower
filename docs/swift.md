@@ -2,7 +2,7 @@
 
 ソースツリー: [`packages/swift`](../packages/swift)
 
-llvm（Clang 19）とは**別パッケージ**。Depends は `clang-19`、`ldid`、`profile.d`（legacy driver 警告抑制）。
+llvm（Clang 19）とは**別パッケージ**。Depends は `build-essential`、`clang-19`、`ldid`、`profile.d`（legacy driver 警告抑制）。
 
 | パッケージ | 内容 |
 |---|---|

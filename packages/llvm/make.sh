@@ -15,7 +15,7 @@
 
 pkgname=llvm
 pkgver=19.1.4
-pkgrel=7
+pkgrel=8
 # dist tarball 名に残っているだけ（Swift 同梱前の Mac 成果物）
 swiftver=6.1.1
 srcname=dist

@@ -25,7 +25,7 @@
 | `llvm-dev` | メタ: Depends `llvm-19-dev` + `llvm-19-linker-tools`；Provides `liblto`；`usr/include/llvm{,-c}` と `usr/lib/libLTO.dylib` の symlink |
 | `libc++-19-dev` | `include/c++`（+ `__pstl*` / `pstl`）。ヘッダのみ。`libllvm16` に依存しない |
 | `libc++-dev` | メタ: Depends `libc++-19-dev`；`/var/jb/usr/include/c++` → llvm-19。Procursus 同名を置換 |
-| `clang-19` | frontend + wrappers；Depends lib\* + `libclang-common-19-dev` + `libc++-19-dev` + `lld-19` + `ld64` + `ldid` |
+| `clang-19` | frontend + wrappers；Depends `build-essential` + lib\* + `libclang-common-19-dev` + `libc++-19-dev` + `lld-19` + `ld64` + `ldid` |
 | `clang-default` | PATH の `clang` 等。`Provides: clang`；Depends `libc++-dev` |
 | `llvm-default` | PATH の `llvm-ar` 等。`Provides: llvm` で Procursus `llvm` を置換 |
 
@@ -35,7 +35,7 @@
 |---|---|
 | Swift | 6.1.1-RELEASE |
 | LLVM | 19.1.4（`swift-6.1.1-RELEASE` の CMake） |
-| Mayflower `pkgver` / `pkgrel` | 19.1.4-7 |
+| Mayflower `pkgver` / `pkgrel` | 19.1.4-8 |
 
 ## Mac ビルド
 
@@ -75,7 +75,7 @@ README の reconfigure note を参照。
 
 ### ip8 現状スナップショット（2026-09-12）
 
-- Mayflower `19.1.4-7` 一式 + メタが入っている。`clang` / `libc++` は 19。
+- Mayflower `19.1.4-8` 一式 + メタが入っている。`clang` / `libc++` は 19。
 - Procursus `libllvm16` スタックと `swift-5.9.2` は**削除済み**。
 - `build-essential` は `apt-mark manual`（SDK 相当。autoremove で落とさない）。
 - `rustc-1.98` / `nim` / `golang-1.26-go` / `ld64` は Mayflower `clang` /

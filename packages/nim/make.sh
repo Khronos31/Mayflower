@@ -15,7 +15,7 @@
 
 pkgname=nim
 pkgver=2.2.12
-pkgrel=1
+pkgrel=2
 
 # nightly（2.2.12 は正式リリース前のため nim-lang.org/download には無い）
 source="https://github.com/nim-lang/nightlies/releases/download/2026-09-08-version-2-2-8e8fbf60693418dc95bb0d762fd660231d08a583/nim-${pkgver}.tar.xz"

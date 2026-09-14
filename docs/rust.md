@@ -6,7 +6,8 @@ Rust ツールチェインをパッケージングする。
 
 ## パッケージ情報
 
-- 版: 1.98.1-1
+- 版: 1.98.1-3
+- Depends（`rustc-1.98`）: `build-essential`, `clang`, `ldid`
 - パッケージ構成:
   - `rustc-1.98`: ツールチェイン本体（`bin/rustc`、`librustc_driver`、`lib/rustlib`）
   - `rust-std-1.98`: `aarch64-apple-ios` 向けの std

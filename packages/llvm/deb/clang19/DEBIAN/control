@@ -5,7 +5,7 @@ Architecture: @ARCH@
 Section: Development
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
-Depends: libllvm19 (= @VERSION@), libclang-cpp19 (= @VERSION@), libclang-common-19-dev (= @VERSION@), libc++-19-dev (= @VERSION@), lld-19 (= @VERSION@), ld64, ldid
+Depends: build-essential, libllvm19 (= @VERSION@), libclang-cpp19 (= @VERSION@), libclang-common-19-dev (= @VERSION@), libc++-19-dev (= @VERSION@), lld-19 (= @VERSION@), ld64, ldid
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://clang.llvm.org/
 Tag: role::developer

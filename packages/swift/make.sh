@@ -18,7 +18,7 @@
 
 pkgname=swift
 pkgver=6.1.1
-pkgrel=4
+pkgrel=5
 llvmver=19.1.4
 srcname=dist
 source=""
