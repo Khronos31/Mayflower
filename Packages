@@ -1,0 +1,1329 @@
+Package: apple-a14
+Name: A14 (ARMv8.5-A)
+Version: 1.0-1
+Architecture: all
+Section: System
+Priority: optional
+Installed-Size: 4
+Depends: cy+model.iphone (>= 13.1) | cy+model.ipad (>= 13.1)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Tag: role::dummy
+Description: Gate for A14 / ARMv8.5-A or newer
+ Empty package. cy+model.iphone / cy+model.ipad version is the device
+ identifier with the comma turned into a dot (iPhone13,1 → 13.1).
+ iPhone 12 mini and iPad Air (4th generation) are the oldest A14 devices.
+ Claude Code will Depend on this package.
+Filename: debs/apple-a14_1.0-1_all.deb
+Size: 1212
+MD5sum: 37552ccc06e132aefe6356133ba29faa
+SHA1: 7095ba3ae5f7752063a6ec1d0780f53d1db930b2
+SHA256: dc40b7dedbe68b238d4fbaaa864bb2910ad5700f4504e6a6c7b4cf0ba3419253
+
+Package: ast-grep
+Name: ast-grep
+Version: 0.45.3-1
+Architecture: iphoneos-arm64
+Section: Utilities
+Priority: optional
+Installed-Size: 50004
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://ast-grep.github.io/
+Tag: purpose::console
+Description: Search and rewrite code using AST patterns
+ Installs ast-grep and the sg alias. Built on-device with Mayflower
+ rustc. Not in Procursus rootless apt.
+Filename: debs/ast-grep_0.45.3-1_iphoneos-arm64.deb
+Size: 7675268
+MD5sum: 217fce4b6375b9cc6f9ba44c5d37459e
+SHA1: fc9e209e952f8749c4eca9a1a1c1267cb88f3aa3
+SHA256: f2201025aafe2f05601a25e74276bc5418d9901eeb6acd8a5a0e70b72134b3d1
+
+Package: cargo-1.98
+Name: Cargo 1.98
+Version: 1.98.1-3
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 34604
+Depends: rustc-1.98 (>= 1.98.1-3), rust-std-1.98 (>= 1.98.1-3), libssl3, libcurl4
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.rust-lang.org/
+Tag: purpose::console
+Description: Rust package manager
+ Fetches crates over TLS using the bootstrap's own OpenSSL and libcurl, rather
+ than carrying its own copies.
+Filename: debs/cargo-1.98_1.98.1-3_iphoneos-arm64.deb
+Size: 8013744
+MD5sum: 9fd881612c400800a5c2f338661eb5f1
+SHA1: ff122f3ac76796aeb3df91e88c149b8456822ab5
+SHA256: ae41e86690542b722424b6be4cec57d5d40b68e6d5c9b5d43485fbd14236effa
+
+Package: clang-19
+Name: Clang 19
+Version: 19.1.4-8
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 396
+Depends: build-essential, libllvm19 (= 19.1.4-8), libclang-cpp19 (= 19.1.4-8), libclang-common-19-dev (= 19.1.4-8), libc++-19-dev (= 19.1.4-8), lld-19 (= 19.1.4-8), ld64, ldid
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://clang.llvm.org/
+Tag: role::developer
+Description: Clang 19 frontend (versioned)
+ Installs under /var/jb/usr/lib/llvm-19 with clang-19 on PATH via a thin
+ wrapper. Resource headers are in libclang-common-19-dev. Does not take over
+ the unversioned clang name; install clang-default for that.
+Filename: debs/clang-19_19.1.4-8_iphoneos-arm64.deb
+Size: 62612
+MD5sum: 17c92a70bda616aa29a5579f7a409aa7
+SHA1: ee7c23a9d5952ba1168cb490820237638b37ef68
+SHA256: 240d241f31fee9096b8e4fd53ba924463566e721ef1cc465aebf028b92998295
+
+Package: clang-default
+Name: Clang (default version)
+Version: 19.1.4-8
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: 4
+Depends: clang-19 (= 19.1.4-8), lld-19 (= 19.1.4-8), libc++-dev (= 19.1.4-8)
+Provides: clang (= 19.1.4-8), c-compiler, c++-compiler, objc-compiler
+Conflicts: clang
+Replaces: clang
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://clang.llvm.org/
+Tag: role::developer
+Description: Clang 19 as the default clang on PATH
+ Puts clang / clang++ / clang-cpp (and cc / c++) on PATH pointing at
+ clang-19. Provides c-compiler and friends, and replaces Procursus clang
+ meta so packages depending on clang pick this up.
+Filename: debs/clang-default_19.1.4-8_all.deb
+Size: 1200
+MD5sum: 906421ec5fd2c76237b539e8e29f0547
+SHA1: 4a8790de6dd84921d78a5a5357bdbb5945f84a18
+SHA256: a581834d18cd28308f075bfe948c76042970c855bff76a02a6bbd1e08a27fb0d
+
+Package: fd-10
+Name: fd 10
+Version: 10.5.0-1
+Architecture: iphoneos-arm64
+Section: Utilities
+Priority: optional
+Installed-Size: 2996
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/sharkdp/fd
+Tag: purpose::console
+Description: Simple, fast and user-friendly alternative to find
+ Built on-device with Mayflower rustc 1.98. Installs the versioned
+ command fd-10. Put fd on PATH with fd-default, which replaces
+ Procursus fd 8.6.0.
+Filename: debs/fd-10_10.5.0-1_iphoneos-arm64.deb
+Size: 915348
+MD5sum: b165e676b20e66ea44ace436989623f5
+SHA1: 50beeb2521b22c7d52a99038da1a14deb1a6a31d
+SHA256: eecea9c418aa8cb737fbc662ee3147b100d5176381b14d67344926a3e8fe3dc2
+
+Package: fd-default
+Name: fd (default version)
+Version: 10.5.0-1
+Architecture: all
+Section: Utilities
+Priority: optional
+Installed-Size: 0
+Depends: fd-10 (>= 10.5.0-1)
+Provides: fd (= 10.5.0-1)
+Conflicts: fd
+Replaces: fd
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/sharkdp/fd
+Tag: purpose::console
+Description: fd 10 as the default fd on PATH
+ Puts fd on PATH, pointing at fd-10. Replaces Procursus fd 8.6.0.
+Filename: debs/fd-default_10.5.0-1_all.deb
+Size: 940
+MD5sum: 37dedcb2c0c7f822e98a6f18070f4c38
+SHA1: 555c1c82fff210e1cb202b779f8fc54953c10f5d
+SHA256: 0fe06e7185aaafec7f4b0f8fd42ad8c3f0cd29824c1a53ac76effdf43e709563
+
+Package: git-2.55
+Name: Git 2.55
+Version: 2.55.0-1
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 31152
+Depends: libiosexec1 (>= 1.2.2), libcurl4, libssl3, libpcre2-8-0, perl
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://git-scm.com/
+Tag: role::developer
+Description: Distributed revision control system
+ Built on-device. Installs the versioned command git-2.55 and helpers
+ under /usr/libexec/git-2.55. Put git on PATH with git-default, which
+ replaces Procursus git 2.39.1.
+Filename: debs/git-2.55_2.55.0-1_iphoneos-arm64.deb
+Size: 4077988
+MD5sum: 88b511a9b5f2ecd0a1830f3618ce73ed
+SHA1: 556eddd42bb40eeba2235a76f3a52b862d459853
+SHA256: 444f74efe19f9493155367268bf1dc73b5665a32cc12f0220a4d28a52caadd4c
+
+Package: git-default
+Name: Git (default version)
+Version: 2.55.0-1
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: 0
+Depends: git-2.55 (>= 2.55.0-1)
+Provides: git (= 2.55.0-1)
+Conflicts: git
+Replaces: git
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://git-scm.com/
+Tag: role::developer
+Description: Git 2.55 as the default git on PATH
+ Puts git on PATH, pointing at git-2.55. Replaces Procursus git 2.39.1.
+Filename: debs/git-default_2.55.0-1_all.deb
+Size: 1048
+MD5sum: 3f814d55b3bf4a9fae85ca5fcb5d9084
+SHA1: a4dc900ad4acd3d9406db5c9a987af41b1822ea5
+SHA256: fd99bdc79fdd7e1a8facdf15e7e2e06093deba56e8e498dcf9fce00e2d8596bb
+
+Package: git-delta
+Name: git-delta
+Version: 0.19.2-1
+Architecture: iphoneos-arm64
+Section: Utilities
+Priority: optional
+Installed-Size: 6988
+Depends: libonig5
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/dandavison/delta
+Tag: purpose::console
+Description: A syntax-highlighting pager for git
+ Built on-device with Mayflower rustc 1.98. Installs /usr/bin/delta.
+ Not in Procursus rootless apt.
+Filename: debs/git-delta_0.19.2-1_iphoneos-arm64.deb
+Size: 2437808
+MD5sum: fe9cfdab9f832757394a60e34e6135d7
+SHA1: c3e0089fd3a2e9ce18272fb150db941298081968
+SHA256: 4f114a53f8980c056edbc9e396ce3a6eb1a2d64f44184ffc57e1e728ed5827f5
+
+Package: glow
+Name: Glow
+Version: 3.0.0-1
+Architecture: iphoneos-arm64
+Section: Utilities
+Priority: optional
+Installed-Size: 17400
+Depends: libiosexec1 (>= 1.2.2)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/charmbracelet/glow
+Tag: purpose::console, role::program
+Description: Render markdown on the CLI
+ Terminal Markdown reader/renderer from Charmbracelet. Built on-device
+ with Mayflower Go. Not in Procursus rootless apt.
+Filename: debs/glow_3.0.0-1_iphoneos-arm64.deb
+Size: 4542080
+MD5sum: 6b4ea8471115a2390dbaf189168519d9
+SHA1: c84025ce4faab683038201981d17776011bb72bc
+SHA256: 5119ed4cb25294d20685e57101b9e0417f2723f3588a9f3eff0442e2a559213e
+
+Package: golang-1.26-go
+Name: Go 1.26
+Version: 1.26.8-2
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 88132
+Depends: build-essential, clang, ldid, libiosexec1 (>= 1.3.1)
+Suggests: golang-1.26-src
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://go.dev/
+Tag: purpose::console
+Description: Go programming language compiler, linker, compiled stdlib
+ Built on-device for rootless jailbreaks. The linker signs every executable
+ it produces with ldid, using the entitlements plist in GOROOT, because
+ jailbroken iOS kills unsigned binaries. GOROOT is baked in, so it does not
+ have to be set in the environment.
+Filename: debs/golang-1.26-go_1.26.8-2_iphoneos-arm64.deb
+Size: 19460260
+MD5sum: 46a9a66070d48e4de4899a5a5b4dbc89
+SHA1: c70de8298ada1596e19c039ae3f619cf88bf6736
+SHA256: d33392151042a2014d542200235c0582781ad172689483bcb8c32216eac00d65
+
+Package: golang-1.26-src
+Name: Go 1.26 source
+Version: 1.26.8-2
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 154284
+Depends: golang-1.26-go (>= 1.26.8-2)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://go.dev/
+Tag: purpose::console
+Description: Go programming language source files
+ The src tree that go build reads to compile the standard library.
+Filename: debs/golang-1.26-src_1.26.8-2_iphoneos-arm64.deb
+Size: 21194284
+MD5sum: 29a342445d7e3ac9d6333e1b24b4a29d
+SHA1: b6243ef4f521109af5dbe89374458e8ce9c5c657
+SHA256: e5159a5fb0395fcacb54318e731ba4c2e32a425f3ddeb8a01b8b8c48d89d7312
+
+Package: golang-default
+Name: Go (default version)
+Version: 1.26.8-2
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: 8
+Depends: golang-1.26-go (>= 1.26.8-2)
+Provides: golang-go (= 1.26.8-2)
+Conflicts: golang-go
+Replaces: golang-go
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://go.dev/
+Tag: purpose::console
+Description: Go programming language compiler - default version
+ Puts go and gofmt on PATH, pointing at the Go 1.26 toolchain.
+ .
+ Named golang-default rather than golang-go because the bootstrap repository
+ pins every one of its own packages above this one, so a package sharing its
+ name would be downgraded by apt upgrade. It provides golang-go, so the
+ bootstrap's golang metapackage stays satisfied.
+Filename: debs/golang-default_1.26.8-2_all.deb
+Size: 1220
+MD5sum: c01868e0a8bb6a0d7961ed777b76e5de
+SHA1: dfd1da2771e503fc40cb4de7e88c4d7b4830a534
+SHA256: 3ecd404c4e38ecdd4f91603c02b0fee89b2c52048146d0b2202655fa121e375c
+
+Package: grok
+Name: Grok Build
+Version: 1.0.24-1
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 180756
+Depends: libiosexec1 (>= 1.2.2), ripgrep-15 | ripgrep-default | ripgrep
+Recommends: git-2.55 | git-default | git
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/xai-org/grok-build
+Tag: role::developer
+Description: Grok Build TUI
+ On-device build of xai-grok-pager 1.0.24 (jemalloc off). Commands grok
+ and agent (symlink).
+ Ripgrep is required on PATH (Mayflower ripgrep-15 / ripgrep-default).
+Filename: debs/grok_1.0.24-1_iphoneos-arm64.deb
+Size: 38148908
+MD5sum: 62ade1259cd08d199af5e3d4ac8ba2ac
+SHA1: 4db965fbb5c26fe2a892e3f0e21f4a7fd35048a8
+SHA256: 82f4fade3559aa1d7658e2bcc9bbca784eea0478849bdc93a68d0998700f9010
+
+Package: jq-1.8
+Name: jq 1.8
+Version: 1.8.2-1
+Architecture: iphoneos-arm64
+Section: Utilities
+Priority: optional
+Installed-Size: 196
+Depends: libiosexec1 (>= 1.2.2), libjq1 (>= 1.8.2-1)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://jqlang.github.io/jq/
+Tag: purpose::console
+Description: Command-line JSON processor
+ Built on-device. Installs jq-1.8. Put jq on PATH with jq-default,
+ which replaces Procursus jq 1.6.
+Filename: debs/jq-1.8_1.8.2-1_iphoneos-arm64.deb
+Size: 42760
+MD5sum: a6966494850de138ab42b51ed412e45e
+SHA1: fd67c79e2391ac6f22751995e1afb061b6bf44d2
+SHA256: 0a891d21dfdb4851856f312454168d9d0209f9c24ed54a0ad6b971ccd8565b55
+
+Package: jq-default
+Name: jq (default version)
+Version: 1.8.2-1
+Architecture: all
+Section: Utilities
+Priority: optional
+Installed-Size: 0
+Depends: jq-1.8 (>= 1.8.2-1)
+Provides: jq (= 1.8.2-1)
+Conflicts: jq
+Replaces: jq
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://jqlang.github.io/jq/
+Tag: purpose::console
+Description: jq 1.8 as the default jq on PATH
+ Puts jq on PATH, pointing at jq-1.8. Replaces Procursus jq 1.6.
+Filename: debs/jq-default_1.8.2-1_all.deb
+Size: 936
+MD5sum: 9d26cd1256ea5b556804eb99fc6ada4d
+SHA1: f6e947ef15dc8459828502219dc07caa989afb53
+SHA256: 86453bd1bf97795a202d93d9bfd8afd336861ed9dc0d58286ebaa364f9d9fcdb
+
+Package: libc++-19-dev
+Name: LLVM C++ Standard library 19 (headers)
+Version: 19.1.4-8
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 10224
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://libcxx.llvm.org/
+Tag: role::developer
+Description: Clang 19 libc++ headers (headers-only)
+ Headers under /var/jb/usr/lib/llvm-19/include/c++ (and __pstl* if present).
+ Does not ship a replacement libc++.dylib — Darwin/iOS uses Apple's runtime.
+ Headers-only: no Depends on libllvm16 or libllvm19.
+Filename: debs/libc++-19-dev_19.1.4-8_iphoneos-arm64.deb
+Size: 773308
+MD5sum: d04e930ed45a60ba2a6d7576ebba16ba
+SHA1: 597f03213c77e731dd750e24f9ca847d92be8c3c
+SHA256: b2377fc4b5d55453d08ae19705acaf7ce82e3e191b969c9d1fcc1b6c95876abd
+
+Package: libc++-dev
+Name: LLVM C++ Standard library (default)
+Version: 19.1.4-8
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: 4
+Depends: libc++-19-dev (= 19.1.4-8)
+Conflicts: libc++-dev
+Replaces: libc++-dev
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://libcxx.llvm.org/
+Tag: role::developer
+Description: Default libc++ headers (Procursus libc++-dev replacement)
+ Same package name as Procursus libc++-dev; 19.1.4 upgrades it. Symlinks
+ /var/jb/usr/include/c++ → ../lib/llvm-19/include/c++. Does not touch
+ libllvm16, libc++-16-dev, or swift-5.9.2.
+Filename: debs/libc++-dev_19.1.4-8_all.deb
+Size: 1188
+MD5sum: 60ff0c8df44c74c6d4d2dbcecc278a56
+SHA1: 2682c2e0404b23adbd88b7aedafd6bc066397eca
+SHA256: 9340b8afcd6edd18c963eba2097341e05666c28873b54871d8daedb14e6b010f
+
+Package: libclang-common-19-dev
+Name: Clang 19 common resources
+Version: 19.1.4-8
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 13704
+Depends: libllvm19 (= 19.1.4-8)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://clang.llvm.org/
+Tag: role::developer
+Description: Clang 19 resource headers (and Polly if present)
+ Ships lib/clang/19 resource headers used by the clang-19 frontend.
+ Moved out of the clang-19 package to mirror Procursus libclang-common-*-dev.
+Filename: debs/libclang-common-19-dev_19.1.4-8_iphoneos-arm64.deb
+Size: 672944
+MD5sum: 9e8c0683cc87966b1034ce795adcaf5e
+SHA1: e2d37e6c0deca75d3da18c41949ed656826851c9
+SHA256: 4d321f6d232c23e0e04d973ce0e987832366e07a22fd3570580b6e17a45da248
+
+Package: libclang-cpp19
+Name: Clang C++ library 19
+Version: 19.1.4-8
+Architecture: iphoneos-arm64
+Section: Libraries
+Priority: optional
+Installed-Size: 67544
+Depends: libllvm19 (= 19.1.4-8), ldid
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://clang.llvm.org/
+Tag: role::shared-lib
+Description: libclang-cpp for Clang 19
+ Shared C++ Clang library (libclang-cpp*.dylib) under llvm-19/lib.
+Filename: debs/libclang-cpp19_19.1.4-8_iphoneos-arm64.deb
+Size: 11804228
+MD5sum: 61cbfaa2ac4e7e3a24dcd69a54dfe5b0
+SHA1: f8e5c4c0a3bbc167a7ca445711714897d2542045
+SHA256: 46384b485a006db7ba77cc47b3c44d53b1cc9fca3c6d3e06ab4d5d13fc473e5f
+
+Package: libclang1-19
+Name: Clang C library 19
+Version: 19.1.4-8
+Architecture: iphoneos-arm64
+Section: Libraries
+Priority: optional
+Installed-Size: 38908
+Depends: libllvm19 (= 19.1.4-8), ldid
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://clang.llvm.org/
+Tag: role::shared-lib
+Description: libclang.dylib for Clang 19
+ C interface to Clang (libclang.dylib + libclang-19.dylib).
+Filename: debs/libclang1-19_19.1.4-8_iphoneos-arm64.deb
+Size: 7249388
+MD5sum: 48d58c9a6c35231b86ac4d9679e0b4e2
+SHA1: 7bf0ada7cb7f3a4db4d365b0ddd58a2d79781ea1
+SHA256: c37d85c38587e15a2cd9626aba90b98e5d727aaccf5ad039ba3b3027cba169b9
+
+Package: libjq-dev
+Name: jq development files
+Version: 1.8.2-1
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 20
+Depends: libjq1 (>= 1.8.2-1)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://jqlang.github.io/jq/
+Description: jq 1.8 headers and pkg-config
+ Headers and libjq.dylib symlink for building against libjq1.
+Filename: debs/libjq-dev_1.8.2-1_iphoneos-arm64.deb
+Size: 4228
+MD5sum: a2e388ee464353a589e9b1f60f2f0a8f
+SHA1: 03aea8091cdcdb2954a928756208addaeafe0624
+SHA256: 3809cc80bb29ab64db82fc3de5fd10afba7ba09239c2f180ed041af34a68826b
+
+Package: libjq1
+Name: jq shared library
+Version: 1.8.2-1
+Architecture: iphoneos-arm64
+Section: Libraries
+Priority: optional
+Installed-Size: 492
+Depends: libiosexec1 (>= 1.2.2), libonig5
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://jqlang.github.io/jq/
+Description: jq 1.8 shared library
+ Built on-device. Provides libjq.1.dylib.
+Filename: debs/libjq1_1.8.2-1_iphoneos-arm64.deb
+Size: 128356
+MD5sum: eb0448d68075412f515bff8fdf39e495
+SHA1: 09c769ece2dc5e46f4428e117465a46550061d03
+SHA256: b751fd82bf1d5c7573021f2e84861bcf5ee94058a2832bdcaee22041f50bc140
+
+Package: libllvm19
+Name: LLVM 19 runtime library
+Version: 19.1.4-8
+Architecture: iphoneos-arm64
+Section: Libraries
+Priority: optional
+Installed-Size: 56204
+Depends: ldid
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://llvm.org/
+Tag: role::shared-lib
+Description: libLLVM.dylib for LLVM 19
+ Shared LLVM library under /var/jb/usr/lib/llvm-19/lib (libLLVM.dylib and
+ libLLVM-19.dylib). Coexists with Procursus libllvm16; do not remove libllvm16
+ while swift-5.9.2 is installed.
+Filename: debs/libllvm19_19.1.4-8_iphoneos-arm64.deb
+Size: 13671024
+MD5sum: 52d49b636229bb2079669f9045006216
+SHA1: e1c78a11d3ef74a55dfbc0b4c4a2b6f0b503569a
+SHA256: c0580756ecc37bd4b8646dd985a9fead9be975df95c6ae6c7e60dc553aa5e487
+
+Package: liblua5.5-0
+Name: Lua 5.5 shared library
+Version: 5.5.1-4
+Architecture: iphoneos-arm64
+Section: Libraries
+Priority: optional
+Installed-Size: 292
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.lua.org/
+Description: Lua 5.5 shared library
+ Built on-device for rootless jailbreaks. Upstream only ships a static
+ archive; this dylib is linked from the same objects with install_name
+ @rpath/liblua5.5.0.dylib.
+Filename: debs/liblua5.5-0_5.5.1-4_iphoneos-arm64.deb
+Size: 95572
+MD5sum: fd418345d1d788a3553d12a211257e37
+SHA1: 36a09b645b83b4ac42d1d9427c036fadaca101e4
+SHA256: 0f6616a24b85dff6cb91c4641fddc60073af8b5f028b9d9360d020c581b895c3
+
+Package: liblua5.5-dev
+Name: Lua 5.5 development files
+Version: 5.5.1-4
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 64
+Depends: liblua5.5-0
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.lua.org/
+Description: Lua 5.5 headers, static library and pkg-config
+ Headers live under /var/jb/usr/include/lua5.5. pkg-config name is lua5.5.
+Filename: debs/liblua5.5-dev_5.5.1-4_iphoneos-arm64.deb
+Size: 13072
+MD5sum: ab1877c33692438df509dfd9e4de6781
+SHA1: 896b9c6e7cd72077883c9866ed4a90220f06301b
+SHA256: 7767a8a4b1be2041f12fdf2db22f3ae6c40ba88eb2143bdae2d2d282bffcc3bc
+
+Package: libpcsclite-dev
+Name: PC/SC Lite development files
+Version: 2.5.1-3
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 88
+Depends: libpcsclite1 (>= 2.5.1-3)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://pcsclite.apdu.fr/
+Tag: role::developer
+Description: PC/SC Lite headers and pkg-config
+ Built on-device. pkg-config name is libpcsclite.
+Filename: debs/libpcsclite-dev_2.5.1-3_iphoneos-arm64.deb
+Size: 17528
+MD5sum: 7909ea71bb87da175eea2fcf49624dbb
+SHA1: 6cdc11dbf3688623ab40387050a8ba3426bbb6e1
+SHA256: 3a65e3af5ddb44f9821fa830aaf28e6e7feaaf4e5be7dc8410b02c5f6f1035ba
+
+Package: libpcsclite1
+Name: PC/SC Lite library
+Version: 2.5.1-3
+Architecture: iphoneos-arm64
+Section: Libraries
+Priority: optional
+Installed-Size: 160
+Depends: libiosexec1 (>= 1.2.2)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://pcsclite.apdu.fr/
+Description: PC/SC smart card middleware (client library)
+ Built on-device. Provides libpcsclite.1.dylib for recisdb and friends.
+Filename: debs/libpcsclite1_2.5.1-3_iphoneos-arm64.deb
+Size: 19468
+MD5sum: 13d536b3fef390c48c1ced3168f4063a
+SHA1: ea1e95af9e9487eaa49d7688abcfb28186b3ee09
+SHA256: c4e62f973c8f937eeeb1906daa4c3dc25f1bf52a7e46f6ddf1cb6c391edb1163
+
+Package: libswift-6.1
+Name: Swift 6.1 runtime
+Version: 6.1.1-5
+Architecture: iphoneos-arm64
+Section: Libraries
+Priority: optional
+Installed-Size: 17672
+Depends: ldid
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.swift.org/
+Tag: role::shared-lib
+Description: Swift 6.1 runtime libraries (iphoneos)
+ Shared Swift stdlib / concurrency / … dylibs under llvm-19.
+ Required to run binaries built with swift-6.1.
+Filename: debs/libswift-6.1_6.1.1-5_iphoneos-arm64.deb
+Size: 3574964
+MD5sum: 946a13e24ed40f07509b705bbf28cd4a
+SHA1: 8ccd138cf9a663cbcb2c411a994de7a80d484068
+SHA256: ad5cfb2017a14a67d486a59dbddbbe6693861ebe6c73c7a9bbd0399d1ea043be
+
+Package: lld
+Name: LLD (default version)
+Version: 19.1.4-8
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: 4
+Depends: lld-19 (= 19.1.4-8)
+Provides: lld (= 19.1.4-8)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://lld.llvm.org/
+Tag: role::developer
+Description: LLD 19 as the default lld on PATH
+ Unversioned lld / ld64.lld / ld.lld (and friends) pointing at llvm-19.
+ Replaces the Procursus lld meta package of the same name.
+Filename: debs/lld_19.1.4-8_all.deb
+Size: 1164
+MD5sum: 2995f37fe73f8e26e3726397ed75afa7
+SHA1: 6f85274c83307e5271c197be234862e94398c189
+SHA256: a3c25f1448d951a66392473084b279752ee9879758073e21f2f0306edf2ed920
+
+Package: lld-19
+Name: LLD 19
+Version: 19.1.4-8
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 4900
+Depends: libllvm19 (= 19.1.4-8), ldid
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://lld.llvm.org/
+Tag: role::developer
+Description: lld linker for LLVM 19
+ lld / ld64.lld / ld.lld under /var/jb/usr/lib/llvm-19/bin plus versioned PATH
+ links (lld-19, …). Includes post-link ldid signing after Mach-O write.
+Filename: debs/lld-19_19.1.4-8_iphoneos-arm64.deb
+Size: 1128500
+MD5sum: 0fb7848ba15ce9e123648f00419d45f3
+SHA1: 0fb2305cc8b81811e7558c72902bc79b30e4960c
+SHA256: 2ff224000ff93bb0e3b059ca42319b5a361bc3a43f25bb52474ad0280f19ff70
+
+Package: llvm-19
+Name: LLVM 19 tools
+Version: 19.1.4-8
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 3052
+Depends: libllvm19 (= 19.1.4-8), llvm-19-linker-tools (= 19.1.4-8), ldid
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://llvm.org/
+Tag: role::developer
+Description: LLVM 19 binutils-style tools
+ llvm-ar / nm / ranlib / config / dsymutil / opt / llc / objdump / objcopy /
+ strip / symbolizer / cxxfilt / size / strings / install-name-tool / lipo under
+ /var/jb/usr/lib/llvm-19 with *-19 on PATH.
+Filename: debs/llvm-19_19.1.4-8_iphoneos-arm64.deb
+Size: 587628
+MD5sum: 8de4a16f855edf11c0abda9f1e98201c
+SHA1: 299b8fa93b524a1ea033923543ca148d07830f15
+SHA256: 0e979fedee85494c0a2c8743e22c20550abbd40625240d70c8a60dbbdc34d965
+
+Package: llvm-19-dev
+Name: LLVM 19 development files
+Version: 19.1.4-8
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 29904
+Depends: libllvm19 (= 19.1.4-8), llvm-19 (= 19.1.4-8)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://llvm.org/
+Tag: role::developer
+Description: LLVM 19 headers and static libs
+ include/llvm, include/llvm-c, and any libLLVM*.a / cmake bits from the dist.
+Filename: debs/llvm-19-dev_19.1.4-8_iphoneos-arm64.deb
+Size: 3636844
+MD5sum: 935caf84f5abbc9187ce5182abb45197
+SHA1: 438db5377c42ce0c481056c0116a4ca3ff08d1ac
+SHA256: d7def52e835a6d426f3cafba298c558e7f673e44cce226e31d2e8af5f973d99a
+
+Package: llvm-19-linker-tools
+Name: LLVM 19 linker plugins
+Version: 19.1.4-8
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 96
+Depends: libllvm19 (= 19.1.4-8), ldid
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://llvm.org/
+Tag: role::developer
+Description: libLTO (+ LLVMPolly) for LLVM 19
+ Provides libLTO.dylib under /var/jb/usr/lib/llvm-19/lib. Does not ship lld
+ binaries — those are in lld-19.
+Filename: debs/llvm-19-linker-tools_19.1.4-8_iphoneos-arm64.deb
+Size: 15052
+MD5sum: 68ecac920df659d5f82804e098c6fea7
+SHA1: 9d8aaf8a34fb0f9600d6fb72bcece6bc7f11cb2d
+SHA256: 17b67046078cf0b5e3931d6ac4231ad271b48c39930d69898d69419e889ad30f
+
+Package: llvm-default
+Name: LLVM (default version)
+Version: 19.1.4-8
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: 4
+Depends: llvm-19 (= 19.1.4-8), llvm-19-linker-tools (= 19.1.4-8), lld-19 (= 19.1.4-8)
+Provides: llvm (= 19.1.4-8)
+Conflicts: llvm
+Replaces: llvm
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://llvm.org/
+Tag: role::developer
+Description: LLVM 19 as the default llvm toolchain meta
+ Replaces Procursus llvm meta. Versioned tools remain llvm-*-19;
+ unversioned llvm-ar etc. are linked from llvm-default. Unversioned lld
+ comes from the lld meta package.
+Filename: debs/llvm-default_19.1.4-8_all.deb
+Size: 1412
+MD5sum: c1208723050e12c0b96178d6e71751fa
+SHA1: ed77fcccd9c527825a3f324ae63513b49a073081
+SHA256: 308a0b30ab62e3e89dbb161658c89d1dfb75619ebc2bf640dc5cec8f91643c49
+
+Package: llvm-dev
+Name: LLVM development files (default)
+Version: 19.1.4-8
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: 4
+Depends: llvm-19-dev (= 19.1.4-8), llvm-19-linker-tools (= 19.1.4-8)
+Provides: liblto
+Conflicts: libto
+Replaces: liblto
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://llvm.org/
+Tag: role::developer
+Description: Default LLVM headers/libs (Procursus llvm-dev replacement)
+ Symlinks usr/include/llvm{,-c} and usr/lib/libLTO.dylib to the llvm-19 tree.
+ Conflicts/Replaces Procursus llvm-dev of the same name; does not touch
+ libllvm16 / llvm-16*.
+Filename: debs/llvm-dev_19.1.4-8_all.deb
+Size: 1240
+MD5sum: bca06f1b93317e0a75356d14e8d21faf
+SHA1: 6e864c3d61d022d671a9cd7dba8eecedafd33e46
+SHA256: dc9d8344da7b6d75615a5bb8f540232ff965c7fb72c4f63674ed51066af89486
+
+Package: lua-default
+Name: Lua (default version)
+Version: 5.5.1-4
+Architecture: all
+Section: Interpreters
+Priority: optional
+Installed-Size: 0
+Depends: lua5.5 (>= 5.5.1-4)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.lua.org/
+Tag: purpose::console
+Description: Lua 5.5 as the default lua on PATH
+ Puts lua and luac on PATH, pointing at lua5.5 and luac5.5.
+Filename: debs/lua-default_5.5.1-4_all.deb
+Size: 992
+MD5sum: d4aaee1e91dd12708ace187ae2e98bc2
+SHA1: a6545f6d27bd5d0387f53cc07fd875adebfbe6c3
+SHA256: 00d14b2341f35f7577b808841d4c662be976a90a2baad9440174712d5458f426
+
+Package: lua5.5
+Name: Lua 5.5
+Version: 5.5.1-4
+Architecture: iphoneos-arm64
+Section: Interpreters
+Priority: optional
+Installed-Size: 348
+Depends: liblua5.5-0
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.lua.org/
+Tag: purpose::console
+Description: Lua 5.5 interpreter
+ Built on-device for rootless jailbreaks using upstream's ios target
+ (LUA_USE_IOS). Installs versioned names lua5.5 and luac5.5. Install
+ lua-default to put lua and luac on PATH.
+Filename: debs/lua5.5_5.5.1-4_iphoneos-arm64.deb
+Size: 84880
+MD5sum: 249d08d435929cca9bfdc4dca020c3f0
+SHA1: 1a38c4859a0a75d892e12bdad1ab7ee1df445923
+SHA256: 91c04461063284c9bef7baf238d460dda2788e520f1f9dd57e60ef9a1e0917bd
+
+Package: luarocks
+Name: LuaRocks
+Version: 3.13.0-2
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 900
+Depends: lua5.5, liblua5.5-0, liblua5.5-dev, unzip, curl
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://luarocks.org/
+Tag: purpose::console
+Description: Lua package manager for Lua 5.5
+ Built on-device for rootless jailbreaks. Rocks go to ~/.luarocks (user)
+ and /var/jb/usr/local (system).
+Filename: debs/luarocks_3.13.0-2_iphoneos-arm64.deb
+Size: 119508
+MD5sum: b8d4069b8eea0342f079f070d61a05a9
+SHA1: 8086fd60434b39a266eaf1123ff55c660ee49627
+SHA256: 39e89762e100b052b5eafcb4180409eedc09cf404868cdfe11ef2b08820a3451
+
+Package: nim
+Name: Nim
+Version: 2.2.12-2
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 49500
+Depends: build-essential, clang, ldid, libiosexec1 (>= 1.3.1)
+Recommends: libpcre1
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://nim-lang.org/
+Tag: purpose::console
+Description: Nim programming language
+ Statically typed compiled systems programming language. This build runs
+ on-device on rootless jailbreaks: programs are linked against libiosexec
+ (rootless has no /bin/sh) and signed with ldid using
+ /var/jb/usr/share/nim/entitlements.plist after every link.
+Filename: debs/nim_2.2.12-2_iphoneos-arm64.deb
+Size: 9886052
+MD5sum: f172d52d68368c26d2a5d6342661c2af
+SHA1: a9d0aa30a2c144014ebf4bec29d382d0d85b4d92
+SHA256: 1ef15661f1089f2fb205c43ca488332f68ef94af592ab404cc2e6de7a5b1afd8
+
+Package: node-default
+Name: Node.js (default version)
+Version: 24.21.0-1
+Architecture: all
+Section: Interpreters
+Priority: optional
+Installed-Size: 0
+Depends: nodejs-24 (>= 24.21.0-1)
+Provides: nodejs (= 24.21.0-1), npm (= 24.21.0-1)
+Conflicts: npm
+Replaces: npm
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://nodejs.org/
+Tag: purpose::console
+Description: Node.js 24 as the default node on PATH
+ Puts node, npm and npx on PATH, pointing at node-24, npm-24 and npx-24.
+ Provides nodejs so Procursus npm's Depends: nodejs is satisfied, and
+ replaces the bootstrap's npm 8.1.1.
+Filename: debs/node-default_24.21.0-1_all.deb
+Size: 1040
+MD5sum: dca19a61fb093cbd5b3285296fa3cc05
+SHA1: 3b2565b633980fe9f2e31837e45a2bf5425637ce
+SHA256: 3c13476e49e75b9eaabd70641c43b5301b24aa7a3cb6ccefeb0a7bdcf6848b42
+
+Package: nodejs-24
+Name: Node.js 24
+Version: 24.21.0-1
+Architecture: iphoneos-arm64
+Section: Interpreters
+Priority: optional
+Installed-Size: 102736
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://nodejs.org/
+Tag: purpose::console, role::developer
+Description: Node.js 24 LTS interpreter
+ Cross-built for rootless jailbreaks as aarch64-apple-ios. Installs versioned
+ names node-24, npm-24 and npx-24. The node-24 wrapper runs V8 with --jitless
+ unless NODE_IOS_ALLOW_JIT=1. Install node-default to put node, npm and npx
+ on PATH.
+Filename: debs/nodejs-24_24.21.0-1_iphoneos-arm64.deb
+Size: 18457400
+MD5sum: 118723ff1a471e624c071fb98ef7eecd
+SHA1: 6fff3bff992977eb5c016b3d70ea24f8337ad7bb
+SHA256: 593dc2e143e0ae78ed89869bca20237b9f904448bb29d41d5dc218330d985836
+
+Package: pcscd
+Name: PC/SC Lite daemon
+Version: 2.5.1-3
+Architecture: iphoneos-arm64
+Section: Utilities
+Priority: optional
+Installed-Size: 180
+Depends: libpcsclite1 (>= 2.5.1-3), libiosexec1 (>= 1.2.2)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://pcsclite.apdu.fr/
+Description: PC/SC smart card daemon
+ Built on-device. Loads IFD handlers from /usr/lib/pcsc/drivers and
+ serial configs from /etc/reader.conf.d (px4-userland IFD).
+ No libudev/libusb hotplug. launchd job: fr.apdu.pcscd.
+Filename: debs/pcscd_2.5.1-3_iphoneos-arm64.deb
+Size: 44752
+MD5sum: 8e3cc052926925d6fba26a0f57294f8d
+SHA1: 980f1bdacd6ae736e1df7025a93f3f5d6461a4e3
+SHA256: f153d262ee4857d1ba4122f8dd54d1a5266105b8f9f4eef5f779f065e2683185
+
+Package: px4-userland
+Name: PX4 Driver
+Version: 0.1.3-2
+Architecture: iphoneos-arm64
+Section: Utilities
+Priority: optional
+Installed-Size: 820
+Depends: libusb-1.0-0
+Recommends: pcscd
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/Khronos31/px4-userland
+Tag: purpose::console
+Description: Userland PX-Q3U4 tuner and card driver
+ Owns a PLEX PX-Q3U4 (USB ID 0511:084a) from userspace via libusb:
+ eight tuners plus the built-in IC card reader. Binaries are px4d,
+ px4-ts, and px4ctl. Built on-device for rootless jailbreaks.
+ .
+ IT930x firmware is not included. px4d requires --firmware PATH to a
+ 2169-byte blob whose SHA-256 is
+ 5213a5a38872661277a2cc1b2dfdfe88faf06f41205f460f3b51857f0568b484.
+ iOS has no XDG_RUNTIME_DIR; pass --runtime-dir as well.
+ .
+ Ships libpx4-userland-ifd.dylib for pcscd (dlopen). Register with
+ px4-pcsc-register BASE_SERIAL RUNTIME_DIR; run px4d as the same
+ user as pcscd (root on launchd).
+ .
+ Signed with IOKit USB entitlements (same set as Siano Driver).
+ GPL-2.0-only.
+Filename: debs/px4-userland_0.1.3-2_iphoneos-arm64.deb
+Size: 164952
+MD5sum: c003431a806a777d0226575668063d0b
+SHA1: 681dbd214954122c247b4eba1cda8bf28b872d6d
+SHA256: 039ecb7520a0eb9d80269e044841b2225722be0113807cdf7d51a6d7a24ea27b
+
+Package: python3-default
+Name: Python 3 (default version)
+Version: 3.14.7-2
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: 0
+Depends: python3.14 (>= 3.14.7-2)
+Provides: python3 (= 3.14.7-2)
+Conflicts: python3
+Replaces: python3
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.python.org/
+Tag: purpose::console
+Description: Python 3 interpreter - default version
+ Puts python, python3, python3-config, pydoc3 and pip3 on PATH, pointing at
+ Python 3.14. This takes over the unversioned names from the bootstrap's own
+ python3 package, which ships 3.9, and therefore replaces it.
+ .
+ idle3 and 2to3 are not provided. Python 3.13 removed lib2to3, and idlelib
+ needs tkinter, which is not built here.
+Filename: debs/python3-default_3.14.7-2_all.deb
+Size: 1216
+MD5sum: 1adfb2af1eaf5e5117b9e431deb0cd68
+SHA1: 95a8759c37c63aa0cf6a4d0fe44d359bf3926030
+SHA256: 2d8a3578897d7ef1477d0d683038e3e9821312b36fd6b5a613096929e5f4983f
+
+Package: python3.14
+Name: Python 3.14
+Version: 3.14.7-2
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 37124
+Depends: libffi8, libsqlite3-1, libreadline8, libncursesw6, liblzma5, libssl3, libgdbm6, libuuid16
+Conflicts: python3.14-minimal
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.python.org/
+Tag: purpose::console
+Description: Python 3.14 interpreter
+ Built on-device for rootless jailbreaks. Configured as darwin rather than
+ through the iOS support added in PEP 730, so that subprocess and the rest of
+ the POSIX surface stay available, which is the point on a jailbroken device.
+ os.system and subprocess with shell=True use the shell under the jailbreak
+ prefix.
+ .
+ Installs versioned names only: python3.14, pip3.14, pydoc3.14 and
+ python3.14-config. Install python3-default to make python3 on PATH mean this
+ interpreter; that package supersedes the bootstrap's python3.
+Filename: debs/python3.14_3.14.7-2_iphoneos-arm64.deb
+Size: 7623192
+MD5sum: 4db387c6adcf7f9040a51a0fa514934f
+SHA1: f25c748de47960e5ca18fb76e7f4af39383b2b9f
+SHA256: 53c40aff1edc8ca685c0308cc347cfa33c8517c72d35608540adfc501c7f080e
+
+Package: ripgrep-15
+Name: ripgrep 15
+Version: 15.2.0-1
+Architecture: iphoneos-arm64
+Section: Utilities
+Priority: optional
+Installed-Size: 5576
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/BurntSushi/ripgrep
+Tag: purpose::console
+Description: Recursively search directories for a regex pattern
+ Built on-device with Mayflower rustc 1.98. Installs the versioned
+ command rg-15. Put rg on PATH with ripgrep-default, which replaces
+ Procursus ripgrep 12.1.1.
+Filename: debs/ripgrep-15_15.2.0-1_iphoneos-arm64.deb
+Size: 1256468
+MD5sum: 32c710ff7089c967fab6b9722c42b6e9
+SHA1: 75a3447f9773dab4a763ba3e9bbc6d3804088663
+SHA256: 5d514d796200cdecfda04439268563ba7220c2582ac3c5ff11749698526a32e0
+
+Package: ripgrep-default
+Name: ripgrep (default version)
+Version: 15.2.0-1
+Architecture: all
+Section: Utilities
+Priority: optional
+Installed-Size: 0
+Depends: ripgrep-15 (>= 15.2.0-1)
+Provides: ripgrep (= 15.2.0-1)
+Conflicts: ripgrep
+Replaces: ripgrep
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/BurntSushi/ripgrep
+Tag: purpose::console
+Description: ripgrep 15 as the default rg on PATH
+ Puts rg on PATH, pointing at rg-15. Replaces Procursus ripgrep 12.1.1.
+Filename: debs/ripgrep-default_15.2.0-1_all.deb
+Size: 956
+MD5sum: 61586c588b1d6fe7fcfcdbdd86bd2194
+SHA1: 490e2aaedd0f8f5073b5bcca5f973903ccd9289d
+SHA256: 339ebc505a58bd83da77e97aa095dd19fddb676e013891b7de2eff9a71f695d6
+
+Package: ruby
+Name: Ruby
+Version: 4.0.6-1
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 59252
+Depends: libssl3, libyaml-0-2, libffi8, libgmp10, libreadline8, libncursesw6
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.ruby-lang.org/
+Tag: purpose::console
+Description: Ruby 4.0 interpreter
+ Built on-device for rootless jailbreaks. Configured as darwin so Fiber uses
+ the arm64 assembly coroutine and process spawning stays available.
+ Kernel#system and Kernel#exec with a shell use /var/jb/bin/sh.
+ .
+ YJIT and ZJIT are not built. The interpreter is enough for a working ruby;
+ a later package revision may add them.
+Filename: debs/ruby_4.0.6-1_iphoneos-arm64.deb
+Size: 11879432
+MD5sum: 164e555932f236008ca8216d8ac3452d
+SHA1: eb67ff65b5a430889b6fc81aa945ca91ac116be9
+SHA256: 339ae21aac18d5e75d046823490fdb6fc1a34f7788563c679f5964f79cbd2ae0
+
+Package: ruff
+Name: Ruff
+Version: 0.16.7-1
+Architecture: iphoneos-arm64
+Section: Utilities
+Priority: optional
+Installed-Size: 30984
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://docs.astral.sh/ruff
+Tag: purpose::console, role::program
+Description: Extremely fast Python linter and formatter
+ Astral Ruff. Built on-device with Mayflower rustc. Not in Procursus
+ rootless apt.
+Filename: debs/ruff_0.16.7-1_iphoneos-arm64.deb
+Size: 6821200
+MD5sum: fa55583e8e3ab262e70288ae5361461e
+SHA1: 9f252761193fcdae78b9176de6838560ca380417
+SHA256: cdeb65236c1f67363553c133d3523e68bb1a55ff8760b86324cd406eef206241
+
+Package: rust-default
+Name: Rust (default version)
+Version: 1.98.1-3
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: 8
+Depends: rustc-1.98 (>= 1.98.1-3), cargo-1.98 (>= 1.98.1-3)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.rust-lang.org/
+Tag: purpose::console
+Description: Rust programming language - default version
+ Puts rustc and cargo on PATH, pointing at the Rust 1.98 toolchain. The wrappers
+ supply SDKROOT, because there is no xcrun on the device and rustc otherwise
+ warns on every invocation that it cannot find the iPhoneOS SDK.
+Filename: debs/rust-default_1.98.1-3_all.deb
+Size: 1176
+MD5sum: 9a22a7cb4fc6234007fed8d7e118e3cf
+SHA1: 9b7f8734b9ea06ee37861d4b6299b169934b8d4b
+SHA256: cf4f15a6210df9fa27f6253752e5523a7abe0875c278730d96225921f8987b56
+
+Package: rust-std-1.98
+Name: Rust 1.98 standard library
+Version: 1.98.1-3
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 113984
+Depends: rustc-1.98 (>= 1.98.1-3)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.rust-lang.org/
+Tag: purpose::console
+Description: Rust standard library for aarch64-apple-ios
+ The precompiled std that rustc links into every program built for this device.
+Filename: debs/rust-std-1.98_1.98.1-3_iphoneos-arm64.deb
+Size: 25484336
+MD5sum: 66ee0ff3aa68ab622b65372f7e9c3abb
+SHA1: 91bca9b035ac7dc8dd0d20a20895a0efb21b1f19
+SHA256: a94ac681e3b1910d5dffea5b86d4c447bf4ff35bc726b1677bcbb73c3e2241a7
+
+Package: rustc-1.98
+Name: Rust 1.98 compiler
+Version: 1.98.1-3
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 207400
+Depends: build-essential, clang, ldid
+Recommends: rust-std-1.98, cargo-1.98
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.rust-lang.org/
+Tag: purpose::console
+Description: Rust systems programming language compiler
+ Cross-built on a Mac because the rustc bootstrap builds LLVM, which does not
+ fit on this device. The compiler itself runs on the device: it compiles, links
+ and signs programs without any help from a desktop.
+ .
+ The linker signs every executable and dylib it produces with ldid, using the
+ entitlements plist inside the toolchain, because jailbroken iOS kills unsigned
+ images and refuses to dlopen them.
+Filename: debs/rustc-1.98_1.98.1-3_iphoneos-arm64.deb
+Size: 38028368
+MD5sum: 2926109d516cca265b9fd611aab224c3
+SHA1: 7cc64f9c907863f07021bc7647e9dbfb2fe5bba3
+SHA256: bf4165d94d3b10a35fd73b0b58dddb930464930c494027046986015baa98f5a2
+
+Package: sd
+Name: sd
+Version: 1.1.0-1
+Architecture: iphoneos-arm64
+Section: Utilities
+Priority: optional
+Installed-Size: 1944
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/chmln/sd
+Tag: purpose::console
+Description: Intuitive find and replace CLI
+ A friendlier sed. Built on-device with Mayflower rustc. Not in
+ Procursus rootless apt.
+Filename: debs/sd_1.1.0-1_iphoneos-arm64.deb
+Size: 830392
+MD5sum: c3c3cb2e95b3c677aa00851fde832a8b
+SHA1: 170afe6fd4e553bb054f63326a6b6a561dec6209
+SHA256: 9d46d3b8d1796d1352b6cac9e047ebbc183203126a7a2ec81f73911bdcf70b37
+
+Package: siano-userland
+Name: Siano Driver
+Version: 0.1.5-2
+Architecture: iphoneos-arm64
+Section: Utilities
+Priority: optional
+Installed-Size: 280
+Depends: libusb-1.0-0
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/Khronos31/siano-userland
+Tag: purpose::console
+Description: Userland ISDB-T tuner capture for Siano RIO (PX-S1UD)
+ Captures MPEG-TS from Siano-based USB tuners (e.g. PLEX PX-S1UD) via libusb.
+ Built on-device for rootless jailbreaks.
+ .
+ This package redistributes the unmodified Siano firmware blob
+ isdbt_rio.inp in binary form under LICENCE.siano
+ (Copyright (c) 2005-2014 Siano Mobile Silicon Ltd.). Reverse
+ engineering, decompilation, and disassembly of the firmware are
+ prohibited. Full terms: /var/jb/usr/share/licenses/siano-ts/LICENCE.siano
+ and /var/jb/usr/share/doc/siano-ts/copyright.
+ .
+ Firmware files are installed under /var/jb/usr/share/siano-ts/ and
+ /var/jb/lib/firmware/. The application itself is GPL-2.0-or-later
+ (COPYING).
+Filename: debs/siano-userland_0.1.5-2_iphoneos-arm64.deb
+Size: 68532
+MD5sum: 2147121d6ba85e2e874a4cf580eeb577
+SHA1: 95b4a49949799b6abb8143b1f7704fd27e49d22a
+SHA256: 158592ef26d3a97b2f2ec40be6c54ba241a6c7c706e1c74541ac5869af2c4a18
+
+Package: swift-6.1
+Name: Swift 6.1 compiler
+Version: 6.1.1-5
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 301476
+Depends: build-essential, libswift-6.1 (= 6.1.1-5), clang-19 (>= 19.1.4), ldid, profile.d
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.swift.org/
+Tag: role::developer
+Description: Swift 6.1 compiler (versioned)
+ Versioned swift-6.1 / swiftc-6.1 on PATH. Installs into the llvm-19
+ prefix. Ships mayflower-swift-ld for post-link ldid (independent of
+ CLANG_NO_LDID / LLD_NO_LDID). Does not include fat IDE/test tools.
+Filename: debs/swift-6.1_6.1.1-5_iphoneos-arm64.deb
+Size: 60935148
+MD5sum: 8a27a6d05fbd7df63397c8ebb529c160
+SHA1: e56c49e421a950dcb6bc720fc555debcd53551f1
+SHA256: 8e60a38f12a80d0e38e04c9347c692ae630ccf5f18d26ff030acb446fc1dd590
+
+Package: swift-6.1-dev
+Name: Swift 6.1 development files
+Version: 6.1.1-5
+Architecture: iphoneos-arm64
+Section: Development
+Priority: optional
+Installed-Size: 49344
+Depends: libswift-6.1 (= 6.1.1-5), swift-6.1 (= 6.1.1-5)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.swift.org/
+Tag: role::devel-lib
+Description: Swift 6.1 modules and headers
+ .swiftmodule / shims / clang overlays needed to compile Swift code
+ against the Mayflower stdlib. Runtime dylibs live in libswift-6.1.
+Filename: debs/swift-6.1-dev_6.1.1-5_iphoneos-arm64.deb
+Size: 6069436
+MD5sum: 7079e5b4eedc376ede4227c9a4ede801
+SHA1: 6e13c03b5f125d0a31ba8c07894d6f5b2405b2fc
+SHA256: f8a0d6dfeacf54ea4c49f434882232323153286c317816a55af881c7ddb34ab3
+
+Package: swift-default
+Name: Swift (default version)
+Version: 6.1.1-5
+Architecture: all
+Section: Development
+Priority: optional
+Installed-Size: 4
+Depends: swift-6.1 (= 6.1.1-5), libswift-6.1 (= 6.1.1-5), swift-6.1-dev (= 6.1.1-5)
+Provides: swift (= 6.1.1-5)
+Conflicts: swift
+Replaces: swift
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.swift.org/
+Tag: role::developer
+Description: Swift 6.1 as the default swift on PATH
+ Puts swift / swiftc on PATH pointing at swift-6.1. Replaces the
+ Procursus swift meta only (not swift-5.9.2 itself).
+Filename: debs/swift-default_6.1.1-5_all.deb
+Size: 1112
+MD5sum: 77b0cb01008f35c9008e1b057f1208df
+SHA1: 09cfd319ae123f26c0f01f6ac2125dd2de5a0e33
+SHA256: 039b6a1dabf990f215e7aa7ad57f80a7eeca7c3c3ec81dfc8c41959a737194b7
+
+Package: swiftformat
+Name: SwiftFormat
+Version: 0.63.0-1
+Architecture: iphoneos-arm64
+Section: Utilities
+Priority: optional
+Installed-Size: 4864
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/nicklockwood/SwiftFormat
+Tag: purpose::console, role::program
+Description: Format Swift source on the CLI
+ SwiftFormat by Nick Lockwood. Built on-device with Mayflower
+ swiftc-6.1 (direct swiftc, no SPM). Not in Procursus rootless apt.
+ Runtime uses the system Swift stdlib under /usr/lib/swift.
+Filename: debs/swiftformat_0.63.0-1_iphoneos-arm64.deb
+Size: 1024720
+MD5sum: 28935074c8502efa15d92f3a178c5f41
+SHA1: 4ea4d746b32a1d86d96404d933b98c8f7a9029cb
+SHA256: 86186cfe6de193a570ded801aa15d63d9aae3b11e7580216e6d917b90767cf94
+
+Package: tmux-3.7
+Name: tmux 3.7
+Version: 3.7c-1
+Architecture: iphoneos-arm64
+Section: Terminal_Support
+Priority: optional
+Installed-Size: 1224
+Depends: libevent-2.1-7, libncursesw6, libiosexec1 (>= 1.2.2)
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/tmux/tmux
+Tag: purpose::console, interface::text-mode
+Description: terminal multiplexer (versioned)
+ Built on-device. Installs the versioned command tmux-3.7.
+ Put tmux on PATH with tmux-default, which replaces Procursus tmux 3.4.
+ Default shell for run-shell is /var/jb/bin/sh (dash).
+Filename: debs/tmux-3.7_3.7c-1_iphoneos-arm64.deb
+Size: 379500
+MD5sum: 6c49f595a0a9e374db219488c52bd603
+SHA1: 4f79b65054d347ac055e79a6db3e281105c17d0f
+SHA256: 3d7598d460f9e17b9761a792fa0993c8bebbd2a1a57f9e54cd38588edfda426c
+
+Package: tmux-default
+Name: tmux (default version)
+Version: 3.7c-1
+Architecture: all
+Section: Terminal_Support
+Priority: optional
+Installed-Size: 0
+Depends: tmux-3.7 (>= 3.7c-1)
+Provides: tmux (= 3.7c-1)
+Conflicts: tmux
+Replaces: tmux
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/tmux/tmux
+Tag: purpose::console, interface::text-mode
+Description: tmux 3.7 as the default tmux on PATH
+ Puts tmux on PATH, pointing at tmux-3.7. Replaces Procursus tmux 3.4.
+Filename: debs/tmux-default_3.7c-1_all.deb
+Size: 1012
+MD5sum: 236231c18861fd98cc27cfd93060332d
+SHA1: 79466265d123acae6b550afd84c1264b9b62cbf1
+SHA256: 1fcd79edf92d1cf648912d1192e69655c6e1dda471b95648e1a4803283a162a5
+
