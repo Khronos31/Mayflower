@@ -1,0 +1,21 @@
+Package: zig
+Name: Zig
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: build-essential, ldid, libiosexec1 (>= 1.3.1)
+Recommends: clang-19 | clang, ld64
+Suggests: llvm-19 | llvm
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://ziglang.org/
+Tag: purpose::console
+Description: Zig programming language compiler
+ Zig 0.16.0 toolchain for rootless jailbroken iOS (iphoneos-arm64). Provides
+ zig build and zig build-exe for aarch64-ios on-device. Does not replace the
+ system C compiler; use clang from build-essential when C interop is needed.
+ .
+ The shipped zig binary embeds LLVM. Executables it produces (and zig itself)
+ must be signed with ldid using the entitlements plist under
+ /var/jb/usr/lib/zig-0.16.0/.
