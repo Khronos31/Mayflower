@@ -1,8 +1,8 @@
 name: zig-mayflower-macos
 
 # Build Zig 0.16.0 + Mayflower MachO patch with LLVM on a GitHub-hosted
-# macOS runner (~14GB RAM). Mac mini (8GB) OOMs on this link; GHA is the
-# intended host for patched stage3 until we have more RAM locally.
+# macOS runner. Mac mini (8GB) OOMs on this link; GHA is the intended host
+# for patched stage3 until we have more RAM locally.
 on:
   workflow_dispatch:
   push:
@@ -11,6 +11,7 @@ on:
       - "packages/zig/**"
       - "docs/zig.md"
       - ".github/workflows/zig-mayflower-macos.yml"
+
 permissions:
   contents: read
 
@@ -33,7 +34,7 @@ jobs:
         run: |
           set -euo pipefail
           brew update
-          # zstd: cmake zig2 link needs -lzstd (Homebrew keg path, not on default ld path)
+          # zstd: cmake zig2 link needs -lzstd (Homebrew path, not on default ld path)
           brew install cmake ninja zstd llvm@21 lld@21
           LLVM_PREFIX="$(brew --prefix llvm@21)"
           LLD_PREFIX="$(brew --prefix lld@21)"
@@ -43,7 +44,6 @@ jobs:
           echo "ZSTD_PREFIX=$ZSTD_PREFIX" >> "$GITHUB_ENV"
           echo "$LLVM_PREFIX/bin" >> "$GITHUB_PATH"
           echo "$LLD_PREFIX/bin" >> "$GITHUB_PATH"
-          # help the linker find Homebrew zstd / llvm dylibs in later steps
           {
             echo "LDFLAGS=-L$ZSTD_PREFIX/lib -L$LLVM_PREFIX/lib -L$LLD_PREFIX/lib"
             echo "LIBRARY_PATH=$ZSTD_PREFIX/lib:$LLVM_PREFIX/lib:$LLD_PREFIX/lib"
@@ -74,23 +74,18 @@ jobs:
           set -euo pipefail
           PREFIX="${GITHUB_WORKSPACE}/zig-mayflower-prefix"
           JOBS="$(sysctl -n hw.ncpu)"
-          try_build() {
-            local static="$1"
-            rm -rf "$ZIG_SRC/build"
-            cmake -S "$ZIG_SRC" -B "$ZIG_SRC/build" -G Ninja \
-              -DCMAKE_BUILD_TYPE=Release \
-              -DCMAKE_PREFIX_PATH="${LLVM_PREFIX};${LLD_PREFIX};${ZSTD_PREFIX}" \
-              -DCMAKE_INSTALL_PREFIX="$PREFIX" \
-              -DCMAKE_EXE_LINKER_FLAGS="-L${ZSTD_PREFIX}/lib" \
-              -DZIG_STATIC_LLVM="$static"
-            cmake --build "$ZIG_SRC/build" --parallel "$JOBS"
-            cmake --install "$ZIG_SRC/build"
-          }
-          if ! try_build ON; then
-            echo "::warning::ZIG_STATIC_LLVM=ON failed; retrying with OFF (dylib LLVM)"
-            rm -rf "$PREFIX"
-            try_build OFF
-          fi
+          # macos-15 GHA reports ~7.5GiB free; zig's LLVM stage3 step declares
+          # max_rss=8GiB and refuses without --maxrss (zig build.zig).
+          rm -rf "$ZIG_SRC/build" "$PREFIX"
+          cmake -S "$ZIG_SRC" -B "$ZIG_SRC/build" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${LLVM_PREFIX};${LLD_PREFIX};${ZSTD_PREFIX}" \
+            -DCMAKE_INSTALL_PREFIX="$PREFIX" \
+            -DCMAKE_EXE_LINKER_FLAGS="-L${ZSTD_PREFIX}/lib" \
+            -DZIG_STATIC_LLVM=OFF \
+            -DZIG_EXTRA_BUILD_ARGS="--maxrss;8000000000"
+          cmake --build "$ZIG_SRC/build" --parallel "$JOBS"
+          cmake --install "$ZIG_SRC/build"
           if [ -x "$PREFIX/bin/zig" ]; then
             ZIG_BIN="$PREFIX/bin/zig"
           elif [ -x "$PREFIX/zig" ]; then
