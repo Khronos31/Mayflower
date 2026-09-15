@@ -264,6 +264,9 @@ jobs:
           # Flat-ish install: we re-layout for make.sh after.
           # zig's compile-exe step still declares max_rss=8GiB even with
           # -Denable-llvm=false; macos-15 GHA has ~7.5GiB free (same as stage3).
+          # tee must not hide a failed zig build: check PIPESTATUS[0] explicitly
+          # (do not rely only on ambient pipefail).
+          set +e
           "$ZIG_BOOT" build \
             -Dtarget=aarch64-ios \
             -Dcpu=apple_a8 \
@@ -276,9 +279,18 @@ jobs:
             --maxrss 8000000000 \
             --verbose-link \
             2>&1 | tee "${GITHUB_WORKSPACE}/ios-host-build.log"
-          # Locate zig binary
+          BUILD_EC=${PIPESTATUS[0]}
+          set -euo pipefail
+          if [ "$BUILD_EC" -ne 0 ]; then
+            echo "::error::ios-host zig build failed (exit $BUILD_EC); see ios-host-build.log"
+            exit "$BUILD_EC"
+          fi
+          # Fail before Pack if no usable zig binary
           ZIG_IOS="$(find "$PREFIX" -type f -name zig | head -1)"
-          test -n "$ZIG_IOS" && test -x "$ZIG_IOS"
+          if [ -z "$ZIG_IOS" ] || [ ! -x "$ZIG_IOS" ]; then
+            echo "::error::ios-host build produced no usable zig binary under $PREFIX"
+            exit 1
+          fi
           echo "ZIG_IOS=$ZIG_IOS" >> "$GITHUB_ENV"
           file "$ZIG_IOS"
           lipo -info "$ZIG_IOS" || true
