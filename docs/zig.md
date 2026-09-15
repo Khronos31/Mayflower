@@ -158,20 +158,27 @@ ssh ha "ssh ip8 'cat > ~/hello && chmod +x ~/hello && ~/hello'" < ./hello
 
 **zls は後回し。** `ZIG_NO_LDID` は導入しない。
 
-## Host rebuild note (Mac mini 8GB)
+## Host tracks (2026-09-15)
 
-Patched stage3 `zig` with LLVM on an 8GB Mac mini is not practical today:
+Two different “hosts” — do not mix them up:
 
-- `zig build` without `-Denable-llvm` produced a ~24MB host `zig` that OOM-kills
-  (`exit 137`) even on an empty native `build-exe`.
-- Full LLVM-enabled stage3 link is expected to need more RAM than this machine has.
-- Do not treat Grok Bot local-exec as the root cause; Latitude→SSH does not add RAM.
+| Track | Binary runs on | Role | Status |
+|-------|----------------|------|--------|
+| **macos-host** | Mac (aarch64) | Dev: `build-exe -target aarch64-ios` → ldid → ip8 | **Done** (GHA artifact + local smoke) |
+| **ios-host** | jailbroken iPhone | Deb payload for `packages/zig` (`ZIG_DIST_DIR`) | **Next** (cross from macos-host) |
 
-Validated smoke (2026-09-15, ip8): official `zig-aarch64-macos-0.16.0` `build-obj`
-→ system `clang -target arm64-apple-ios… -isysroot iPhoneOS.sdk -lSystem` →
-`ldid -Sentitlements.plist` last → device printed `hello` (`exit 0`).
-That is the same link/sign order the MachO patch encodes; in-process patched
-`build-exe` still waits for a host with enough RAM (or an ios-host package build).
+`packages/zig/make.sh` packages an **ios-host** tree. The GHA
+`zig-mayflower-0.16.0-aarch64-macos` artifact is the **macos-host** bootstrap
+(Homebrew `llvm@21` dylibs). It is not the deb.
+
+Validated (2026-09-15):
+
+- GHA patched macos-host `build-exe -target aarch64-ios` (clang + dyld stub +
+  sibling `libcompiler_rt_zcu.o` + ldid).
+- Same binary path on Mac mini → ip8 printed `hello` / exit 0
+  (commit `e904edd` artifact).
+
+Mac mini (8GB) still must not link LLVM stage3 locally; use GHA for macos-host.
 
 ## CI: patched LLVM stage3 on GitHub Actions
 
@@ -187,6 +194,21 @@ Mac mini (8GB) OOMs when linking LLVM into Zig. Use workflow
 GHA macos-15 reports ~7.5GiB free while Zig LLVM stage3 declares `max_rss = 8GiB`; the workflow passes `-DZIG_EXTRA_BUILD_ARGS=--maxrss;8000000000` so the build may proceed (OOM risk remains).
 
 Trigger: `workflow_dispatch`, or push/PR touching `packages/zig/**` on `zig-0.16-wip`.
+
+### CI job: ios-host cross (no LLVM in the device binary)
+
+Same workflow, job `ios-host` (needs macos `build`):
+
+- Bootstrap: the macos-host artifact from the prior job (patched, so Exe link
+  uses clang → ldid).
+- `zig build -Dtarget=aarch64-ios -Dcpu=apple_a11 -Denable-llvm=false`
+  with iPhoneOS SDK / `ZIG_LDID_ENTITLEMENTS`.
+- Artifact: `zig-mayflower-0.16.0-aarch64-ios` for `ZIG_DIST_DIR` → `make.sh`.
+
+LLVM-less first: Mayflower already routes device Exe/dylib through system
+clang, so the on-device compiler may not need embedded LLVM for pure Zig
+`build-exe`. If that proves too limited, revisit a static/cross LLVM later.
+
 
 ## ios dyld stubs
 

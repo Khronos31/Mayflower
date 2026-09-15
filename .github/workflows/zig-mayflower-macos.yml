@@ -192,3 +192,145 @@ jobs:
             smoke-link.log
           if-no-files-found: error
           retention-days: 30
+
+  # Cross-build an ios-host zig (no embedded LLVM) for packages/zig deb.
+  # Uses the patched macos-host from `build` so Mayflower clang+ldid links
+  # the device binary. Mac mini does not run this locally (RAM).
+  ios-host:
+    needs: build
+    runs-on: macos-15
+    timeout-minutes: 180
+    steps:
+      - name: Checkout Mayflower
+        uses: actions/checkout@v4
+
+      - name: Download macos-host artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: zig-mayflower-${{ env.ZIG_VERSION }}-aarch64-macos
+          path: macos-art
+
+      - name: Unpack macos-host zig
+        run: |
+          set -euo pipefail
+          tar xzf "macos-art/zig-mayflower-${ZIG_VERSION}-aarch64-macos.tar.gz"
+          if [ -x zig-mayflower-prefix/bin/zig ]; then
+            ZIG_BOOT="$PWD/zig-mayflower-prefix/bin/zig"
+          else
+            ZIG_BOOT="$(find zig-mayflower-prefix -type f -name zig | head -1)"
+          fi
+          test -x "$ZIG_BOOT"
+          echo "ZIG_BOOT=$ZIG_BOOT" >> "$GITHUB_ENV"
+          "$ZIG_BOOT" version
+          # Homebrew LLVM dylibs — same runner flavor as `build`, so paths match.
+          brew install llvm@21 lld@21 zstd ldid
+          brew --prefix llvm@21
+          otool -L "$ZIG_BOOT" | head -20
+
+      - name: Fetch Zig ${{ env.ZIG_VERSION }} sources + Mayflower patch
+        run: |
+          set -euo pipefail
+          curl -fsSL -o "zig-${ZIG_VERSION}.tar.xz" \
+            "https://ziglang.org/download/${ZIG_VERSION}/zig-${ZIG_VERSION}.tar.xz"
+          tar xf "zig-${ZIG_VERSION}.tar.xz"
+          cd "zig-${ZIG_VERSION}"
+          patch -p1 < "$GITHUB_WORKSPACE/packages/zig/patches/src_link_MachO.zig.patch"
+          grep -n flushMayflowerIosDevice src/link/MachO.zig | head
+          echo "ZIG_SRC=${GITHUB_WORKSPACE}/zig-${ZIG_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Cross-build ios-host zig (enable-llvm=false)
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          test -n "$SDK" && test -d "$SDK"
+          PREFIX="${GITHUB_WORKSPACE}/zig-mayflower-ios-prefix"
+          WORK="${GITHUB_WORKSPACE}/ios-host-ent"
+          mkdir -p "$WORK" "$PREFIX"
+          cat > "$WORK/entitlements.plist" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>platform-application</key>
+            <true/>
+            <key>com.apple.private.security.container-required</key>
+            <false/>
+          </dict>
+          </plist>
+          PLIST
+          export ZIG_LDID_ENTITLEMENTS="$WORK/entitlements.plist"
+          cd "$ZIG_SRC"
+          # Flat-ish install: we re-layout for make.sh after.
+          "$ZIG_BOOT" build \
+            -Dtarget=aarch64-ios \
+            -Dcpu=apple_a11 \
+            -Denable-llvm=false \
+            -Doptimize=ReleaseFast \
+            -Dno-langref=true \
+            -Dstrip=true \
+            --sysroot "$SDK" \
+            --prefix "$PREFIX" \
+            --verbose-link \
+            2>&1 | tee "${GITHUB_WORKSPACE}/ios-host-build.log"
+          # Locate zig binary
+          ZIG_IOS="$(find "$PREFIX" -type f -name zig | head -1)"
+          test -n "$ZIG_IOS" && test -x "$ZIG_IOS"
+          echo "ZIG_IOS=$ZIG_IOS" >> "$GITHUB_ENV"
+          file "$ZIG_IOS"
+          lipo -info "$ZIG_IOS" || true
+          # Ensure Mach-O is iphoneos, not macos
+          if otool -l "$ZIG_IOS" | grep -q 'LC_BUILD_VERSION' ; then
+            otool -l "$ZIG_IOS" | grep -A6 LC_BUILD_VERSION | head -20
+          fi
+          if command -v ldid >/dev/null; then
+            ldid -S"$ZIG_LDID_ENTITLEMENTS" "$ZIG_IOS" || ldid -S "$ZIG_IOS"
+            ldid -e "$ZIG_IOS" || true
+          fi
+          # Layout for packages/zig make.sh: PREFIX/zig + PREFIX/lib
+          DIST="${GITHUB_WORKSPACE}/zig-mayflower-ios-dist"
+          rm -rf "$DIST"
+          mkdir -p "$DIST"
+          cp "$ZIG_IOS" "$DIST/zig"
+          # lib/ next to zig (official / make.sh layout)
+          if [ -d "$PREFIX/lib" ]; then
+            cp -R "$PREFIX/lib" "$DIST/"
+          elif [ -d "$PREFIX/lib/zig" ]; then
+            mkdir -p "$DIST/lib"
+            cp -R "$PREFIX/lib/zig" "$DIST/lib/"
+          else
+            # zig build may install under lib/zig-0.16.0 style — gather
+            LIBDIR="$(find "$PREFIX" -type d -name lib | head -1)"
+            test -n "$LIBDIR"
+            cp -R "$LIBDIR" "$DIST/"
+          fi
+          chmod 755 "$DIST/zig"
+          ls -lh "$DIST/zig"
+          du -sh "$DIST" "$DIST/lib" || true
+          echo "DIST=$DIST" >> "$GITHUB_ENV"
+
+      - name: Pack ios-host artifact
+        run: |
+          set -euo pipefail
+          test -x "${DIST}/zig"
+          test -d "${DIST}/lib"
+          cat > "${DIST}/MAYFLOWER-README.txt" <<'TXT'
+          Mayflower patched Zig (ios aarch64 host, no embedded LLVM)
+          - For packages/zig ZIG_DIST_DIR → make.sh → iphoneos-arm64 deb
+          - Device Exe/dylib link: system clang + ldid (MachO patch)
+          - Built on GHA by cross from macos-host with -Denable-llvm=false
+          TXT
+          tar -C "$(dirname "$DIST")" -czf \
+            "zig-mayflower-${ZIG_VERSION}-aarch64-ios.tar.gz" "$(basename "$DIST")"
+          ls -lh "zig-mayflower-${ZIG_VERSION}-aarch64-ios.tar.gz"
+          # also keep build log
+          test -f ios-host-build.log
+
+      - name: Upload ios-host artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zig-mayflower-${{ env.ZIG_VERSION }}-aarch64-ios
+          path: |
+            zig-mayflower-${{ env.ZIG_VERSION }}-aarch64-ios.tar.gz
+            ios-host-build.log
+          if-no-files-found: error
+          retention-days: 30
