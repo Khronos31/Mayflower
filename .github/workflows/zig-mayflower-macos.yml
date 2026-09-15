@@ -262,6 +262,8 @@ jobs:
           export ZIG_LDID_ENTITLEMENTS="$WORK/entitlements.plist"
           cd "$ZIG_SRC"
           # Flat-ish install: we re-layout for make.sh after.
+          # zig's compile-exe step still declares max_rss=8GiB even with
+          # -Denable-llvm=false; macos-15 GHA has ~7.5GiB free (same as stage3).
           "$ZIG_BOOT" build \
             -Dtarget=aarch64-ios \
             -Dcpu=apple_a11 \
@@ -271,6 +273,7 @@ jobs:
             -Dstrip=true \
             --sysroot "$SDK" \
             --prefix "$PREFIX" \
+            --maxrss 8000000000 \
             --verbose-link \
             2>&1 | tee "${GITHUB_WORKSPACE}/ios-host-build.log"
           # Locate zig binary
