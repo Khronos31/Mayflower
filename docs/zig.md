@@ -180,3 +180,14 @@ Mac mini (8GB) OOMs when linking LLVM into Zig. Use workflow
 GHA macos-15 reports ~7.5GiB free while Zig LLVM stage3 declares `max_rss = 8GiB`; the workflow passes `-DZIG_EXTRA_BUILD_ARGS=--maxrss;8000000000` so the build may proceed (OOM risk remains).
 
 Trigger: `workflow_dispatch`, or push/PR touching `packages/zig/**` on `zig-0.16-wip`.
+
+## ios dyld stubs
+
+`std.debug.SelfInfo` references `_dyld_get_image_header_containing_address` /
+`_dyld_image_path_containing_address`, which headers mark `__API_UNAVAILABLE`
+on ios. System `ld` then fails Mayflower's clang link for Exe/dylib that pull
+in SelfInfo (e.g. `std.debug.print` panic paths).
+
+The MachO patch compiles a tiny C stub (NULL returns) into the local cache and
+links it before `-lSystem`. Stack traces that need those APIs get
+`MissingDebugInfo` instead of a link error.

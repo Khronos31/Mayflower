@@ -1,9 +1,10 @@
 --- a/src/link/MachO.zig
 +++ b/src/link/MachO.zig
-@@ -364,6 +364,20 @@
+@@ -363,6 +363,20 @@
+     if (self.getZigObject()) |zo| try zo.flush(self, tid);
      if (self.base.isStaticLib()) return relocatable.flushStaticLib(self, comp, zcu_obj_path);
      if (self.base.isObject()) return relocatable.flushObject(self, comp, zcu_obj_path);
- 
++
 +    // Mayflower: Zig's self-hosted Mach-O linker produces SIGILL on jailbroken
 +    // iOS devices (verified on ip8). Route ios device Exe/dylib final link
 +    // through system clang/ld, then ldid last — same pattern as Go/Rust/Nim.
@@ -17,14 +18,14 @@
 +            return;
 +        }
 +    }
-+
+ 
      var positionals = std.array_list.Managed(link.Input).init(gpa);
      defer positionals.deinit();
- 
-@@ -623,6 +637,252 @@
+@@ -622,7 +636,326 @@
+         };
      }
  }
- 
++
 +
 +/// Mayflower ios-device final link: system clang (+ its ld) then ldid last.
 +///
@@ -108,7 +109,7 @@
 +            try argv.append(dso_exact.name);
 +        },
 +    };
-+
+ 
 +    for (comp.c_object_table.keys()) |key| {
 +        try argv.append(try key.status.success.object_path.toString(arena));
 +    }
@@ -164,6 +165,13 @@
 +        try argv.append(try comp.libcxx_static_lib.?.full_object_path.toString(arena));
 +    }
 +
++    // std.debug.SelfInfo references dyld APIs that are __API_UNAVAILABLE on ios
++    // (header marks them macos-only). System ld then fails the Mayflower clang
++    // link. Provide NULL-returning stubs so Exe/dylib can link; stack traces
++    // that need these APIs simply get MissingDebugInfo.
++    const stub_o = try self.mayflowerCompileIosDyldStub(arena, apple_arch, min_ver);
++    try argv.append(stub_o);
++
 +    try argv.append("-lSystem");
 +
 +    if (comp.zigc_static_lib) |lib| try argv.append(try lib.full_object_path.toString(arena));
@@ -193,6 +201,72 @@
 +    }
 +
 +    try self.mayflowerLdidLast(arena, full_out_path);
++}
++
++
++fn mayflowerCompileIosDyldStub(
++    self: *MachO,
++    arena: Allocator,
++    apple_arch: []const u8,
++    min_ver: []const u8,
++) link.File.FlushError![]const u8 {
++    const comp = self.base.comp;
++    const gpa = comp.gpa;
++    const io = comp.io;
++    const diags = &comp.link_diags;
++
++    // Darwin C adds one underscore: `_dyld_...` exports `__dyld_...`.
++    const stub_c =
++        \\struct mach_header;
++        \\const struct mach_header *_dyld_get_image_header_containing_address(const void *address) {
++        \\    (void)address;
++        \\    return 0;
++        \\}
++        \\const char *_dyld_image_path_containing_address(const void *address) {
++        \\    (void)address;
++        \\    return 0;
++        \\}
++    ;
++
++    const cache_root = comp.dirs.local_cache.path orelse ".";
++    const stub_c_path = try fs.path.join(arena, &.{ cache_root, "mayflower_ios_dyld_stub.c" });
++    const stub_o_path = try fs.path.join(arena, &.{ cache_root, "mayflower_ios_dyld_stub.o" });
++
++    {
++        const file = try comp.dirs.local_cache.handle.createFile(io, "mayflower_ios_dyld_stub.c", .{});
++        defer file.close(io);
++        file.writeStreamingAll(io, stub_c) catch |err| {
++            return diags.fail("failed to write mayflower ios dyld stub: {s}", .{@errorName(err)});
++        };
++    }
++
++    var carg = std.array_list.Managed([]const u8).init(arena);
++    try carg.append("clang");
++    try carg.append("-target");
++    try carg.append(try std.fmt.allocPrint(arena, "{s}-apple-ios{s}", .{ apple_arch, min_ver }));
++    if (comp.sysroot) |sysroot| {
++        try carg.append("-isysroot");
++        try carg.append(sysroot);
++    }
++    try carg.append("-c");
++    try carg.append(stub_c_path);
++    try carg.append("-o");
++    try carg.append(stub_o_path);
++
++    const result = std.process.run(gpa, io, .{ .argv = carg.items }) catch |err| {
++        return diags.fail("failed to spawn clang for mayflower ios dyld stub: {s}", .{@errorName(err)});
++    };
++    defer {
++        gpa.free(result.stdout);
++        gpa.free(result.stderr);
++    }
++    switch (result.term) {
++        .exited => |code| if (code != 0) {
++            return diags.fail("clang failed building mayflower ios dyld stub (exit {d}): {s}", .{ code, result.stderr });
++        },
++        else => return diags.fail("clang failed building mayflower ios dyld stub: {s}", .{result.stderr}),
++    }
++    return stub_o_path;
 +}
 +
 +const MayflowerLdidPlan = union(enum) {

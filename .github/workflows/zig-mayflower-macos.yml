@@ -141,17 +141,16 @@ jobs:
           set -e
           tail -100 link.log || true
           if [ "$EC" -ne 0 ] || [ ! -f ./hello ]; then
-            echo "::warning::build-exe failed (exit $EC); fallback build-obj + clang + ldid"
-            "$ZIG_BIN" build-obj hello.zig -target aarch64-ios -mcpu=apple_a11 \
-              -OReleaseSmall --sysroot "$SDK" -femit-bin=hello.o
-            clang -target arm64-apple-ios15.0 -isysroot "$SDK" -o hello hello.o -lSystem
-            if command -v ldid >/dev/null; then
-              ldid -S"$ZIG_LDID_ENTITLEMENTS" hello
-            fi
-          else
-            if ! grep -Eiq 'clang|mayflower|flushMayflower' link.log; then
-              echo "::warning::verbose-link log did not clearly show clang; see link.log"
-            fi
+            echo "::error::patched zig build-exe failed (exit $EC); see link.log"
+            exit 1
+          fi
+          if ! grep -Eiq 'clang|mayflower_ios_dyld_stub|flushMayflower' link.log; then
+            echo "::warning::verbose-link log did not clearly show clang/stub; see link.log"
+          fi
+          # Must not still be missing the ios-unavailable dyld SelfInfo symbols.
+          if grep -q 'dyld_get_image_header_containing_address' link.log && grep -q 'Undefined symbols' link.log; then
+            echo "::error::dyld SelfInfo symbol still undefined after stub"
+            exit 1
           fi
           file hello
           lipo -info hello || true
