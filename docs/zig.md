@@ -62,9 +62,11 @@ Verified on ip8:
    - clang 成功後に **`ldid` を最後に**実行。
    - **compiler_rt:** Apple ld may reject zig-packed `libcompiler_rt.a`
      (`ld: 64-bit mach-o member 'libcompiler_rt_zcu.o' not 8-byte aligned`).
-     Mayflower prefers `compiler_rt_obj` (the zcu `.o`) for the system-clang
-     ios-device path; falls back to `compiler_rt_lib` only when the `.o` is absent.
-     GHA CI ld may still accept the `.a`.
+     Mayflower prefers `compiler_rt_obj` when set; otherwise, if
+     `compiler_rt_lib` is set, it looks for sibling `libcompiler_rt_zcu.o`
+     next to the `.a` (zig still writes it) and links that. Falls back to
+     the `.a` only when the sibling is missing. GHA's ld often accepts the
+     `.a`, so CI can green while local Mac Apple ld still needs the `.o`.
 3. Entitlements（Go の `GO_LDID_ENTITLEMENTS` 流儀）:
    - `ZIG_LDID_ENTITLEMENTS` が **非空** → `ldid -S$path`
    - `ZIG_LDID_ENTITLEMENTS` が **空文字** → 署名スキップ（任意・Go 互換）

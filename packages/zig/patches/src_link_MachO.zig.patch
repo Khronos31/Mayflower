@@ -21,7 +21,7 @@
  
      var positionals = std.array_list.Managed(link.Input).init(gpa);
      defer positionals.deinit();
-@@ -623,6 +637,333 @@
+@@ -623,6 +637,345 @@
      }
  }
  
@@ -176,11 +176,23 @@
 +    if (comp.zigc_static_lib) |lib| try argv.append(try lib.full_object_path.toString(arena));
 +    // Prefer compiler_rt .o over zig-packed .a: Apple ld rejects
 +    // libcompiler_rt.a with "64-bit mach-o member ... not 8-byte aligned".
-+    // Linking the zcu .o directly works. GHA ld may accept the .a.
++    // Compilation often only sets compiler_rt_lib; zig still emits sibling
++    // libcompiler_rt_zcu.o next to the .a — use that when present.
 +    if (comp.compiler_rt_obj) |obj| {
 +        try argv.append(try obj.full_object_path.toString(arena));
 +    } else if (comp.compiler_rt_lib) |lib| {
-+        try argv.append(try lib.full_object_path.toString(arena));
++        const lib_path = try lib.full_object_path.toString(arena);
++        const dir = fs.path.dirname(lib_path) orelse ".";
++        const zcu_o = try fs.path.join(arena, &.{ dir, "libcompiler_rt_zcu.o" });
++        const zcu_ok = if (fs.path.isAbsolute(zcu_o))
++            Io.Dir.accessAbsolute(io, zcu_o, .{})
++        else
++            Io.Dir.cwd().access(io, zcu_o, .{});
++        if (zcu_ok) |_| {
++            try argv.append(zcu_o);
++        } else |_| {
++            try argv.append(lib_path);
++        }
 +    }
 +    if (comp.ubsan_rt_lib) |lib| try argv.append(try lib.full_object_path.toString(arena));
 +    if (comp.ubsan_rt_obj) |obj| try argv.append(try obj.full_object_path.toString(arena));
