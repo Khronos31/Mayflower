@@ -21,11 +21,10 @@
  
      var positionals = std.array_list.Managed(link.Input).init(gpa);
      defer positionals.deinit();
-@@ -622,7 +636,326 @@
-         };
+@@ -623,6 +637,327 @@
      }
  }
-+
+ 
 +
 +/// Mayflower ios-device final link: system clang (+ its ld) then ldid last.
 +///
@@ -109,7 +108,7 @@
 +            try argv.append(dso_exact.name);
 +        },
 +    };
- 
++
 +    for (comp.c_object_table.keys()) |key| {
 +        try argv.append(try key.status.success.object_path.toString(arena));
 +    }
@@ -233,7 +232,9 @@
 +    const stub_o_path = try fs.path.join(arena, &.{ cache_root, "mayflower_ios_dyld_stub.o" });
 +
 +    {
-+        const file = try comp.dirs.local_cache.handle.createFile(io, "mayflower_ios_dyld_stub.c", .{});
++        const file = comp.dirs.local_cache.handle.createFile(io, "mayflower_ios_dyld_stub.c", .{}) catch |err| {
++            return diags.fail("failed to create mayflower ios dyld stub: {s}", .{@errorName(err)});
++        };
 +        defer file.close(io);
 +        file.writeStreamingAll(io, stub_c) catch |err| {
 +            return diags.fail("failed to write mayflower ios dyld stub: {s}", .{@errorName(err)});
