@@ -16,6 +16,6 @@ Description: Zig programming language compiler
  zig build and zig build-exe for aarch64-ios on-device. Does not replace the
  system C compiler; use clang from build-essential when C interop is needed.
  .
- The shipped zig binary embeds LLVM. Executables it produces (and zig itself)
- must be signed with ldid using the entitlements plist under
- /var/jb/usr/lib/zig-0.16.0/.
+ The ios-host binary is built without embedded LLVM (Mayflower routes device
+ Exe/dylib through system clang then ldid). Sign zig and its outputs with
+ ldid using /var/jb/usr/lib/zig-0.16.0/entitlements.plist.

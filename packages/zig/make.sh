@@ -21,7 +21,7 @@ pkgver=0.16.0
 pkgrel=1
 srcname=dist
 source=""
-export compress=xz
+export compress=gzip
 
 zig_install() {
   echo "${JB}/usr/lib/zig-${pkgver}"
