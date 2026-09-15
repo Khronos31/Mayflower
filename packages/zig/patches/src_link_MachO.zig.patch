@@ -1,0 +1,276 @@
+--- a/src/link/MachO.zig
++++ b/src/link/MachO.zig
+@@ -364,6 +364,20 @@
+     if (self.base.isStaticLib()) return relocatable.flushStaticLib(self, comp, zcu_obj_path);
+     if (self.base.isObject()) return relocatable.flushObject(self, comp, zcu_obj_path);
+ 
++    // Mayflower: Zig's self-hosted Mach-O linker produces SIGILL on jailbroken
++    // iOS devices (verified on ip8). Route ios device Exe/dylib final link
++    // through system clang/ld, then ldid last — same pattern as Go/Rust/Nim.
++    // Simulator keeps the self-hosted path. No ZIG_NO_LDID.
++    {
++        const target = self.getTarget();
++        if (target.os.tag == .ios and target.abi != .simulator and
++            (self.base.isExe() or self.base.isDynLib()))
++        {
++            try self.flushMayflowerIosDevice(arena);
++            return;
++        }
++    }
++
+     var positionals = std.array_list.Managed(link.Input).init(gpa);
+     defer positionals.deinit();
+ 
+@@ -623,6 +637,252 @@
+     }
+ }
+ 
++
++/// Mayflower ios-device final link: system clang (+ its ld) then ldid last.
++///
++/// Must run instead of the self-hosted Mach-O body. Self-hosted link ends with
++/// DebugSymbols.flush, writeUuid, and writeCodeSignature — all of which rewrite
++/// the image. Signing has to happen after every rewrite; we skip those steps by
++/// using clang/ld and calling ldid ourselves as the final step (Go/Rust/Nim).
++fn flushMayflowerIosDevice(self: *MachO, arena: Allocator) link.File.FlushError!void {
++    const comp = self.base.comp;
++    const gpa = comp.gpa;
++    const io = comp.io;
++    const diags = &comp.link_diags;
++
++    if (!std.process.can_spawn) {
++        return diags.fail("mayflower ios device link requires process spawning", .{});
++    }
++
++    const full_out_path = try self.base.emit.root_dir.join(arena, &.{self.base.emit.sub_path});
++    const zcu_obj_path: ?[]const u8 = if (self.base.zcu_object_basename) |raw| p: {
++        const p = try comp.resolveEmitPathFlush(arena, .temp, raw);
++        break :p try p.toString(arena);
++    } else null;
++
++    var argv = std.array_list.Managed([]const u8).init(arena);
++    try argv.append("clang");
++
++    const target = self.getTarget();
++    const apple_arch: []const u8 = switch (target.cpu.arch) {
++        .aarch64 => "arm64",
++        .x86_64 => "x86_64",
++        else => @tagName(target.cpu.arch),
++    };
++    const min_ver = try std.fmt.allocPrint(arena, "{d}.{d}", .{
++        self.platform.version.major,
++        self.platform.version.minor,
++    });
++    try argv.append("-target");
++    try argv.append(try std.fmt.allocPrint(arena, "{s}-apple-ios{s}", .{ apple_arch, min_ver }));
++
++    if (comp.sysroot) |sysroot| {
++        try argv.append("-isysroot");
++        try argv.append(sysroot);
++    }
++
++    if (self.base.isDynLib()) {
++        try argv.append("-dynamiclib");
++        if (self.install_name) |install_name| {
++            try argv.append("-install_name");
++            try argv.append(install_name);
++        }
++    }
++
++    if (self.base.gc_sections) {
++        try argv.append("-Wl,-dead_strip");
++    }
++    if (self.entry_name) |entry_name| {
++        try argv.append("-e");
++        try argv.append(entry_name);
++    }
++    if (self.base.isDynLib() and self.base.allow_shlib_undefined) {
++        try argv.append("-undefined");
++        try argv.append("dynamic_lookup");
++    }
++
++    try argv.append("-o");
++    try argv.append(full_out_path);
++
++    for (comp.link_inputs) |link_input| switch (link_input) {
++        .dso => continue,
++        .res => unreachable,
++        .object, .archive => |obj| {
++            const path = try obj.path.toString(arena);
++            if (obj.must_link) {
++                try argv.append(try std.fmt.allocPrint(arena, "-Wl,-force_load,{s}", .{path}));
++            } else {
++                try argv.append(path);
++            }
++        },
++        .dso_exact => |dso_exact| {
++            try argv.append("-l");
++            try argv.append(dso_exact.name);
++        },
++    };
++
++    for (comp.c_object_table.keys()) |key| {
++        try argv.append(try key.status.success.object_path.toString(arena));
++    }
++    if (zcu_obj_path) |p| try argv.append(p);
++
++    if (comp.config.any_sanitize_thread) {
++        try argv.append(try comp.tsan_lib.?.full_object_path.toString(arena));
++    }
++    if (comp.config.any_fuzz) {
++        try argv.append(try comp.fuzzer_lib.?.full_object_path.toString(arena));
++    }
++
++    for (self.lib_directories) |lib_directory| {
++        try argv.append(try std.fmt.allocPrint(arena, "-L{s}", .{lib_directory.path orelse "."}));
++    }
++
++    for (comp.link_inputs) |link_input| switch (link_input) {
++        .object, .archive, .dso_exact => continue,
++        .res => unreachable,
++        .dso => |dso| {
++            const path = try dso.path.toString(arena);
++            if (dso.needed) {
++                try argv.append("-needed-l");
++                try argv.append(path);
++            } else if (dso.weak) {
++                try argv.append("-weak-l");
++                try argv.append(path);
++            } else {
++                try argv.append("-l");
++                try argv.append(path);
++            }
++        },
++    };
++
++    for (self.framework_dirs) |f_dir| {
++        try argv.append("-F");
++        try argv.append(f_dir);
++    }
++    for (self.frameworks) |framework| {
++        const name = framework.path.stem();
++        if (framework.needed) {
++            try argv.append("-needed_framework");
++        } else if (framework.weak) {
++            try argv.append("-weak_framework");
++        } else {
++            try argv.append("-framework");
++        }
++        try argv.append(name);
++    }
++
++    if (comp.config.link_libcpp) {
++        try argv.append(try comp.libcxxabi_static_lib.?.full_object_path.toString(arena));
++        try argv.append(try comp.libcxx_static_lib.?.full_object_path.toString(arena));
++    }
++
++    try argv.append("-lSystem");
++
++    if (comp.zigc_static_lib) |lib| try argv.append(try lib.full_object_path.toString(arena));
++    if (comp.compiler_rt_lib) |lib| try argv.append(try lib.full_object_path.toString(arena));
++    if (comp.compiler_rt_obj) |obj| try argv.append(try obj.full_object_path.toString(arena));
++    if (comp.ubsan_rt_lib) |lib| try argv.append(try lib.full_object_path.toString(arena));
++    if (comp.ubsan_rt_obj) |obj| try argv.append(try obj.full_object_path.toString(arena));
++
++    if (comp.verbose_link) try Compilation.dumpArgv(io, argv.items);
++
++    // Do not set CLANG_NO_LDID / LLD_NO_LDID here. Double ldid is fine; the
++    // user may set those themselves if they want clang/lld to skip signing.
++    {
++        const result = std.process.run(gpa, io, .{ .argv = argv.items }) catch |err| {
++            return diags.fail("failed to spawn clang for mayflower ios link: {s}", .{@errorName(err)});
++        };
++        defer {
++            gpa.free(result.stdout);
++            gpa.free(result.stderr);
++        }
++        switch (result.term) {
++            .exited => |code| if (code != 0) {
++                return diags.fail("clang failed linking ios device image (exit {d}): {s}", .{ code, result.stderr });
++            },
++            else => return diags.fail("clang failed linking ios device image: {s}", .{result.stderr}),
++        }
++    }
++
++    try self.mayflowerLdidLast(arena, full_out_path);
++}
++
++const MayflowerLdidPlan = union(enum) {
++    skip,
++    plain,
++    entitlements: []const u8,
++};
++
++/// Resolve ldid entitlements the Go way:
++/// - `ZIG_LDID_ENTITLEMENTS` set → use that path; empty string skips signing
++/// - else entitlements.plist next to zig lib, or known Mayflower paths
++/// - else plain `ldid -S`
++fn mayflowerLdidPlan(self: *MachO, arena: Allocator) !MayflowerLdidPlan {
++    const io = self.base.comp.io;
++    if (std.c.getenv("ZIG_LDID_ENTITLEMENTS")) |raw| {
++        const path = std.mem.span(raw);
++        if (path.len == 0) return .skip;
++        return .{ .entitlements = path };
++    }
++
++    var candidates = std.array_list.Managed([]const u8).init(arena);
++    if (self.base.comp.dirs.zig_lib.path) |lib| {
++        try candidates.append(try fs.path.join(arena, &.{ lib, "entitlements.plist" }));
++        // Official tarball layout: zig + lib/ as siblings under the prefix.
++        try candidates.append(try fs.path.join(arena, &.{ lib, "..", "entitlements.plist" }));
++    }
++    try candidates.append("/var/jb/usr/lib/zig/entitlements.plist");
++    try candidates.append("/var/jb/usr/share/zig/entitlements.plist");
++
++    for (candidates.items) |cand| {
++        const access_ok = if (fs.path.isAbsolute(cand))
++            Io.Dir.accessAbsolute(io, cand, .{})
++        else
++            Io.Dir.cwd().access(io, cand, .{});
++        access_ok catch continue;
++        return .{ .entitlements = cand };
++    }
++    return .plain;
++}
++
++fn mayflowerLdidLast(self: *MachO, arena: Allocator, out_path: []const u8) link.File.FlushError!void {
++    const comp = self.base.comp;
++    const gpa = comp.gpa;
++    const io = comp.io;
++    const diags = &comp.link_diags;
++
++    const plan = self.mayflowerLdidPlan(arena) catch |err| {
++        return diags.fail("failed to resolve ZIG_LDID_ENTITLEMENTS: {s}", .{@errorName(err)});
++    };
++    switch (plan) {
++        .skip => return,
++        .plain, .entitlements => {},
++    }
++
++    var argv = std.array_list.Managed([]const u8).init(arena);
++    try argv.append("ldid");
++    switch (plan) {
++        .skip => unreachable,
++        .plain => try argv.append("-S"),
++        .entitlements => |ent| try argv.append(try std.fmt.allocPrint(arena, "-S{s}", .{ent})),
++    }
++    try argv.append(out_path);
++
++    const result = std.process.run(gpa, io, .{ .argv = argv.items }) catch |err| {
++        return diags.fail("failed to spawn ldid: {s}", .{@errorName(err)});
++    };
++    defer {
++        gpa.free(result.stdout);
++        gpa.free(result.stderr);
++    }
++    switch (result.term) {
++        .exited => |code| if (code != 0) {
++            return diags.fail("ldid failed (exit {d}): {s}", .{ code, result.stderr });
++        },
++        else => return diags.fail("ldid failed: {s}", .{result.stderr}),
++    }
++}
++
+ /// --verbose-link output
+ fn dumpArgv(self: *MachO, comp: *Compilation) !void {
+     const gpa = comp.gpa;
