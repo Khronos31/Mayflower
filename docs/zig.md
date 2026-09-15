@@ -177,4 +177,6 @@ Mac mini (8GB) OOMs when linking LLVM into Zig. Use workflow
 - Build/install stage3, smoke `build-exe -target aarch64-ios` (clang + ldid path)
 - Upload `zig-mayflower-0.16.0-aarch64-macos` artifact
 
+GHA macos-15 reports ~7.5GiB free while Zig LLVM stage3 declares `max_rss = 8GiB`; the workflow passes `-DZIG_EXTRA_BUILD_ARGS=--maxrss;8000000000` so the build may proceed (OOM risk remains).
+
 Trigger: `workflow_dispatch`, or push/PR touching `packages/zig/**` on `zig-0.16-wip`.
