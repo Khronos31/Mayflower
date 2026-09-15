@@ -201,9 +201,13 @@ Same workflow, job `ios-host` (needs macos `build`):
 
 - Bootstrap: the macos-host artifact from the prior job (patched, so Exe link
   uses clang → ldid).
-- `zig build -Dtarget=aarch64-ios -Dcpu=apple_a11 -Denable-llvm=false`
+- `zig build -Dtarget=aarch64-ios -Dcpu=apple_a8 -Denable-llvm=false`
   with iPhoneOS SDK / `ZIG_LDID_ENTITLEMENTS`.
 - Artifact: `zig-mayflower-0.16.0-aarch64-ios` for `ZIG_DIST_DIR` → `make.sh`.
+- **Host CPU baseline: `apple_a8`.** The ios-host `zig` binary itself is built
+  with `-Dcpu=apple_a8` so it runs on A8 through A11 (palera1n floor) and on
+  A10X iPads. An `apple_a11` host SIGILLs on A10X (iPad7,4). App `-mcpu` when
+  cross-building from macos-host can still be higher (e.g. `apple_a11` for ip8).
 
 LLVM-less first: Mayflower already routes device Exe/dylib through system
 clang, so the on-device compiler may not need embedded LLVM for pure Zig

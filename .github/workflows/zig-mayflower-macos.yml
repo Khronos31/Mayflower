@@ -266,7 +266,7 @@ jobs:
           # -Denable-llvm=false; macos-15 GHA has ~7.5GiB free (same as stage3).
           "$ZIG_BOOT" build \
             -Dtarget=aarch64-ios \
-            -Dcpu=apple_a11 \
+            -Dcpu=apple_a8 \
             -Denable-llvm=false \
             -Doptimize=ReleaseFast \
             -Dno-langref=true \
@@ -318,7 +318,7 @@ jobs:
           test -x "${DIST}/zig"
           test -d "${DIST}/lib"
           cat > "${DIST}/MAYFLOWER-README.txt" <<'TXT'
-          Mayflower patched Zig (ios aarch64 host, no embedded LLVM)
+          Mayflower patched Zig (ios aarch64 host, -Dcpu=apple_a8, no embedded LLVM)
           - For packages/zig ZIG_DIST_DIR → make.sh → iphoneos-arm64 deb
           - Device Exe/dylib link: system clang + ldid (MachO patch)
           - Built on GHA by cross from macos-host with -Denable-llvm=false
