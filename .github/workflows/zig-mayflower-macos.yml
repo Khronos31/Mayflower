@@ -11,17 +11,11 @@ on:
       - "packages/zig/**"
       - "docs/zig.md"
       - ".github/workflows/zig-mayflower-macos.yml"
-  pull_request:
-    paths:
-      - "packages/zig/**"
-      - "docs/zig.md"
-      - ".github/workflows/zig-mayflower-macos.yml"
-
 permissions:
   contents: read
 
 concurrency:
-  group: zig-mayflower-macos-${{ github.ref }}
+  group: zig-mayflower-macos
   cancel-in-progress: true
 
 env:
@@ -29,7 +23,7 @@ env:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 180
     steps:
       - name: Checkout Mayflower
@@ -40,12 +34,15 @@ jobs:
           set -euo pipefail
           brew update
           brew install cmake ninja llvm@21 lld@21
-          echo "LLVM_PREFIX=$(brew --prefix llvm@21)" >> "$GITHUB_ENV"
-          echo "LLD_PREFIX=$(brew --prefix lld@21)" >> "$GITHUB_ENV"
-          echo "$(brew --prefix llvm@21)/bin" >> "$GITHUB_PATH"
-          echo "$(brew --prefix lld@21)/bin" >> "$GITHUB_PATH"
-          llvm-config --version
-          clang --version | head -1
+          LLVM_PREFIX="$(brew --prefix llvm@21)"
+          LLD_PREFIX="$(brew --prefix lld@21)"
+          echo "LLVM_PREFIX=$LLVM_PREFIX" >> "$GITHUB_ENV"
+          echo "LLD_PREFIX=$LLD_PREFIX" >> "$GITHUB_ENV"
+          echo "$LLVM_PREFIX/bin" >> "$GITHUB_PATH"
+          echo "$LLD_PREFIX/bin" >> "$GITHUB_PATH"
+          # keg-only: GITHUB_PATH applies to later steps only — use absolute paths here
+          "$LLVM_PREFIX/bin/llvm-config" --version
+          "$LLVM_PREFIX/bin/clang" --version | head -1
 
       - name: Fetch Zig ${{ env.ZIG_VERSION }} sources
         run: |
@@ -172,7 +169,7 @@ jobs:
           - Zig 0.16.0 + packages/zig/patches/src_link_MachO.zig.patch
           - ios device Exe/dylib: system clang link, then ldid last
           - ZIG_LDID_ENTITLEMENTS for entitlements (Go-style); no ZIG_NO_LDID
-          - Built on GitHub Actions macos-14 with Homebrew llvm@21
+          - Built on GitHub Actions macos-15 with Homebrew llvm@21
           If otool shows Homebrew LLVM dylibs, install llvm@21 (and lld@21)
           on the machine that runs this binary, or prefer a static build.
           TXT

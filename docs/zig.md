@@ -171,7 +171,7 @@ That is the same link/sign order the MachO patch encodes; in-process patched
 Mac mini (8GB) OOMs when linking LLVM into Zig. Use workflow
 [`.github/workflows/zig-mayflower-macos.yml`](../.github/workflows/zig-mayflower-macos.yml):
 
-- Runner: `macos-14` (~14GB)
+- Runner: `macos-15` (~14GB+)
 - `brew install llvm@21 lld@21` + CMake/Ninja
 - Apply `packages/zig/patches/src_link_MachO.zig.patch`
 - Build/install stage3, smoke `build-exe -target aarch64-ios` (clang + ldid path)
