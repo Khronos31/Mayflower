@@ -21,7 +21,7 @@
  
      var positionals = std.array_list.Managed(link.Input).init(gpa);
      defer positionals.deinit();
-@@ -623,6 +637,327 @@
+@@ -623,6 +637,333 @@
      }
  }
  
@@ -174,8 +174,14 @@
 +    try argv.append("-lSystem");
 +
 +    if (comp.zigc_static_lib) |lib| try argv.append(try lib.full_object_path.toString(arena));
-+    if (comp.compiler_rt_lib) |lib| try argv.append(try lib.full_object_path.toString(arena));
-+    if (comp.compiler_rt_obj) |obj| try argv.append(try obj.full_object_path.toString(arena));
++    // Prefer compiler_rt .o over zig-packed .a: Apple ld rejects
++    // libcompiler_rt.a with "64-bit mach-o member ... not 8-byte aligned".
++    // Linking the zcu .o directly works. GHA ld may accept the .a.
++    if (comp.compiler_rt_obj) |obj| {
++        try argv.append(try obj.full_object_path.toString(arena));
++    } else if (comp.compiler_rt_lib) |lib| {
++        try argv.append(try lib.full_object_path.toString(arena));
++    }
 +    if (comp.ubsan_rt_lib) |lib| try argv.append(try lib.full_object_path.toString(arena));
 +    if (comp.ubsan_rt_obj) |obj| try argv.append(try obj.full_object_path.toString(arena));
 +

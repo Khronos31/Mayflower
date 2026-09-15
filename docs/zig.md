@@ -60,6 +60,11 @@ Verified on ip8:
      二重署名は許容。抑止したいときは利用者が自分で env を付ける
      （それらのフラグは Mayflower の clang/lld 側のもので、言語 toolchain のフラグではない）。
    - clang 成功後に **`ldid` を最後に**実行。
+   - **compiler_rt:** Apple ld may reject zig-packed `libcompiler_rt.a`
+     (`ld: 64-bit mach-o member 'libcompiler_rt_zcu.o' not 8-byte aligned`).
+     Mayflower prefers `compiler_rt_obj` (the zcu `.o`) for the system-clang
+     ios-device path; falls back to `compiler_rt_lib` only when the `.o` is absent.
+     GHA CI ld may still accept the `.a`.
 3. Entitlements（Go の `GO_LDID_ENTITLEMENTS` 流儀）:
    - `ZIG_LDID_ENTITLEMENTS` が **非空** → `ldid -S$path`
    - `ZIG_LDID_ENTITLEMENTS` が **空文字** → 署名スキップ（任意・Go 互換）
