@@ -33,16 +33,26 @@ jobs:
         run: |
           set -euo pipefail
           brew update
-          brew install cmake ninja llvm@21 lld@21
+          # zstd: cmake zig2 link needs -lzstd (Homebrew keg path, not on default ld path)
+          brew install cmake ninja zstd llvm@21 lld@21
           LLVM_PREFIX="$(brew --prefix llvm@21)"
           LLD_PREFIX="$(brew --prefix lld@21)"
+          ZSTD_PREFIX="$(brew --prefix zstd)"
           echo "LLVM_PREFIX=$LLVM_PREFIX" >> "$GITHUB_ENV"
           echo "LLD_PREFIX=$LLD_PREFIX" >> "$GITHUB_ENV"
+          echo "ZSTD_PREFIX=$ZSTD_PREFIX" >> "$GITHUB_ENV"
           echo "$LLVM_PREFIX/bin" >> "$GITHUB_PATH"
           echo "$LLD_PREFIX/bin" >> "$GITHUB_PATH"
+          # help the linker find Homebrew zstd / llvm dylibs in later steps
+          {
+            echo "LDFLAGS=-L$ZSTD_PREFIX/lib -L$LLVM_PREFIX/lib -L$LLD_PREFIX/lib"
+            echo "LIBRARY_PATH=$ZSTD_PREFIX/lib:$LLVM_PREFIX/lib:$LLD_PREFIX/lib"
+            echo "CMAKE_PREFIX_PATH=$LLVM_PREFIX;$LLD_PREFIX;$ZSTD_PREFIX"
+          } >> "$GITHUB_ENV"
           # keg-only: GITHUB_PATH applies to later steps only — use absolute paths here
           "$LLVM_PREFIX/bin/llvm-config" --version
           "$LLVM_PREFIX/bin/clang" --version | head -1
+          ls "$ZSTD_PREFIX/lib"/libzstd* | head
 
       - name: Fetch Zig ${{ env.ZIG_VERSION }} sources
         run: |
@@ -69,8 +79,9 @@ jobs:
             rm -rf "$ZIG_SRC/build"
             cmake -S "$ZIG_SRC" -B "$ZIG_SRC/build" -G Ninja \
               -DCMAKE_BUILD_TYPE=Release \
-              -DCMAKE_PREFIX_PATH="${LLVM_PREFIX};${LLD_PREFIX}" \
+              -DCMAKE_PREFIX_PATH="${LLVM_PREFIX};${LLD_PREFIX};${ZSTD_PREFIX}" \
               -DCMAKE_INSTALL_PREFIX="$PREFIX" \
+              -DCMAKE_EXE_LINKER_FLAGS="-L${ZSTD_PREFIX}/lib" \
               -DZIG_STATIC_LLVM="$static"
             cmake --build "$ZIG_SRC/build" --parallel "$JOBS"
             cmake --install "$ZIG_SRC/build"
