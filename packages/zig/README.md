@@ -27,3 +27,8 @@ ZIG_DIST_DIR=~/dev/zig-mayflower-prefix ./make.sh zig
 - zls
 - `zig cc` のシステム CC 化
 - `ZIG_NO_LDID`（作らない）
+
+## CI（macos / LLVM stage3）
+
+8GB Mac mini では LLVM 入り stage3 が OOM しやすい。GitHub Actions の
+`zig-mayflower-macos` workflow でパッチ適用ビルドと artifact を作る。

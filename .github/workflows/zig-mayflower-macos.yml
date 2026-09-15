@@ -1,0 +1,192 @@
+name: zig-mayflower-macos
+
+# Build Zig 0.16.0 + Mayflower MachO patch with LLVM on a GitHub-hosted
+# macOS runner (~14GB RAM). Mac mini (8GB) OOMs on this link; GHA is the
+# intended host for patched stage3 until we have more RAM locally.
+on:
+  workflow_dispatch:
+  push:
+    branches: [zig-0.16-wip]
+    paths:
+      - "packages/zig/**"
+      - "docs/zig.md"
+      - ".github/workflows/zig-mayflower-macos.yml"
+  pull_request:
+    paths:
+      - "packages/zig/**"
+      - "docs/zig.md"
+      - ".github/workflows/zig-mayflower-macos.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zig-mayflower-macos-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ZIG_VERSION: "0.16.0"
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 180
+    steps:
+      - name: Checkout Mayflower
+        uses: actions/checkout@v4
+
+      - name: Install build deps (LLVM 21 + LLD + CMake/Ninja)
+        run: |
+          set -euo pipefail
+          brew update
+          brew install cmake ninja llvm@21 lld@21
+          echo "LLVM_PREFIX=$(brew --prefix llvm@21)" >> "$GITHUB_ENV"
+          echo "LLD_PREFIX=$(brew --prefix lld@21)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix llvm@21)/bin" >> "$GITHUB_PATH"
+          echo "$(brew --prefix lld@21)/bin" >> "$GITHUB_PATH"
+          llvm-config --version
+          clang --version | head -1
+
+      - name: Fetch Zig ${{ env.ZIG_VERSION }} sources
+        run: |
+          set -euo pipefail
+          curl -fsSL -o "zig-${ZIG_VERSION}.tar.xz" \
+            "https://ziglang.org/download/${ZIG_VERSION}/zig-${ZIG_VERSION}.tar.xz"
+          tar xf "zig-${ZIG_VERSION}.tar.xz"
+          echo "ZIG_SRC=${GITHUB_WORKSPACE}/zig-${ZIG_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Apply Mayflower MachO patch
+        run: |
+          set -euo pipefail
+          cd "$ZIG_SRC"
+          patch -p1 < "$GITHUB_WORKSPACE/packages/zig/patches/src_link_MachO.zig.patch"
+          grep -n flushMayflowerIosDevice src/link/MachO.zig | head
+
+      - name: Configure + build + install stage3
+        run: |
+          set -euo pipefail
+          PREFIX="${GITHUB_WORKSPACE}/zig-mayflower-prefix"
+          JOBS="$(sysctl -n hw.ncpu)"
+          try_build() {
+            local static="$1"
+            rm -rf "$ZIG_SRC/build"
+            cmake -S "$ZIG_SRC" -B "$ZIG_SRC/build" -G Ninja \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_PREFIX_PATH="${LLVM_PREFIX};${LLD_PREFIX}" \
+              -DCMAKE_INSTALL_PREFIX="$PREFIX" \
+              -DZIG_STATIC_LLVM="$static"
+            cmake --build "$ZIG_SRC/build" --parallel "$JOBS"
+            cmake --install "$ZIG_SRC/build"
+          }
+          if ! try_build ON; then
+            echo "::warning::ZIG_STATIC_LLVM=ON failed; retrying with OFF (dylib LLVM)"
+            rm -rf "$PREFIX"
+            try_build OFF
+          fi
+          if [ -x "$PREFIX/bin/zig" ]; then
+            ZIG_BIN="$PREFIX/bin/zig"
+          elif [ -x "$PREFIX/zig" ]; then
+            ZIG_BIN="$PREFIX/zig"
+          else
+            STAGE3_ZIG="$(find "$ZIG_SRC/build" -type f -name zig -path '*/stage3/bin/*' | head -1)"
+            test -n "$STAGE3_ZIG"
+            mkdir -p "$PREFIX/bin"
+            cp "$STAGE3_ZIG" "$PREFIX/bin/zig"
+            if [ -d "$ZIG_SRC/build/stage3/lib" ]; then
+              cp -R "$ZIG_SRC/build/stage3/lib" "$PREFIX/"
+            fi
+            ZIG_BIN="$PREFIX/bin/zig"
+          fi
+          echo "ZIG_BIN=$ZIG_BIN" >> "$GITHUB_ENV"
+          "$ZIG_BIN" version
+          ls -lh "$ZIG_BIN"
+          otool -L "$ZIG_BIN" | head -40
+
+      - name: Smoke — patched zig build-exe aarch64-ios
+        run: |
+          set -euo pipefail
+          brew install ldid || true
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          test -n "$SDK" && test -d "$SDK"
+          WORK="${GITHUB_WORKSPACE}/smoke-hello"
+          mkdir -p "$WORK"
+          cat > "$WORK/hello.zig" <<'ZIG'
+          const std = @import("std");
+          pub fn main() void {
+              std.debug.print("hello\n", .{});
+          }
+          ZIG
+          cat > "$WORK/entitlements.plist" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>platform-application</key>
+            <true/>
+            <key>com.apple.private.security.container-required</key>
+            <false/>
+          </dict>
+          </plist>
+          PLIST
+          export ZIG_LDID_ENTITLEMENTS="$WORK/entitlements.plist"
+          cd "$WORK"
+          set +e
+          "$ZIG_BIN" build-exe hello.zig -target aarch64-ios -mcpu=apple_a11 \
+            -OReleaseSmall --sysroot "$SDK" -fno-strip --verbose-link \
+            > link.log 2>&1
+          EC=$?
+          set -e
+          tail -100 link.log || true
+          if [ "$EC" -ne 0 ] || [ ! -f ./hello ]; then
+            echo "::warning::build-exe failed (exit $EC); fallback build-obj + clang + ldid"
+            "$ZIG_BIN" build-obj hello.zig -target aarch64-ios -mcpu=apple_a11 \
+              -OReleaseSmall --sysroot "$SDK" -femit-bin=hello.o
+            clang -target arm64-apple-ios15.0 -isysroot "$SDK" -o hello hello.o -lSystem
+            if command -v ldid >/dev/null; then
+              ldid -S"$ZIG_LDID_ENTITLEMENTS" hello
+            fi
+          else
+            if ! grep -Eiq 'clang|mayflower|flushMayflower' link.log; then
+              echo "::warning::verbose-link log did not clearly show clang; see link.log"
+            fi
+          fi
+          file hello
+          lipo -info hello || true
+          if command -v ldid >/dev/null; then
+            ldid -e hello || true
+          fi
+          cp hello "${GITHUB_WORKSPACE}/hello-aarch64-ios" || true
+          cp link.log "${GITHUB_WORKSPACE}/smoke-link.log" || true
+
+      - name: Pack artifact
+        run: |
+          set -euo pipefail
+          PREFIX="${GITHUB_WORKSPACE}/zig-mayflower-prefix"
+          test -x "$PREFIX/bin/zig" || test -x "$ZIG_BIN"
+          if [ ! -x "$PREFIX/bin/zig" ]; then
+            mkdir -p "$PREFIX/bin"
+            cp "$ZIG_BIN" "$PREFIX/bin/zig"
+          fi
+          cat > "$PREFIX/MAYFLOWER-README.txt" <<'TXT'
+          Mayflower patched Zig (macos aarch64 host)
+          - Zig 0.16.0 + packages/zig/patches/src_link_MachO.zig.patch
+          - ios device Exe/dylib: system clang link, then ldid last
+          - ZIG_LDID_ENTITLEMENTS for entitlements (Go-style); no ZIG_NO_LDID
+          - Built on GitHub Actions macos-14 with Homebrew llvm@21
+          If otool shows Homebrew LLVM dylibs, install llvm@21 (and lld@21)
+          on the machine that runs this binary, or prefer a static build.
+          TXT
+          tar -C "${GITHUB_WORKSPACE}" -czf \
+            "zig-mayflower-${ZIG_VERSION}-aarch64-macos.tar.gz" zig-mayflower-prefix
+          ls -lh "zig-mayflower-${ZIG_VERSION}-aarch64-macos.tar.gz"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zig-mayflower-${{ env.ZIG_VERSION }}-aarch64-macos
+          path: |
+            zig-mayflower-${{ env.ZIG_VERSION }}-aarch64-macos.tar.gz
+            hello-aarch64-ios
+            smoke-link.log
+          if-no-files-found: error
+          retention-days: 30

@@ -165,3 +165,16 @@ Validated smoke (2026-09-15, ip8): official `zig-aarch64-macos-0.16.0` `build-ob
 `ldid -Sentitlements.plist` last → device printed `hello` (`exit 0`).
 That is the same link/sign order the MachO patch encodes; in-process patched
 `build-exe` still waits for a host with enough RAM (or an ios-host package build).
+
+## CI: patched LLVM stage3 on GitHub Actions
+
+Mac mini (8GB) OOMs when linking LLVM into Zig. Use workflow
+[`.github/workflows/zig-mayflower-macos.yml`](../.github/workflows/zig-mayflower-macos.yml):
+
+- Runner: `macos-14` (~14GB)
+- `brew install llvm@21 lld@21` + CMake/Ninja
+- Apply `packages/zig/patches/src_link_MachO.zig.patch`
+- Build/install stage3, smoke `build-exe -target aarch64-ios` (clang + ldid path)
+- Upload `zig-mayflower-0.16.0-aarch64-macos` artifact
+
+Trigger: `workflow_dispatch`, or push/PR touching `packages/zig/**` on `zig-0.16-wip`.
