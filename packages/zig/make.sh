@@ -71,22 +71,10 @@ check() {
   # 署名が無いと端末では即 SIGKILL。梱包前に必ず当てる。
   ldid -S"${ENTFILE}" ./zig
 
+  # 軽量スモークのみ。ip8 での on-device build-exe は jetsam/OOM しやすい
+  # （docs/zig.md）。Rust の check と同様、version 系で止める。
   ./zig version
   ./zig targets >/dev/null
-
-  local work="${BUILDROOT}/check"
-  rm -rf "${work}"
-  mkdir -p "${work}"
-  cat > "${work}/hello.zig" <<'ZIG'
-const std = @import("std");
-pub fn main() void {
-    std.debug.print("zig hello\n", .{});
-}
-ZIG
-  # ホストが ios として動いている前提。macos 誤認バイナリならここで落ちる。
-  ./zig build-exe "${work}/hello.zig" -femit-bin="${work}/hello" -OReleaseSmall
-  ldid -S"${ENTFILE}" "${work}/hello"
-  "${work}/hello"
 }
 
 package() {
