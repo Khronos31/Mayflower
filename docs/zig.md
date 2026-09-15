@@ -162,21 +162,52 @@ ssh ha "ssh ip8 'cat > ~/hello && chmod +x ~/hello && ~/hello'" < ./hello
 
 Two different “hosts” — do not mix them up:
 
-| Track | Binary runs on | Role | Status |
-|-------|----------------|------|--------|
-| **macos-host** | Mac (aarch64) | Dev: `build-exe -target aarch64-ios` → ldid → ip8 | **Done** (GHA artifact + local smoke) |
-| **ios-host** | jailbroken iPhone | Deb payload for `packages/zig` (`ZIG_DIST_DIR`) | **Next** (cross from macos-host) |
+| Track | What | Status |
+|-------|------|--------|
+| **macos-host** | Mac (aarch64) `zig` — `build-exe -target aarch64-ios` → ldid → device | **Done** (GHA + local smoke) |
+| **ios-host binary** | Cross-build `aarch64-ios` host (`apple_a8`, `-Denable-llvm=false`) + on-device launch smoke | **Done** |
+| **ios-host deb** | `ZIG_DIST_DIR` → `packages/zig/make.sh` → `iphoneos-arm64` deb | **Next** |
+| **heavy on-device compile** | On-device `build-exe` of non-trivial programs | **Limited** (RAM / jetsam; see below) |
 
 `packages/zig/make.sh` packages an **ios-host** tree. The GHA
 `zig-mayflower-0.16.0-aarch64-macos` artifact is the **macos-host** bootstrap
-(Homebrew `llvm@21` dylibs). It is not the deb.
+(Homebrew `llvm@21` dylibs). It is not the deb. The ios-host artifact is
+`zig-mayflower-0.16.0-aarch64-ios` (for `ZIG_DIST_DIR`).
 
 Validated (2026-09-15):
 
 - GHA patched macos-host `build-exe -target aarch64-ios` (clang + dyld stub +
   sibling `libcompiler_rt_zcu.o` + ldid).
-- Same binary path on Mac mini → ip8 printed `hello` / exit 0
-  (commit `e904edd` artifact).
+- Same macos-host path on Mac mini → ip8 printed `hello` / exit 0
+  (earlier `e904edd` artifact).
+- **ios-host:** GHA at commit `c9b0957` produced artifact
+  `zig-mayflower-0.16.0-aarch64-ios` (`-Dcpu=apple_a8`, `-Denable-llvm=false`).
+  On-device launch smoke: **iPad7,4** and **iPhone8** (`iPhone10,1`) both
+  `zig version` → `0.16.0` and light commands OK.
+  Prior **`apple_a11` host SIGILL on iPad7,4** (A10X) — keep host CPU at
+  `apple_a8` (palera1n floor); app `-mcpu` when cross-building from macos-host
+  can still be higher (e.g. `apple_a11` for ip8).
+
+### On-device compile limits（既知・deb を止めない）
+
+ip8 上で ios-host の `zig build-exe`（非 trivial）を走らせると **RAM / jetsam OOM**、
+ゼロ長の出力、SSH 切断があり得る。これは **ホスト binary を deb 梱包する理由を
+止めない**既知の上限。パッケージ化（`ZIG_DIST_DIR` → `make.sh`）は進めてよい。
+重いコンパイルは当面 macos-host cross か、端末の余裕があるときだけ。
+
+### On-device compile に `--libc` / `--sysroot` が要る
+
+脱獄 iOS には **`xcrun` / `xcode-select` が無い**。Zig が SDK を自動解決できないので、
+端末上で compile を試すときは明示的に **`--libc`**（＋通常 **`--sysroot`**）を付ける:
+
+```sh
+# 例: rootless jb + Procursus SDK 配置
+ZIG=./zig   # ios-host binary
+SDK=/var/jb/usr/share/SDKs/iPhoneOS.sdk
+# libc.txt は Mayflower / zig-smoke 手順で作った kit を端末へコピーしたもの
+"$ZIG" build-exe hello.zig -target aarch64-ios -mcpu=apple_a8 \
+  --sysroot "$SDK" --libc ./libc.txt
+```
 
 Mac mini (8GB) still must not link LLVM stage3 locally; use GHA for macos-host.
 
@@ -203,15 +234,16 @@ Same workflow, job `ios-host` (needs macos `build`):
   uses clang → ldid).
 - `zig build -Dtarget=aarch64-ios -Dcpu=apple_a8 -Denable-llvm=false`
   with iPhoneOS SDK / `ZIG_LDID_ENTITLEMENTS`.
-- Artifact: `zig-mayflower-0.16.0-aarch64-ios` for `ZIG_DIST_DIR` → `make.sh`.
+- Artifact: `zig-mayflower-0.16.0-aarch64-ios`（`c9b0957` で取得・上記 device smoke 済み）
+  → 次は `ZIG_DIST_DIR` → `make.sh` で deb。
 - **Host CPU baseline: `apple_a8`.** The ios-host `zig` binary itself is built
   with `-Dcpu=apple_a8` so it runs on A8 through A11 (palera1n floor) and on
   A10X iPads. An `apple_a11` host SIGILLs on A10X (iPad7,4). App `-mcpu` when
   cross-building from macos-host can still be higher (e.g. `apple_a11` for ip8).
 
 LLVM-less first: Mayflower already routes device Exe/dylib through system
-clang, so the on-device compiler may not need embedded LLVM for pure Zig
-`build-exe`. If that proves too limited, revisit a static/cross LLVM later.
+clang, so light on-device use does not need embedded LLVM. Heavy on-device
+`build-exe` is RAM-limited (above); revisit static/cross LLVM only if needed.
 
 
 ## ios dyld stubs
