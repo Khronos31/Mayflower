@@ -221,10 +221,11 @@ jobs:
           fi
           test -x "$ZIG_BOOT"
           echo "ZIG_BOOT=$ZIG_BOOT" >> "$GITHUB_ENV"
-          "$ZIG_BOOT" version
-          # Homebrew LLVM dylibs — same runner flavor as `build`, so paths match.
+          # Homebrew LLVM dylibs must exist before running macos-host zig
+          # (linked against /opt/homebrew/opt/llvm@21/...). Same runner as build.
           brew install llvm@21 lld@21 zstd ldid
           brew --prefix llvm@21
+          "$ZIG_BOOT" version
           otool -L "$ZIG_BOOT" | head -20
 
       - name: Fetch Zig ${{ env.ZIG_VERSION }} sources + Mayflower patch
