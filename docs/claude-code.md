@@ -39,6 +39,17 @@ Anthropic Claude Code を、脱獄 iOS（iphoneos-arm64）向けに非公式移�
 - Mach-O の platform を iOS にし、`libSystem` を shim 経由に差し替え
 - `ldid` で署名
 
+
+## busy-wait（SharedArrayBuffer sleep 置換）
+
+上流は原子待ち `Atomics.wait` で短い sleep をしている。iOS では
+`SharedArrayBuffer` が使えないため、同じ長さの busy-wait に差し替えている。
+
+2.1.274 ではこの sleep 関数（`mt`）の呼び出しは、同期 rename のリトライ
+（定数 `j=50` = 50ms）だけ。しかもリトライ判定 `H()` が常に `false` のため、
+現行ビルドではその経路自体が死んでおり、実運用で CPU を回し続ける心配は
+ほぼ無い。上流が `H` を戻したり呼び出しを増やしたりしたら要再確認。
+
 ## ラッパーと自動更新
 
 ラッパーは次を export する。

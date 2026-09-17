@@ -2,7 +2,7 @@
 
 Unofficial Claude Code build for jailbroken iOS (iphoneos-arm64).
 
-- Wrapper: `/var/jb/usr/bin/claude` (`BUN_JSC_useCodeCache=0` only)
+- Wrapper: `/var/jb/usr/bin/claude` (`BUN_JSC_useCodeCache=0`, `DISABLE_UPDATES=1`, `DISABLE_AUTOUPDATER=1`, `DISABLE_INSTALLATION_CHECKS=1`)
 - Binary: `/var/jb/usr/libexec/claude-code/claude.bin`
 - Shim: `/var/jb/usr/libexec/claude-code/libsystemshim.dylib`
 

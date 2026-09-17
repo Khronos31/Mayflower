@@ -6,7 +6,7 @@
 #
 # Unofficial Anthropic Claude Code for jailbroken iOS (iphoneos-arm64).
 # Downloads official darwin-arm64 Mach-O from npm, patches for iOS, installs:
-#   /var/jb/usr/bin/claude                      (wrapper; BUN_JSC_useCodeCache=0 only)
+#   /var/jb/usr/bin/claude                      (wrapper; Bun cache + updater disables)
 #   /var/jb/usr/libexec/claude-code/claude.bin  (patched binary)
 #   /var/jb/usr/libexec/claude-code/libsystemshim.dylib
 #
@@ -86,7 +86,13 @@ check() {
   }
   test -f "${srcdir}/libsystemshim.dylib"
   otool -L "${srcdir}/claude" | grep -q 'libsystemshim.dylib'
-  python3 -c "import pathlib; d=pathlib.Path(r'${srcdir}/claude').read_bytes(); assert b'return R/*T*/' in d"
+  python3 -c "import pathlib; d=pathlib.Path(r'${srcdir}/claude').read_bytes(); assert b'return R/*T*/' in d; assert b'dt=0;function mt(t){for(var e=Date.now()' in d; assert b'/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation' in d; assert b'/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation' not in d"
+  # shim minos should be ios 15.x-aligned, not host SDK 18.x
+  vtool -show-build "${srcdir}/libsystemshim.dylib" 2>/dev/null | grep -E 'minos|sdk' | head -5 || true
+  if vtool -show-build "${srcdir}/libsystemshim.dylib" 2>/dev/null | grep -q 'minos 18\.'; then
+    echo "check: libsystemshim minos still looks like host SDK 18.x" >&2
+    return 1
+  fi
   echo "check: OK (structural)"
 }
 
