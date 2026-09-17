@@ -49,7 +49,6 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 
 | パッケージ | 版 | 備考 |
 |---|---|---|
-
 | [apple-a14](docs/apple-a14.md) | 1.0 | 空のゲート。`cy+model.iphone (>= 13.1) \| cy+model.ipad (>= 13.1)`。Claude Code が依存する |
 | [ast-grep](docs/ast-grep.md) | 0.45.3 | `ast-grep` / `sg`。端末の rustc で建てる。Procursus に無し |
 | [claude-code](docs/claude-code.md) | 2.1.274 | 非公式。**ビルドは Mac**。darwin-arm64 をパッチ。Depends `apple-a14`。ラッパーで自動更新と ~/.local 再生成を抑止 |
