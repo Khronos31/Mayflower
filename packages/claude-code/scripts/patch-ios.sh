@@ -87,12 +87,15 @@ fi
 
 # 5) Build libsystemshim and retarget libSystem
 SHIM_OUT="${OUTDIR}/libsystemshim.dylib"
-SDKROOT="${SDKROOT:-$(xcrun --show-sdk-path 2>/dev/null || true)}"
-clang -dynamiclib -arch arm64 -isysroot "${SDKROOT}" \
+SDKROOT="${SDKROOT:-$(xcrun --sdk iphoneos --show-sdk-path 2>/dev/null || xcrun --show-sdk-path 2>/dev/null || true)}"
+# Pin minos/sdk to match the patched binary (vtool ios 15.0/17.0), not the
+# host SDK version that -arch-only would inherit (e.g. 18.4).
+clang -dynamiclib -target arm64-apple-ios15.0 -isysroot "${SDKROOT}" \
   -install_name @executable_path/libsystemshim.dylib \
   -o "$SHIM_OUT" "$SHIM_C" \
   -Wl,-reexport_library,/usr/lib/libSystem.B.dylib
-echo "shim: built $SHIM_OUT"
+vtool -set-build-version ios 15.0 17.0 -replace -output "$SHIM_OUT" "$SHIM_OUT" 2>/dev/null || true
+echo "shim: built $SHIM_OUT (ios15.0 target)"
 
 # Change libSystem load to shim (match whatever install name the binary uses)
 if otool -L "$BIN" | grep -q 'libSystem.B.dylib'; then
