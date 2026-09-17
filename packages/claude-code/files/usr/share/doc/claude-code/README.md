@@ -7,3 +7,9 @@ Unofficial Claude Code build for jailbroken iOS (iphoneos-arm64).
 - Shim: `/var/jb/usr/libexec/claude-code/libsystemshim.dylib`
 
 See `/var/jb/usr/share/licenses/claude-code/NOTICE`.
+
+## Updates
+
+The wrapper sets `DISABLE_AUTOUPDATER=1` and `DISABLE_INSTALLATION_CHECKS=1`
+so Claude Code does not rewrite `~/.local/bin/claude` or self-update over
+the Mayflower package. Prefer `apt` / a new Mayflower build for upgrades.
