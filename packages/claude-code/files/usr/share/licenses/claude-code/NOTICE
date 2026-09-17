@@ -1,0 +1,19 @@
+Claude Code for jailbroken iOS (Mayflower package: claude-code)
+==============================================================
+
+This package redistributes a modified Anthropic Claude Code native binary
+(darwin-arm64 → iphoneos-arm64), plus a Mayflower wrapper and libsystemshim.
+
+Upstream Claude Code is © Anthropic PBC. All rights reserved.
+Use of Claude Code is subject to Anthropic's Legal Agreements:
+  https://code.claude.com/docs/en/legal-and-compliance
+  (see also LICENSE.md from @anthropic-ai/claude-code)
+
+This package is UNOFFICIAL. It is not affiliated with, endorsed by, or
+supported by Anthropic. The binary has been patched (Mach-O platform,
+embedded strings, credential storage path, libSystem shim) for jailbroken
+iOS. Redistribution of a reverse-engineered / binary-modified build may
+conflict with Anthropic's terms; packagers and users accept that risk.
+
+Mayflower packaging scripts, the /usr/bin/claude wrapper, and shim.c are
+part of the Mayflower project (see the repository LICENSE).

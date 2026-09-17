@@ -1,0 +1,9 @@
+#!/bin/sh
+# Mayflower claude-code: Bun cache off + block native self-install/updater.
+# Without these, installMethod=native recreates ~/.local/bin/claude on startup
+# (autoUpdates:false is ignored when autoUpdatesProtectedForNative is set).
+export BUN_JSC_useCodeCache=0
+export DISABLE_UPDATES=1
+export DISABLE_AUTOUPDATER=1
+export DISABLE_INSTALLATION_CHECKS=1
+exec /var/jb/usr/libexec/claude-code/claude.bin "$@"

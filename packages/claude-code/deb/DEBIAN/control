@@ -1,0 +1,17 @@
+Package: claude-code
+Name: Claude Code
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Development
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libiosexec1 (>= 1.2.2), apple-a14
+Recommends: git-2.55 | git-default | git
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/anthropics/claude-code
+Tag: role::developer
+Description: Claude Code for jailbroken iOS (unofficial)
+ Patched Anthropic Claude Code 2.1.274 for iphoneos-arm64.
+ Wrapper /var/jb/usr/bin/claude sets BUN_JSC_useCodeCache=0;
+ real binary in /var/jb/usr/libexec/claude-code/.
+ Unofficial; not affiliated with Anthropic. See NOTICE.
