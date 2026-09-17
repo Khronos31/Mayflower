@@ -14,7 +14,7 @@
 # Optional: CLAUDE_CODE_DARWIN_BIN=/path/to/claude to skip npm download.
 
 pkgname=claude-code
-pkgver=2.1.261
+pkgver=2.1.274
 pkgrel=1
 srcname="claude-code-darwin-arm64-${pkgver}"
 source="https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-${pkgver}.tgz"
@@ -86,7 +86,7 @@ check() {
   }
   test -f "${srcdir}/libsystemshim.dylib"
   otool -L "${srcdir}/claude" | grep -q 'libsystemshim.dylib'
-  python3 -c "import pathlib; d=pathlib.Path(r'${srcdir}/claude').read_bytes(); assert b'return _/*E*/' in d"
+  python3 -c "import pathlib; d=pathlib.Path(r'${srcdir}/claude').read_bytes(); assert b'return R/*T*/' in d"
   echo "check: OK (structural)"
 }
 
