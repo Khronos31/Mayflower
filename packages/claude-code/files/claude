@@ -1,0 +1,4 @@
+#!/bin/sh
+# Mayflower claude-code: thin wrapper. Only Bun cache control — do not unset API/OAuth env.
+export BUN_JSC_useCodeCache=0
+exec /var/jb/usr/libexec/claude-code/claude.bin "$@"
