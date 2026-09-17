@@ -15,7 +15,7 @@
 
 pkgname=claude-code
 pkgver=2.1.274
-pkgrel=1
+pkgrel=2
 srcname="claude-code-darwin-arm64-${pkgver}"
 source="https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-${pkgver}.tgz"
 export compress=xz
