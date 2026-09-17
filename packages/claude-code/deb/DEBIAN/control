@@ -5,7 +5,7 @@ Architecture: @ARCH@
 Section: Development
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
-Depends: libiosexec1 (>= 1.2.2)
+Depends: libiosexec1 (>= 1.2.2), apple-a14
 Recommends: git-2.55 | git-default | git
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://github.com/anthropics/claude-code
