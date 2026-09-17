@@ -1,5 +1,5 @@
 Package: claude-code
-Name: Claude Code (iOS)
+Name: Claude Code
 Version: @VERSION@
 Architecture: @ARCH@
 Section: Development
