@@ -5,7 +5,7 @@ Architecture: @ARCH@
 Section: Development
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
-Depends: libffi8, libsqlite3-1, libreadline8, libncursesw6, liblzma5, libssl3, libgdbm6, libuuid16
+Depends: libffi8, libsqlite3-1, libreadline8, libncursesw6, liblzma5, libssl3, libgdbm6, libuuid16, libiosexec1 (>= 1.3.1)
 Conflicts: python3.14-minimal
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://www.python.org/
@@ -15,7 +15,8 @@ Description: Python 3.14 interpreter
  through the iOS support added in PEP 730, so that subprocess and the rest of
  the POSIX surface stay available, which is the point on a jailbroken device.
  os.system and subprocess with shell=True use the shell under the jailbreak
- prefix.
+ prefix. Linked with mayflower_spawn so Dopamine shebang posix_spawn/execve
+ is retried with the interpreter argv.
  .
  Installs versioned names only: python3.14, pip3.14, pydoc3.14 and
  python3.14-config. Install python3-default to make python3 on PATH mean this

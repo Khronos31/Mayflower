@@ -126,6 +126,7 @@ export CXXFLAGS="${CXXFLAGS} ${COMMON_FLAGS}"
 export LDFLAGS="-L${JB}/usr/lib -Wl,-rpath,${JB}/usr/lib ${LDFLAGS} ${COMMON_FLAGS}"
 export CPPFLAGS="-I${JB}/usr/include ${CPPFLAGS} ${COMMON_FLAGS}"
 
+
 # MAYFLOWER_RESUME=1 で clean / download / prepare / applyPatch を飛ばし、
 # 既にあるビルドツリーで build から始める。移植中、次の壁を1つずつ潰すための
 # 近道。完成したレシピの検証には使わないこと（素の状態から通るかが分からない）。
@@ -140,21 +141,15 @@ case "${MAYFLOWER_RESUME:-0}" in
   *) echo "$0: MAYFLOWER_RESUME は 0 / 1 / package のいずれか" >&2; exit 1 ;;
 esac
 
-if [ "${RESUME_FROM}" != all ]; then
-  echo "==> RESUME(${RESUME_FROM}): 既存のビルドツリーを使う"
-  [ -d "${srcdir}" ] || { echo "$0: ${srcdir} が無い。最初は RESUME なしで回すこと" >&2; exit 1; }
-else
+if [ "${RESUME_FROM}" = all ]; then
   cd "${PROJECTROOT}"
   clean
   if [ -n "${source}" ]; then
     download
   fi
-
-  cd "${BUILDROOT}"
-  prepare
-
-  cd "${PROJECTROOT}"
-  applyPatch
+else
+  echo "==> RESUME(${RESUME_FROM}): 既存のビルドツリーを使う"
+  [ -d "${srcdir}" ] || { echo "$0: ${srcdir} が無い。最初は RESUME なしで回すこと" >&2; exit 1; }
 fi
 
 # ios_compat=1 のパッケージには、SDK が iOS で塞いでいる system(3) の代替を
@@ -167,6 +162,8 @@ fi
 # プロトタイプを rename の前に見てしまい衝突する。実測では wait / wait3 /
 # wait4 / waitid / waitpid / realpath / getpriority / getrusage / ptsname などが
 # まとめて「無い」と判定され、os.waitpid が消えた。
+mkdir -p "${BUILDROOT}"
+
 if [ "${ios_compat:-0}" = 1 ]; then
   echo "==> ios_compat: system(3) を ${JB}/bin/sh 経由に差し替える"
   # オブジェクトではなく静的ライブラリで渡す。LDFLAGS はビルド系によって
@@ -183,11 +180,14 @@ fi
 #
 # libiosexec の dyld interpose は Dopamine の systemhook が __posix_spawn を
 # 差し替えたあとでは効かない。fishhook でプロセス内の posix_spawn /
-# posix_spawnp を張り直し、EPERM/ENOEXEC の shebang を interpreter argv で
-# 再試行する（files/mayflower_spawn.c）。-liosexec は他の ie_* 呼び出し用。
-# Mac ホストでのパッケージ作業（claude-code 等）ではスキップする。
-if [ "$(uname -s)" != "Darwin" ]; then
-  echo "==> mayflower_spawn: fishhook posix_spawn + -liosexec"
+# posix_spawnp / execve / execv を張り直し、EPERM/ENOEXEC の shebang を
+# interpreter argv で再試行する（files/mayflower_spawn.c）。-liosexec は他の
+# ie_* 呼び出し用。
+#
+# **iOS も Darwin なので `uname != Darwin` では検出できない。** Mac ホストの
+# パッケージ作業だけを外す（mayflower-exec.sh と同じ判定）。
+if ! { [ "$(uname -s)" = "Darwin" ] && [ ! -e "${JB}/usr/bin/clang" ]; }; then
+  echo "==> mayflower_spawn: fishhook posix_spawn/execve + -liosexec"
   mkdir -p "${BUILDROOT}"
   clang -O2 -I"${ROOTDIR}/files" -c "${ROOTDIR}/files/mayflower_spawn.c"     -o "${BUILDROOT}/mayflower_spawn.o"
   clang -O2 -I"${ROOTDIR}/files" -c "${ROOTDIR}/files/fishhook.c"     -o "${BUILDROOT}/fishhook.o"
@@ -196,6 +196,14 @@ if [ "$(uname -s)" != "Darwin" ]; then
   # 静的ライブラリで渡す（ios_compat と同じ理由: LDFLAGS が複数回展開されても
   # duplicate symbol にならない）。
   export LDFLAGS="${LDFLAGS} -L${BUILDROOT} -lmayflower_spawn -liosexec"
+fi
+
+if [ "${RESUME_FROM}" = all ]; then
+  cd "${BUILDROOT}"
+  prepare
+
+  cd "${PROJECTROOT}"
+  applyPatch
 fi
 
 if [ "${RESUME_FROM}" != package ]; then

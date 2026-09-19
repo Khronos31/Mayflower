@@ -12,3 +12,6 @@ Tag: purpose::console
 Description: Lua package manager for Lua 5.5
  Built on-device for rootless jailbreaks. Rocks go to ~/.luarocks (user)
  and /var/jb/usr/local (system).
+ .
+ PATH entries are Mach-O wrappers; Lua scripts live under
+ /var/jb/usr/libexec/luarocks/.

@@ -6,11 +6,15 @@
 # LuaRocks 3.13.0。Lua 5.5 向け。C はほぼ無く、configure + スクリプトの
 # インストール。端末に lua5.5 / liblua5.5-dev が要る。
 #
+# 上流の bin/luarocks は `#!/usr/bin/env lua` の shebang スクリプト。
+# Dopamine では PATH 入り口の shebang が posix_spawn EPERM になるので、
+# スクリプトは libexec に置き、usr/bin には Mach-O ラッパーを置く（npm と同じ）。
+#
 # Procursus に luarocks は無い。
 
 pkgname=luarocks
 pkgver=3.13.0
-pkgrel=2
+pkgrel=3
 srcname="luarocks-${pkgver}"
 source="https://luarocks.github.io/luarocks/releases/luarocks-${pkgver}.tar.gz"
 
@@ -45,4 +49,27 @@ package() {
 
   install -d "${pkgdir}${JB}/usr/share/licenses/luarocks"
   install -m644 COPYING "${pkgdir}${JB}/usr/share/licenses/luarocks/"
+
+  # shebang スクリプトを libexec へ移し、PATH 入り口を Mach-O にする。
+  local libexec="${pkgdir}${JB}/usr/libexec/luarocks"
+  local bindir="${pkgdir}${JB}/usr/bin"
+  install -d "${libexec}"
+  local b
+  for b in luarocks luarocks-admin; do
+    [ -f "${bindir}/${b}" ] || { echo "package: bin/${b} が無い" >&2; return 1; }
+    # インタプリタを絶対パスに（/usr/bin/env は rootless に無い）
+    {
+      printf '%s\n' "#!${JB}/usr/bin/lua5.5"
+      tail -n +2 "${bindir}/${b}"
+    } > "${bindir}/${b}.new"
+    mv "${bindir}/${b}.new" "${bindir}/${b}"
+    chmod 755 "${bindir}/${b}"
+    mv "${bindir}/${b}" "${libexec}/${b}"
+  done
+
+  . "${ROOTDIR}/files/mayflower-exec.sh"
+  for b in luarocks luarocks-admin; do
+    mayflower_install_exec "${bindir}/${b}" \
+      "${JB}/usr/bin/lua5.5" -- "${JB}/usr/libexec/luarocks/${b}"
+  done
 }

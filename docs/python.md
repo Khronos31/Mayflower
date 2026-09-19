@@ -6,7 +6,7 @@ CPython を rootless 脱獄 iOS 上でセルフビルドする。
 
 ## パッケージ情報
 
-- 版: 3.14.7-2
+- 版: 3.14.7-3
 - パッケージ構成:
   - `python3.14`: 版付きの名前のみ
   - `python3-default`: 版なしのシンボリックリンク（`Provides: python3`、`Conflicts`/`Replaces: python3`）
@@ -77,3 +77,9 @@ pip が .deb に入らなくなるためである。
 拡張モジュール（`lib-dynload/*.so`）は `@rpath/...` でリンクされており
 `dpkg -S` では引けないため、依存は `otool -L` で辿って確認する。この追跡により
 `libgdbm6` と `libuuid16` の依存抜けが判明し、3.14.7-2 で修正された。
+
+### Dopamine shebang（pkgrel 3）
+
+端末の `./make.sh` が付ける `-lmayflower_spawn -liosexec` を libpython / python
+が引き、`subprocess` の `posix_spawn` と fork+`execve` の shebang をプロセス内で
+再試行する。`check()` で shebang スクリプト起動を検証する。

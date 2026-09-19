@@ -7,7 +7,7 @@ Nim を rootless 脱獄 iOS 上でセルフビルドする。
 ## パッケージ情報
 
 - パッケージ名: `nim`
-- 版: 2.2.12-2
+- 版: 2.2.12-3
 - 含まれるもの: コンパイラ、`nimble`、`atlas`、`nimsuggest`、`nimgrep`、`nimpretty`、`testament`
 - Depends: `build-essential`, `clang`, `ldid`, `libiosexec1 (>= 1.3.1)`
 - Recommends: `libpcre1`
@@ -33,3 +33,11 @@ Nim を rootless 脱獄 iOS 上でセルフビルドする。
    パッチによって nim 自身がリンク後に署名するようにし、ブートストラップ段は
    `bin/cc` ラッパーが肩代わりする。`check()` ではラッパー無しの素の `nim c` で
    `t_exec`、`t_ssl`、`nimgrep`（PCRE 読み込み）が動作することを検証する。
+
+### Dopamine shebang（pkgrel 3）
+
+stdlib は `defined(ios) and defined(libiosexec)` のとき `ie_posix_spawn` /
+`ie_execve` / `ie_system` を呼ぶ（既存パッチ）。加えて端末の `./make.sh` が
+用意する `-lmayflower_spawn` を `koch boot` / tools のリンクに渡し、素の
+`posix_spawn` / `execve` も fishhook する。テストの `t.sh` は
+`#!/var/jb/bin/sh`。

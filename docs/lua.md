@@ -16,7 +16,7 @@ Procursus は `lua5.4` / `liblua5.4-0` / `liblua5.4-dev` まで。5.5 は無い�
 | `liblua5.5-dev` | `include/lua5.5/`、`liblua5.5.dylib`、`liblua5.5.a`、`lua5.5.pc` |
 | `lua-default` | `lua` / `luac`（`lua5.5` を指す） |
 
-版: 5.5.1-1
+版: 5.5.1-4
 
 iPhone 8 / iOS 16.7.14 で `./make.sh lua` が通り、`lua5.5` / `liblua5.5-0` /
 `liblua5.5-dev` を `dpkg -i` した。`lua-default` が `lua` / `luac` を 5.5 にする。
@@ -30,3 +30,9 @@ iPhone 8 / iOS 16.7.14 で `./make.sh lua` が通り、`lua5.5` / `liblua5.5-0` 
 使うので `liblua.a` のまま。
 
 `LUA_ROOT` は `/var/jb/usr/`（パッチ）。`-target arm64-apple-ios16.0`。
+
+### Dopamine shebang（pkgrel 4）
+
+`liblua5.5.0.dylib` / `lua5.5` は既定 `LDFLAGS` の `-lmayflower_spawn -liosexec`
+を引き、プロセス内で `posix_spawn` / `execve` の shebang を再試行する。
+以前の `MYLDFLAGS` は `-lios_compat` だけを書いて既定 LDFLAGS を落としていた。

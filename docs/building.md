@@ -62,15 +62,22 @@ Mayflower が `/var/jb/usr/bin` に置く起動入り口（`go` / `rustc` / `git
 
 端末上の `./make.sh` ビルドでは、既定の `LDFLAGS` に
 `-lmayflower_spawn -liosexec` を足す（`make.sh`、ios_compat と同様に静的
-ライブラリ化）。
+ライブラリ化）。iOS も Darwin なので、Mac ホスト判定は
+`uname=Darwin` かつ `${JB}/usr/bin/clang` が無いときだけスキップする。
 
 - **`-liosexec`**: Procursus の dyld interpose（`ie_posix_spawn` 等）。他の
-  `ie_*` 呼び出しにも必要。
+  `ie_*` 呼び出しにも必要。明示的に `ie_*` を呼ぶパッチ（Go / Nim 等）用。
 - **`-lmayflower_spawn`**: `files/mayflower_spawn.c` + Facebook fishhook
   （`files/fishhook.c` / `fishhook.h`、BSD-3-Clause）。Dopamine の systemhook が
   `__posix_spawn` を差し替えると dyld interpose は効かないため、プロセス内で
-  `posix_spawn` / `posix_spawnp` を fishhook し、EPERM/ENOEXEC の shebang を
-  interpreter argv で再試行する。
+  `posix_spawn` / `posix_spawnp` / `execve` / `execv` を fishhook し、
+  EPERM/ENOEXEC の shebang を interpreter argv で再試行する。`/bin`・
+  `/usr/bin` のインタプリタは `/var/jb` 接頭辞へ書き換える（libiosexec と同じ）。
+
+言語処理系で `posix_spawn` を使うもの（CPython の subprocess 等）は層 2 の
+再リンクで足りる。素の `execve` 経路（CRuby の fork+exec 等）も同じ fishhook
+で拾う。PATH 入り口が shebang スクリプトそのもの（`luarocks` 等）は層 1 の
+Mach-O ラッパーが要る。
 
 Mac ホストでのパッケージ作業（`claude-code` 等）ではこの層はスキップする。
 

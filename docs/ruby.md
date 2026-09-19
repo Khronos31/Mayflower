@@ -7,14 +7,14 @@ CRuby を rootless 脱獄 iOS 上でセルフビルドする。
 ## パッケージ情報
 
 - パッケージ名: `ruby`（Procursus に同名は無い）
-- 版: 4.0.6-1
+- 版: 4.0.6-2
 - YJIT / ZJIT: **建てない**。端末に rustc があると configure が既定で有効にするので、
   `--disable-yjit --disable-zjit` を明示する。あとで足す余地はある。
 - Depends: `libssl3`, `libyaml-0-2`, `libffi8`, `libgmp10`, `libreadline8`,
   `libncursesw6`
 
 iPhone 8 / iOS 16.7.14 / palera1n rootless で `./make.sh ruby` が通り、
-`ruby_4.0.6-1_iphoneos-arm64.deb` を `dpkg -i` した。`ruby -v` は
+`ruby_4.0.6-2_iphoneos-arm64.deb` を `dpkg -i` した。`ruby -v` は
 `ruby 4.0.6 ... +PRISM [arm64-darwin]`。YJIT は付かない。
 
 ## ビルドの要点
@@ -61,3 +61,9 @@ rootless に `/bin/sh` は無い。パッチで次を `/var/jb/bin/sh` に向け
 
 `libssl-dev` `libyaml-dev` `libffi-dev` `libgmp-dev` `libreadline-dev`
 `libncurses-dev`。yaml はランタイムの `libyaml-0-2` が端末に無いことがある。
+
+### Dopamine shebang（pkgrel 2）
+
+Darwin の `Kernel#system` / `Process.spawn` は fork+`execve`。端末の
+`./make.sh` が付ける `-lmayflower_spawn` が `execve` / `execv` を fishhook し、
+shebang を interpreter argv で再試行する。`check()` で検証する。

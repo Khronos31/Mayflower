@@ -15,7 +15,7 @@
 
 pkgname=python
 pkgver=3.14.7
-pkgrel=2
+pkgrel=3
 srcname="Python-${pkgver}"
 source="https://www.python.org/ftp/python/${pkgver}/Python-${pkgver}.tar.xz"
 
@@ -97,6 +97,13 @@ print("lzma    ", lzma.__name__, "ok")
 print("subprocess", subprocess.run(["uname","-m"], capture_output=True, text=True).stdout.strip())
 print("shell   ", subprocess.run("echo shell-ok", shell=True, capture_output=True, text=True).stdout.strip() or "FAILED")
 print("system  ", os.system("echo os.system-ok"))
+# Dopamine: posix_spawn of a shebang script (mayflower_spawn fishhook)
+sh = """#!/var/jb/bin/sh\necho py-shebang-ok\n"""
+open("/tmp/mayflower-py-shebang.sh", "w").write(sh)
+os.chmod("/tmp/mayflower-py-shebang.sh", 0o755)
+r = subprocess.run(["/tmp/mayflower-py-shebang.sh"], capture_output=True, text=True)
+assert r.returncode == 0 and "py-shebang-ok" in r.stdout, (r.returncode, r.stdout, r.stderr)
+print("shebang ", r.stdout.strip())
 import urllib.request; print("urllib  ", "ok", urllib.request.getproxies())
 '
 }

@@ -18,7 +18,7 @@
 
 pkgname=lua
 pkgver=5.5.1
-pkgrel=3
+pkgrel=4
 srcname="lua-${pkgver}"
 source="https://www.lua.org/ftp/lua-${pkgver}.tar.gz"
 subpkgs=(lib lua dev default)
@@ -43,10 +43,12 @@ prepare() {
 build() {
   cd "${srcdir}" || return 1
 
+  # MYLDFLAGS に既定 LDFLAGS（-lmayflower_spawn -liosexec -lios_compat）を
+  # 必ず含める。上書きすると Dopamine の shebang fishhook が抜ける。
   make ios \
     CC="${CC} -std=gnu99" \
     MYCFLAGS="${COMMON_FLAGS}" \
-    MYLDFLAGS="-Wl,-rpath,${JB}/usr/lib -L${BUILDROOT} -lios_compat"
+    MYLDFLAGS="${LDFLAGS}"
 
   cd src || return 1
   # 上流は liblua.a だけ。同じオブジェクトから dylib を出す。
@@ -55,17 +57,26 @@ build() {
     ${COMMON_FLAGS} \
     -install_name @rpath/liblua5.5.0.dylib \
     -compatibility_version 5.5 -current_version 5.5.1 \
-    -Wl,-rpath,${JB}/usr/lib -L${BUILDROOT} -lios_compat -lm
+    ${LDFLAGS} -lm
 
   # lua は dylib へ。luac は luaU_dump など内部記号を使うので liblua.a のまま。
   "${CC}" -std=gnu99 -o lua ${COMMON_FLAGS} lua.o liblua5.5.0.dylib -lm \
-    -Wl,-rpath,${JB}/usr/lib -L${BUILDROOT} -lios_compat
+    ${LDFLAGS}
 }
 
 check() {
   cd "${srcdir}/src" || return 1
   DYLD_LIBRARY_PATH="$(pwd)" ./lua -v
   DYLD_LIBRARY_PATH="$(pwd)" ./lua -e 'assert(_VERSION == "Lua 5.5"); print("ok", _VERSION)'
+  # shebang 子プロセス（Dopamine で posix_spawn EPERM になりやすい経路）
+  printf '%s\n' '#!/var/jb/bin/sh' 'echo lua-shebang-ok' > "${BUILDROOT}/t-shebang.sh"
+  chmod +x "${BUILDROOT}/t-shebang.sh"
+  DYLD_LIBRARY_PATH="$(pwd)" ./lua -e "
+    local h = io.popen('${BUILDROOT}/t-shebang.sh')
+    local o = h:read('*a'); h:close()
+    assert(o:match('lua-shebang-ok'), o)
+    print('shebang', 'ok')
+  "
 }
 
 package_lib() {

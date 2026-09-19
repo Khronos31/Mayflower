@@ -16,7 +16,7 @@
 
 pkgname=ruby
 pkgver=4.0.6
-pkgrel=1
+pkgrel=2
 srcname="ruby-${pkgver}"
 source="https://cache.ruby-lang.org/pub/ruby/4.0/ruby-${pkgver}.tar.xz"
 
@@ -69,6 +69,13 @@ check() {
     puts "fiber   #{f.resume}"
     puts "system  #{system("echo", "system-ok")}"
     puts "shell   #{`echo shell-ok`.strip}"
+    # Dopamine: fork+execve of a shebang script (mayflower_spawn fishhook)
+    sh = "/tmp/mayflower-rb-shebang.sh"
+    File.write(sh, "#!/var/jb/bin/sh\necho rb-shebang-ok\n")
+    File.chmod(0755, sh)
+    out = IO.popen([sh], &:read)
+    raise "shebang failed: #{out.inspect}" unless out.include?("rb-shebang-ok")
+    puts "shebang #{out.strip}"
     require "openssl"; puts "ssl     #{OpenSSL::OPENSSL_VERSION}"
     require "yaml";    puts "yaml    ok"
     require "zlib";    puts "zlib    ok"

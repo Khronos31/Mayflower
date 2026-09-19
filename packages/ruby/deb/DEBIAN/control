@@ -5,7 +5,7 @@ Architecture: @ARCH@
 Section: Development
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
-Depends: libssl3, libyaml-0-2, libffi8, libgmp10, libreadline8, libncursesw6
+Depends: libssl3, libyaml-0-2, libffi8, libgmp10, libreadline8, libncursesw6, libiosexec1 (>= 1.3.1)
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://www.ruby-lang.org/
 Tag: purpose::console
@@ -13,6 +13,7 @@ Description: Ruby 4.0 interpreter
  Built on-device for rootless jailbreaks. Configured as darwin so Fiber uses
  the arm64 assembly coroutine and process spawning stays available.
  Kernel#system and Kernel#exec with a shell use /var/jb/bin/sh.
+ Linked with mayflower_spawn so Dopamine shebang execve is retried.
  .
  YJIT and ZJIT are not built. The interpreter is enough for a working ruby;
  a later package revision may add them.

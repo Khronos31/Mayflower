@@ -15,7 +15,7 @@
 
 pkgname=nim
 pkgver=2.2.12
-pkgrel=2
+pkgrel=3
 
 # nightly（2.2.12 は正式リリース前のため nim-lang.org/download には無い）
 source="https://github.com/nim-lang/nightlies/releases/download/2026-09-08-version-2-2-8e8fbf60693418dc95bb0d762fd660231d08a583/nim-${pkgver}.tar.xz"
@@ -37,8 +37,12 @@ prepare() {
 
   # uname -m が iPhone10,1 を返すので ucpu/uos は手で与える。
   # makefile は darwin 節で CC を固定するため、CC は環境ではなく引数で渡す。
+  local cold_ld="${BUILDROOT}/ios_system.o"
+  if [ -f "${BUILDROOT}/libmayflower_spawn.a" ]; then
+    cold_ld="${cold_ld} -L${BUILDROOT} -lmayflower_spawn -liosexec"
+  fi
   CFLAGS="-include ${PROJECTROOT}/shim/ios_system.h" \
-  LDFLAGS="${BUILDROOT}/ios_system.o" \
+  LDFLAGS="${cold_ld}" \
     make -j"$(sysctl -n hw.ncpu)" \
       ucpu=arm64 uos=darwin \
       SHELL="${JB}/bin/sh"
@@ -59,6 +63,11 @@ build() {
     --clang.linkerexe:"${ROOTDIR}/bin/cc"
     --ldid.entitlements:"${ENTFILE}"
   )
+  # 端末ビルドで make.sh が用意した mayflower_spawn を nim / tools に静的リンク。
+  # 明示 ie_* に加え、素の posix_spawn/execve 呼び出しも fishhook する。
+  if [ -f "${BUILDROOT}/libmayflower_spawn.a" ]; then
+    flags+=(--passL:"-L${BUILDROOT} -lmayflower_spawn -liosexec")
+  fi
 
   ./bin/nim c "${flags[@]}" koch
   ./koch boot "${flags[@]}"
