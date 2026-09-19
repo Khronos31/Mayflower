@@ -21,7 +21,7 @@
 
 pkgname=node
 pkgver=24.21.0
-pkgrel=1
+pkgrel=2
 srcname=dist
 source=""
 subpkgs=(nodejs default)
@@ -70,8 +70,9 @@ package_nodejs() {
     "${pkgdir}${JB}/usr/share/licenses/nodejs-${nodeseries}"
 
   install -m755 "${tree}/bin/node" "${pkgdir}${lib}/node-bin"
-  install -m755 "${PROJECTROOT}/files/node-wrapper" \
-    "${pkgdir}${JB}/usr/bin/node-${nodeseries}"
+  . "${ROOTDIR}/files/mayflower-exec.sh"
+  mayflower_install_node "${pkgdir}${JB}/usr/bin/node-${nodeseries}" \
+    "${lib}/node-bin" "${JB}/usr"
   install -m644 "${PROJECTROOT}/files/entitlements.plist" \
     "${pkgdir}${lib}/entitlements.plist"
   install -m644 "${PROJECTROOT}/files/smoke.js" \
@@ -91,16 +92,10 @@ package_nodejs() {
   fi
 
   # npm / npx は env node を見に行くので、版付きラッパー経由にする。
-  cat > "${pkgdir}${JB}/usr/bin/npm-${nodeseries}" <<EOF
-#!${JB}/bin/sh
-exec "${JB}/usr/bin/node-${nodeseries}" "${lib}/node_modules/npm/bin/npm-cli.js" "\$@"
-EOF
-  cat > "${pkgdir}${JB}/usr/bin/npx-${nodeseries}" <<EOF
-#!${JB}/bin/sh
-exec "${JB}/usr/bin/node-${nodeseries}" "${lib}/node_modules/npm/bin/npx-cli.js" "\$@"
-EOF
-  chmod 755 "${pkgdir}${JB}/usr/bin/npm-${nodeseries}" \
-    "${pkgdir}${JB}/usr/bin/npx-${nodeseries}"
+  mayflower_install_exec "${pkgdir}${JB}/usr/bin/npm-${nodeseries}" \
+    "${JB}/usr/bin/node-${nodeseries}" -- "${lib}/node_modules/npm/bin/npm-cli.js"
+  mayflower_install_exec "${pkgdir}${JB}/usr/bin/npx-${nodeseries}" \
+    "${JB}/usr/bin/node-${nodeseries}" -- "${lib}/node_modules/npm/bin/npx-cli.js"
 
   local l
   for l in "${tree}"/LICENSE "${tree}"/license; do

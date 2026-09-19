@@ -22,7 +22,7 @@
 
 pkgname=rust
 pkgver=1.98.1
-pkgrel=3
+pkgrel=4
 srcname=dist
 source=""
 subpkgs=(rustc std cargo default)
@@ -143,14 +143,9 @@ package_default() {
   prefix="$(rust_install)"
   install -d "${dest}"
 
+  . "${ROOTDIR}/files/mayflower-exec.sh"
   local b
   for b in rustc cargo; do
-    cat > "${dest}/${b}" <<EOF
-#!${JB}/bin/sh
-SDKROOT="\${SDKROOT:-${JB}/usr/share/SDKs/iPhoneOS.sdk}"
-export SDKROOT
-exec "${prefix}/bin/${b}" "\$@"
-EOF
-    chmod 755 "${dest}/${b}"
+    mayflower_install_exec "${dest}/${b}" "${prefix}/bin/${b}"       "SDKROOT=${JB}/usr/share/SDKs/iPhoneOS.sdk"
   done
 }

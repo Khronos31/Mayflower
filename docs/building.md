@@ -44,6 +44,18 @@ rootless では rootfs が封印されていて、`/bin` には `df` と `ps` �
 呼ぶなら、そこへ差し替えるパッチを当てる。動的リンクするときは
 `-Wl,-rpath,/var/jb/usr/lib` が要る（Procursus の clang は自動では付けない）。
 
+## PATH wrappers (Mach-O)
+
+Mayflower が `/var/jb/usr/bin` に置く起動入り口（`go` / `rustc` / `git-2.55` /
+`node-24` / `swift-6.1` / `claude` など）と、ビルド用の `bin/cc`・`bin/c++`・
+`bin/make` は **shebang スクリプトではなく Mach-O** にする。
+
+Dopamine（se3）では `posix_spawn` が shebang を解釈せず EPERM になることがあり、
+libiosexec のインターポーズだけでは足りない。llvm の `toolchain-wrapper.c` と同じく、
+パッケージ時に `files/mayflower-exec.c`（および用途別の `.c`）をコンパイルして
+`ldid` 署名する。ヘルパーは `files/mayflower-exec.sh`。
+
+
 **シェバンに `/bin/bash` や `/usr/bin/env` は書けない。** どちらのパスも存在しない。
 libiosexec を引いている実行ファイルから呼ばれた場合だけ解決されるため一見動くが、
 素の `execve` からは `No such file or directory` になる。このリポジトリの

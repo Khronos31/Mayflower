@@ -56,6 +56,33 @@ export pkgdir="${BUILDROOT}/build"
 # $ROOTDIR/bin を PATH の先頭に置く。bin/make は GNU make に SHELL を与える
 # ラッパーで、これが無いと autotools も cmake も /bin/sh を探して死ぬ。
 # bin/cc と bin/c++ も同じ場所にあるので、ビルド中に cc を直接呼ぶ類も拾える。
+
+# PATH 先頭の bin/cc・bin/c++・bin/make は Mach-O（shebang は Dopamine で EPERM）。
+# 素の clang でコンパイルする（自分自身を経由しない）。
+ensure_bin_wrappers() {
+  local srcdir="${ROOTDIR}/files"
+  local ent="${ENTFILE:?ENTFILE unset}"
+  local hostcc path_wo
+  path_wo="$(echo "${PATH}" | tr ':' '\n' | grep -v "^${ROOTDIR}/bin$" | paste -sd: -)"
+  hostcc="$(PATH="${path_wo}" command -v clang || PATH="${path_wo}" command -v cc || true)"
+  [ -n "${hostcc}" ] || hostcc="$(command -v /var/jb/usr/bin/clang || command -v clang || true)"
+  [ -n "${hostcc}" ] || { echo "ensure_bin_wrappers: no clang/cc" >&2; return 1; }
+  compile_one() {
+    local out="$1" srcname="$2"; shift 2
+    if [ -x "${out}" ] && [ "${out}" -nt "${srcdir}/${srcname}" ]; then
+      return 0
+    fi
+    "${hostcc}" -O2 -o "${out}" "${srcdir}/${srcname}" "$@"
+    ldid -S"${ent}" "${out}"
+    chmod 755 "${out}"
+  }
+  compile_one "${ROOTDIR}/bin/cc" mayflower-cc.c -DCOMPILER='"clang"'
+  compile_one "${ROOTDIR}/bin/c++" mayflower-cc.c -DCOMPILER='"clang++"'
+  compile_one "${ROOTDIR}/bin/make" mayflower-make.c \
+    -DREAL_MAKE='"/var/jb/usr/bin/make"' -DDEFAULT_SHELL='"/var/jb/bin/sh"'
+}
+ensure_bin_wrappers
+
 export PATH="${ROOTDIR}/bin:${PATH}"
 
 # autoconf の configure は SHELL=${CONFIG_SHELL-/bin/sh} を先頭で焼く。

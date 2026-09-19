@@ -18,7 +18,7 @@
 
 pkgname=swift
 pkgver=6.1.1
-pkgrel=5
+pkgrel=6
 llvmver=19.1.4
 srcname=dist
 source=""
@@ -135,13 +135,12 @@ install_mayflower_ld_tools() {
   pref="$(llvm_pref)"
   tools="${pkgdir}${pref}/libexec/mayflower-swift-tools"
   files_dir="${PROJECTROOT}/files"
+  . "${ROOTDIR}/files/mayflower-exec.sh"
   install -d "${tools}" "${pkgdir}${pref}/bin" "${pkgdir}${pref}/libexec"
-  install -m755 "${files_dir}/mayflower-swift-ld" "${tools}/ld"
-  install -m755 "${files_dir}/mayflower-swift-dsymutil" "${tools}/dsymutil"
-  install -m755 "${files_dir}/mayflower-swift-ld" \
-    "${pkgdir}${pref}/bin/mayflower-swift-ld"
-  install -m755 "${files_dir}/mayflower-swift-dsymutil" \
-    "${pkgdir}${pref}/bin/mayflower-swift-dsymutil"
+  mayflower_compile_swift_tool "${tools}/ld" mayflower-swift-ld.c
+  mayflower_compile_swift_tool "${tools}/dsymutil" mayflower-swift-dsymutil.c
+  install -m755 "${tools}/ld" "${pkgdir}${pref}/bin/mayflower-swift-ld"
+  install -m755 "${tools}/dsymutil" "${pkgdir}${pref}/bin/mayflower-swift-dsymutil"
   # clang-19 owns ${pref}/entitlements.plist — only ship under libexec/.
   if [ -f "${files_dir}/entitlements.plist" ]; then
     install -m644 "${files_dir}/entitlements.plist" \
@@ -258,20 +257,14 @@ package_swift61() {
 
   # Versioned PATH wrappers. Only swiftc gets -tools-directory (link via
   # mayflower-swift-ld). Plain `swift` rejects that flag (REPL / --version).
+  . "${ROOTDIR}/files/mayflower-exec.sh"
   if [ -e "${pkgdir}${pref}/bin/swift" ] || [ -L "${pkgdir}${pref}/bin/swift" ]; then
-    {
-      echo '#!/var/jb/bin/sh'
-      echo "exec ${pref}/bin/swift \"\$@\""
-    } > "${pkgdir}${JB}/usr/bin/swift-${swift_series}"
-    chmod 755 "${pkgdir}${JB}/usr/bin/swift-${swift_series}"
+    mayflower_install_exec "${pkgdir}${JB}/usr/bin/swift-${swift_series}" \
+      "${pref}/bin/swift"
   fi
   if [ -e "${pkgdir}${pref}/bin/swiftc" ] || [ -L "${pkgdir}${pref}/bin/swiftc" ]; then
-    {
-      echo '#!/var/jb/bin/sh'
-      echo "TOOLS=${pref}/libexec/mayflower-swift-tools"
-      echo "exec ${pref}/bin/swiftc -tools-directory \"\$TOOLS\" \"\$@\""
-    } > "${pkgdir}${JB}/usr/bin/swiftc-${swift_series}"
-    chmod 755 "${pkgdir}${JB}/usr/bin/swiftc-${swift_series}"
+    mayflower_install_exec "${pkgdir}${JB}/usr/bin/swiftc-${swift_series}" \
+      "${pref}/bin/swiftc" -- "-tools-directory" "${pref}/libexec/mayflower-swift-tools"
   fi
 
   sign_machos_under "${pkgdir}${pref}"

@@ -13,7 +13,7 @@
 
 pkgname=git
 pkgver=2.55.0
-pkgrel=1
+pkgrel=2
 srcname="git-${pkgver}"
 source="https://www.kernel.org/pub/software/scm/git/git-${pkgver}.tar.xz"
 subpkgs=(git default)
@@ -93,11 +93,8 @@ package_git() {
     esac
   done
   rm -f "${b}/git"
-  cat > "${b}/git-2.55" <<EOF
-#!${JB}/bin/sh
-exec ${JB}/usr/libexec/git-2.55/git "\$@"
-EOF
-  chmod 755 "${b}/git-2.55"
+  . "${ROOTDIR}/files/mayflower-exec.sh"
+  mayflower_install_exec "${b}/git-2.55" "${JB}/usr/libexec/git-2.55/git"
   local x
   for x in git-shell git-cvsserver scalar git-receive-pack git-upload-pack git-upload-archive; do
     if [ -L "${b}/${x}" ]; then
