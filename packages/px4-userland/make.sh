@@ -47,6 +47,8 @@ build() {
     -DCMAKE_MAKE_PROGRAM="${ROOTDIR}/bin/make" \
     -DCMAKE_CXX_COMPILER="${CXX}" \
     -DCMAKE_PREFIX_PATH="${JB}/usr" \
+    -DPX4_LIBUSB_INCLUDE_DIR="${JB}/usr/include/libusb-1.0" \
+    -DPX4_LIBUSB_LIBRARY="${JB}/usr/lib/libusb-1.0.dylib" \
     -DPX4_BUILD_TESTS=OFF \
     -DPX4_BUILD_TOOLS=OFF \
     -DPX4_BUILD_PCSC_IFD=ON \
