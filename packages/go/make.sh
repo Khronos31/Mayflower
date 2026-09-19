@@ -34,7 +34,7 @@
 # CFBundleCopyBundleURL に残す形。**Go1.27.2 が出たらそこへ移る。**
 pkgname=go
 pkgver=1.26.8
-pkgrel=3
+pkgrel=4
 srcname=go
 source="https://go.dev/dl/go${pkgver}.src.tar.gz"
 subpkgs=(go src bin)
@@ -57,6 +57,12 @@ prepare() {
   cd "${srcdir}" || return 1
 }
 
+# Dopamine では go / ツール / go build 成果物に dynamic-codesigning 等が要る。
+# リポジトリ共通 entitlements.plist では足りないのでパッケージ専用を使う。
+go_entfile() {
+  echo "${PROJECTROOT}/entitlements-jit.plist"
+}
+
 build() {
   cd "${srcdir}/src" || return 1
 
@@ -71,7 +77,8 @@ build() {
   # 署名はリンカのパッチが行うため、ここにラッパーは要らない。
   export CC=clang CXX=clang++
   # リンカのパッチが読む。ビルド中の中間バイナリもこれで署名される。
-  export GO_LDID_ENTITLEMENTS="${ENTFILE}"
+  # Dopamine JIT: dynamic-codesigning / get-task-allow / task_for_pid-allow。
+  export GO_LDID_ENTITLEMENTS="$(go_entfile)"
   export GOTELEMETRY=off
 
   # -trimpath 相当を使わないこと。焼き込みの GOROOT と実行ファイルパスからの
@@ -109,16 +116,29 @@ EOF
   GOROOT="${goroot}" "${goroot}/bin/go" build -o hello ./
   ./hello
   ldid -e hello | grep -q platform-application
+  ldid -e hello | grep -q dynamic-codesigning
 }
 
 package_go() {
   cd "${srcdir}" || return 1
-  local dest
+  local dest ent tool
   dest="${pkgdir}$(goroot_install)"
+  ent="$(go_entfile)"
   install -d "${dest}"
   cp -R bin pkg api go.env VERSION "${dest}/"
-  # リンカのパッチはここを既定の entitlements として探す。
-  install -m644 "${ENTFILE}" "${dest}/entitlements.plist"
+  # リンカのパッチはここを既定の entitlements として探す（go build 成果物も同 ents）。
+  install -m644 "${ent}" "${dest}/entitlements.plist"
+  # 本体と GOROOT ツールを明示再署名（tidy は既存 ents を維持するが保険）。
+  for tool in "${dest}/bin/"*; do
+    [ -f "${tool}" ] && [ -x "${tool}" ] || continue
+    ldid -S"${ent}" "${tool}" || return 1
+  done
+  if [ -d "${dest}/pkg/tool/ios_${ARCH}" ]; then
+    for tool in "${dest}/pkg/tool/ios_${ARCH}/"*; do
+      [ -f "${tool}" ] && [ -x "${tool}" ] || continue
+      ldid -S"${ent}" "${tool}" || return 1
+    done
+  fi
   install -d "${pkgdir}${JB}/usr/share/licenses/golang-${goseries}"
   install -m644 LICENSE "${pkgdir}${JB}/usr/share/licenses/golang-${goseries}/LICENSE"
 }
@@ -142,11 +162,17 @@ package_src() {
 package_bin() {
   local dest="${pkgdir}${JB}/usr/bin"
   local goroot="${JB}/usr/lib/go-${goseries}"
+  local saved_ent="${ENTFILE}"
   install -d "${dest}"
 
+  # PATH ラッパーも同じ JIT ents で署名（Dopamine で手署名していた経路を吸収）。
+  ENTFILE="$(go_entfile)"
+  export ENTFILE
   . "${ROOTDIR}/files/mayflower-exec.sh"
   local b
   for b in go gofmt; do
     mayflower_install_exec "${dest}/${b}" "${goroot}/bin/${b}"       "GOROOT=${goroot}"
   done
+  ENTFILE="${saved_ent}"
+  export ENTFILE
 }

@@ -6,7 +6,7 @@ Go を rootless 脱獄 iOS 上でビルドする。
 
 ## パッケージ情報
 
-- 版: 1.26.8-2
+- 版: 1.26.8-4
 - Depends（`golang-1.26-go`）: `build-essential`, `clang`, `ldid`, `libiosexec1`
 - パッケージ構成（Debian 流の分割）:
   - `golang-1.26-go`: GOROOT 本体（bin, pkg, api, go.env, entitlements.plist）
@@ -86,3 +86,26 @@ GOROOT_BOOTSTRAP=~/dev/go-bootstrap ./make.sh go
   rootfs を指すと通らない。libiosexec は shebang の解釈先とシェルの探索は
   prefix 付きで行うが、直接渡された絶対パスは読み替えないためである。
   これは Procursus の go でも同様である。
+
+
+## Dopamine 向け JIT entitlements
+
+Dopamine（se3）では Go のランタイム／ツールが JIT やタスクポートを使うため、
+リポジトリ共通の `entitlements.plist`（`platform-application` のみ）では足りない。
+手で `ldid` し直していた経路をパッケージに焼き込む。
+
+- パッケージ専用: [`packages/go/entitlements-jit.plist`](../packages/go/entitlements-jit.plist)
+  - `platform-application`
+  - `com.apple.private.security.container-required` = false
+  - `dynamic-codesigning`
+  - `get-task-allow`
+  - `task_for_pid-allow`
+- `make.sh` はビルド時の `GO_LDID_ENTITLEMENTS`、GOROOT に入れる
+  `entitlements.plist`、`go` / `gofmt` 本体、`GOROOT/pkg/tool/ios_arm64/*`、
+  PATH ラッパーをすべてこの plist で署名する（pkgrel 4）。
+- **`go build` の成果物**も同じ entitlements が要る。リンカのパッチが
+  `$GOROOT/entitlements.plist`（無ければ `GO_LDID_ENTITLEMENTS`）を見て
+  `ldid` するため、本パッケージを入れた環境では追加作業は不要。
+  もし手でリンクした場合は同じ plist で `ldid -S…` すること。SIGKILL になる。
+- `-liosexec` が必要な消費側は **`libiosexec-dev` を apt で入れる**こと。
+  手動の symlink／バイナリ改変はしない。
