@@ -1,0 +1,13 @@
+Package: mirakc
+Name: mirakc
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Utilities
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/mirakc/mirakc
+Tag: purpose::console, role::program
+Description: Mirakurun-compatible PVR backend
+ mirakc. Built on-device with Mayflower rustc. Not in Procursus
+ rootless apt. Does not include mirakc-timeshift-fs or tuner helpers.

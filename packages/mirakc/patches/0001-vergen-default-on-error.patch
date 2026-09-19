@@ -1,0 +1,10 @@
+--- a/mirakc/build.rs
++++ b/mirakc/build.rs
+@@ -3,6 +3,7 @@
+         .sha(false) // full SHA
+         .build();
+     vergen_gitcl::Emitter::default()
++        .default_on_error()
+         .add_instructions(&gitcl)
+         .unwrap()
+         .emit()
