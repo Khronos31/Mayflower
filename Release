@@ -1,0 +1,16 @@
+Origin: Mayflower
+Label: Khronos31
+Suite: stable
+Codename: stable
+Architectures: iphoneos-arm64
+Components: main
+Description: Packages built on-device for rootless jailbroken iOS.
+Date: Sat, 19 Sep 2026 17:00:22 UTC
+MD5Sum:
+ e9721f7ca7b1f162a699a15c52d49126 49066 Packages
+ 9a623c1840cadcfbba3eb73d756ffceb 14995 Packages.gz
+ 7f61a080a5dbdba6a2397a1546893ac4 13676 Packages.xz
+SHA256:
+ 96ca5ed8c0483195357cc37a9af98fcb12e0daae02e76883757eeb5b90a68ea8 49066 Packages
+ 8991f5c5e5dda349f39b8b86e44a263541e208171f28082c7a96ada3107287f1 14995 Packages.gz
+ c93257e3d467bbbb5ec8f0caf232773485bad3df2f7e6dd909a86531c4158c45 13676 Packages.xz
