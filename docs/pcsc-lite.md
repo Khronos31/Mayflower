@@ -6,7 +6,7 @@
 
 ## パッケージ情報
 
-- 版: 2.5.1-3
+- 版: 2.5.1-4
 - `libpcsclite1`: `libpcsclite.1.dylib`
 - `pcscd`: デーモン `/usr/sbin/pcscd`
 - `libpcsclite-dev`: `PCSC/*.h` と `libpcsclite.pc`
@@ -32,11 +32,18 @@ USB ホットプラグは切る。`reader.conf.d` 経由の IFD（px4-userland�
 uname が Darwin なので meson は macOS 用 `hotplug_macosx.c` を足そうとするが、
 iOS SDK に `IOCFPlugIn.h` が無い。IFD は `dyn_unix.c` の `dlopen`。
 
+## Dopamine / se3
+
+iPhone SE 3（Dopamine、A15、iOS 17.0.3）では、ip8 / iPad7,4（いずれも `/cores/binpack` 系の systemhook）で建てた `libpcsclite1` 2.5.1-3 を入れると、`dlopen` / 依存ロード時に `SIGKILL - CODESIGNING`（`Invalid Page`）になる。同じ iOS 17 系の iPad では問題ないので、単純な OS 版差ではない。
+
+2.5.1-4 は se3 上で再ビルドし、`package_libpcsclite` で dylib に `ldid -S` を明示している（`tidy_resign` の失敗握りつぶしを避ける）。
+
 ## 端末
 
 ```sh
 sudo apt install flex
-./make.sh pcsc-lite
+# Dopamine: bin/cc は bash ラッパーで posix_spawn EPERM になるので clang を直指定
+CC=/var/jb/usr/bin/clang CXX=/var/jb/usr/bin/clang++ ./make.sh pcsc-lite
 sudo dpkg -i packages/pcsc-lite/arm64/libpcsclite1_*.deb \
   packages/pcsc-lite/arm64/pcscd_*.deb \
   packages/pcsc-lite/arm64/libpcsclite-dev_*.deb

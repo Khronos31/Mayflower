@@ -12,7 +12,7 @@
 
 pkgname=pcsc-lite
 pkgver=2.5.1
-pkgrel=3
+pkgrel=4
 srcname="pcsc-lite-${pkgver}"
 source="https://pcsclite.apdu.fr/files/pcsc-lite-${pkgver}.tar.xz"
 subpkgs=(libpcsclite pcscd dev)
@@ -78,6 +78,7 @@ if "#ifndef __APPLE__" not in t:
 t = t.replace("#ifndef __APPLE__", "#if 1 /* MAYFLOWER_DLOPEN */", 1)
 p.write_text(t)
 PY
+  python3 "${PROJECTROOT}/files/skip-pod2man.py" "${srcdir}/meson.build"
 }
 
 build() {
@@ -157,8 +158,12 @@ package_libpcsclite() {
   local d="$(_destdir)"
   install -d "${pkgdir}${JB}/usr/lib"
   install -m755 "${d}${JB}/usr/lib/libpcsclite.1.dylib" "${pkgdir}${JB}/usr/lib/"
+  # Dopamine (se3) は未署名/不正ページの dylib を CODESIGNING Invalid Page で落とす。
+  # tidy_resign の ldid 失敗は || true で握りつぶされるので、ここで明示署名する。
+  ldid -S"${ENTFILE}" "${pkgdir}${JB}/usr/lib/libpcsclite.1.dylib"
   if [ -f "${d}${JB}/usr/lib/libpcsclite_real.1.dylib" ]; then
     install -m755 "${d}${JB}/usr/lib/libpcsclite_real.1.dylib" "${pkgdir}${JB}/usr/lib/"
+    ldid -S"${ENTFILE}" "${pkgdir}${JB}/usr/lib/libpcsclite_real.1.dylib"
     ln -s libpcsclite_real.1.dylib "${pkgdir}${JB}/usr/lib/libpcsclite_real.dylib"
     ln -s libpcsclite_real.1.dylib "${pkgdir}${JB}/usr/lib/libpcsclite_real.so.1"
   fi
