@@ -1,0 +1,3 @@
+fishhook (files/fishhook.c, files/fishhook.h) is Copyright (c) 2013, Facebook, Inc.
+See the BSD-3-Clause notice at the top of fishhook.c / fishhook.h.
+Used by mayflower_spawn for process-local posix_spawn rebinding on Dopamine.

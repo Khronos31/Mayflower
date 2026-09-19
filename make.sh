@@ -179,6 +179,25 @@ if [ "${ios_compat:-0}" = 1 ]; then
   export LDFLAGS="${LDFLAGS} -L${BUILDROOT} -lios_compat"
 fi
 
+# mayflower_spawn + -liosexec（端末ビルドのみ）
+#
+# libiosexec の dyld interpose は Dopamine の systemhook が __posix_spawn を
+# 差し替えたあとでは効かない。fishhook でプロセス内の posix_spawn /
+# posix_spawnp を張り直し、EPERM/ENOEXEC の shebang を interpreter argv で
+# 再試行する（files/mayflower_spawn.c）。-liosexec は他の ie_* 呼び出し用。
+# Mac ホストでのパッケージ作業（claude-code 等）ではスキップする。
+if [ "$(uname -s)" != "Darwin" ]; then
+  echo "==> mayflower_spawn: fishhook posix_spawn + -liosexec"
+  mkdir -p "${BUILDROOT}"
+  clang -O2 -I"${ROOTDIR}/files" -c "${ROOTDIR}/files/mayflower_spawn.c"     -o "${BUILDROOT}/mayflower_spawn.o"
+  clang -O2 -I"${ROOTDIR}/files" -c "${ROOTDIR}/files/fishhook.c"     -o "${BUILDROOT}/fishhook.o"
+  rm -f "${BUILDROOT}/libmayflower_spawn.a"
+  "${AR}" rcs "${BUILDROOT}/libmayflower_spawn.a"     "${BUILDROOT}/mayflower_spawn.o" "${BUILDROOT}/fishhook.o"
+  # 静的ライブラリで渡す（ios_compat と同じ理由: LDFLAGS が複数回展開されても
+  # duplicate symbol にならない）。
+  export LDFLAGS="${LDFLAGS} -L${BUILDROOT} -lmayflower_spawn -liosexec"
+fi
+
 if [ "${RESUME_FROM}" != package ]; then
   cd "${BUILDROOT}"
   build

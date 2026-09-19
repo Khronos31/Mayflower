@@ -44,17 +44,35 @@ rootless では rootfs が封印されていて、`/bin` には `df` と `ps` �
 呼ぶなら、そこへ差し替えるパッチを当てる。動的リンクするときは
 `-Wl,-rpath,/var/jb/usr/lib` が要る（Procursus の clang は自動では付けない）。
 
-## PATH wrappers (Mach-O)
+## PATH wrappers (Mach-O) と spawn / libiosexec
+
+Dopamine（se3）では shebang の `posix_spawn` が EPERM になることがあり、対処は
+**二層**ある。
+
+### 層 1: PATH 入り口の Mach-O ラッパー
 
 Mayflower が `/var/jb/usr/bin` に置く起動入り口（`go` / `rustc` / `git-2.55` /
 `node-24` / `swift-6.1` / `claude` など）と、ビルド用の `bin/cc`・`bin/c++`・
-`bin/make` は **shebang スクリプトではなく Mach-O** にする。
+`bin/make` は **shebang スクリプトではなく Mach-O** にする。llvm の
+`toolchain-wrapper.c` と同じく、パッケージ時に `files/mayflower-exec.c`
+（および用途別の `.c`）をコンパイルして `ldid` 署名する。ヘルパーは
+`files/mayflower-exec.sh`。
 
-Dopamine（se3）では `posix_spawn` が shebang を解釈せず EPERM になることがあり、
-libiosexec のインターポーズだけでは足りない。llvm の `toolchain-wrapper.c` と同じく、
-パッケージ時に `files/mayflower-exec.c`（および用途別の `.c`）をコンパイルして
-`ldid` 署名する。ヘルパーは `files/mayflower-exec.sh`。
+### 層 2: `mayflower_spawn`（fishhook）+ `-liosexec`
 
+端末上の `./make.sh` ビルドでは、既定の `LDFLAGS` に
+`-lmayflower_spawn -liosexec` を足す（`make.sh`、ios_compat と同様に静的
+ライブラリ化）。
+
+- **`-liosexec`**: Procursus の dyld interpose（`ie_posix_spawn` 等）。他の
+  `ie_*` 呼び出しにも必要。
+- **`-lmayflower_spawn`**: `files/mayflower_spawn.c` + Facebook fishhook
+  （`files/fishhook.c` / `fishhook.h`、BSD-3-Clause）。Dopamine の systemhook が
+  `__posix_spawn` を差し替えると dyld interpose は効かないため、プロセス内で
+  `posix_spawn` / `posix_spawnp` を fishhook し、EPERM/ENOEXEC の shebang を
+  interpreter argv で再試行する。
+
+Mac ホストでのパッケージ作業（`claude-code` 等）ではこの層はスキップする。
 
 **シェバンに `/bin/bash` や `/usr/bin/env` は書けない。** どちらのパスも存在しない。
 libiosexec を引いている実行ファイルから呼ばれた場合だけ解決されるため一見動くが、
