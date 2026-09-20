@@ -11,10 +11,15 @@
 #
 # ファームウェアは同梱しない。PC/SC IFD は libpcsclite-dev のヘッダで建て、
 # dylib を pcscd が dlopen する（macOS bundle は使わない）。
+#
+# se3 実機: 薄い entitlements の libusb 列挙はデバイス有りでも 0 件。
+# px4-usb-probe を同じ USB entitlements で入れてシリアルを出す。
+# iOS に XDG_RUNTIME_DIR が無く、runtime-dir は 0700・同一 uid 必須。
+# PATH の px4d/px4-ts/px4ctl はラッパーで ${JB}/var/run/px4-userland を足す。
 
 pkgname=px4-userland
 pkgver=0.1.3
-pkgrel=3
+pkgrel=4
 srcname="px4-userland-${pkgver}"
 source="https://github.com/Khronos31/px4-userland/archive/refs/tags/v${pkgver}.tar.gz"
 
@@ -50,13 +55,13 @@ build() {
     -DPX4_LIBUSB_INCLUDE_DIR="${JB}/usr/include/libusb-1.0" \
     -DPX4_LIBUSB_LIBRARY="${JB}/usr/lib/libusb-1.0.dylib" \
     -DPX4_BUILD_TESTS=OFF \
-    -DPX4_BUILD_TOOLS=OFF \
+    -DPX4_BUILD_TOOLS=ON \
     -DPX4_BUILD_PCSC_IFD=ON \
     -DPX4_REQUIRE_PCSC_IFD=ON \
     -DCMAKE_EXE_LINKER_FLAGS="${LDFLAGS} ${abort_o} -lobjc -Wl,-framework,IOKit -Wl,-framework,CoreFoundation -Wl,-framework,Security -Wl,-stack_size,0x800000" \
     -DCMAKE_SHARED_LINKER_FLAGS="${LDFLAGS} ${abort_o}"
 
-  cmake --build build --target px4d px4-ts px4ctl px4_ifdhandler
+  cmake --build build --target px4d px4-ts px4ctl px4_ifdhandler px4-usb-probe
 }
 
 check() {
@@ -65,6 +70,7 @@ check() {
   ./px4d --help >/dev/null
   ./px4-ts --help >/dev/null
   ./px4ctl --help >/dev/null
+  ./px4-usb-probe --help >/dev/null
   test -f ./libpx4-userland-ifd.dylib
 }
 
@@ -75,9 +81,21 @@ package() {
   install -d "${pkgdir}${JB}/usr/bin" \
     "${pkgdir}${JB}/usr/lib/px4-userland" \
     "${pkgdir}${JB}/usr/share/px4-userland"
-  install -m755 build/px4d "${pkgdir}${JB}/usr/bin/px4d"
-  install -m755 build/px4-ts "${pkgdir}${JB}/usr/bin/px4-ts"
-  install -m755 build/px4ctl "${pkgdir}${JB}/usr/bin/px4ctl"
+  install -m755 build/px4d "${pkgdir}${JB}/usr/lib/px4-userland/px4d"
+  install -m755 build/px4-ts "${pkgdir}${JB}/usr/lib/px4-userland/px4-ts"
+  install -m755 build/px4ctl "${pkgdir}${JB}/usr/lib/px4-userland/px4ctl"
+  local b
+  for b in px4d px4-ts px4ctl; do
+    ldid -S"${ENTFILE}" "${pkgdir}${JB}/usr/lib/px4-userland/${b}"
+  done
+  mayflower_wrapper_compile "${pkgdir}${JB}/usr/bin/px4d" \
+    "${ROOTDIR}/files/mayflower-px4.c" -DTOOL='"px4d"' -DPX4_INJECT_FIRMWARE=1
+  mayflower_wrapper_compile "${pkgdir}${JB}/usr/bin/px4-ts" \
+    "${ROOTDIR}/files/mayflower-px4.c" -DTOOL='"px4-ts"'
+  mayflower_wrapper_compile "${pkgdir}${JB}/usr/bin/px4ctl" \
+    "${ROOTDIR}/files/mayflower-px4.c" -DTOOL='"px4ctl"'
+  install -m755 build/px4-usb-probe "${pkgdir}${JB}/usr/bin/px4-usb-probe"
+  ldid -S"${ENTFILE}" "${pkgdir}${JB}/usr/bin/px4-usb-probe"
   install -m755 build/libpx4-userland-ifd.dylib \
     "${pkgdir}${JB}/usr/lib/px4-userland/libpx4-userland-ifd.dylib"
   ldid -S"${ENTFILE}" "${pkgdir}${JB}/usr/lib/px4-userland/libpx4-userland-ifd.dylib"
