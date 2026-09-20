@@ -7,7 +7,8 @@ LuaRocks 3.13.0。Lua 5.5 専用。
 ## パッケージ情報
 
 - パッケージ名: `luarocks`（Procursus に無い）
-- 版: 3.13.0-2
+- 版: 3.13.0-3
+- PATH の `luarocks` / `luarocks-admin` は Mach-O ラッパー。スクリプトは libexec。
 - Depends: `lua5.5`, `liblua5.5-0`, `liblua5.5-dev`, `unzip`, `curl`
 
 ユーザートリーは `~/.luarocks`。システムツリーは `/var/jb/usr/local`。
