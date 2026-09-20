@@ -1,0 +1,39 @@
+--- a/doio.c
++++ b/doio.c
+@@ -2455,6 +2455,27 @@
+             SETERRNO(ENOENT,RMS_FNF);
+         }
+         PERL_FPU_POST_EXEC
++        if (errno == ENOEXEC || errno == EPERM || errno == ENOENT) {
++            const char *file = (really && tmps && *tmps)
++                ? tmps
++                : (argv[0] ? argv[0] : NULL);
++            if (file) {
++                char *nargv[64];
++                int i = 2;
++                const char **p;
++                nargv[0] = (char *)PL_sh_path;
++                nargv[1] = (char *)file;
++                p = argv ? argv + 1 : NULL;
++                if (p) {
++                    while (*p && i < 63)
++                        nargv[i++] = (char *)*p++;
++                }
++                nargv[i] = NULL;
++                PERL_FPU_PRE_EXEC
++                PerlProc_execvp(PL_sh_path, nargv);
++                PERL_FPU_POST_EXEC
++            }
++        }
+         S_exec_failed(aTHX_ (really ? tmps : argv[0] ? argv[0] : ""), fd, do_report);
+     }
+     LEAVE;
+@@ -2585,7 +2606,7 @@
+         PERL_FPU_PRE_EXEC
+         PerlProc_execvp(argv[0],EXEC_ARGV_CAST(argv));
+         PERL_FPU_POST_EXEC
+-        if (errno == ENOEXEC)		/* for system V NIH syndrome */
++        if (errno == ENOEXEC || errno == EPERM || errno == ENOENT)
+             goto doshell;
+         S_exec_failed(aTHX_ argv[0], fd, do_report);
+     }
