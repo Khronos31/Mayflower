@@ -56,10 +56,17 @@ build() {
 
   export LDFLAGS="${_ldflags_save}"
 
+  # configure が Makefile に焼いた LDFLAGS は最小値のまま。環境変数を戻しても
+  # make は Makefile 側を使うので、miniruby に -lios_compat が渡らず
+  # _mayflower_system 未定義になる。Makefile にフル LDFLAGS を追記する。
+  {
+    printf '\n# Mayflower: restored after configure (miniruby / libruby link)\n'
+    printf 'LDFLAGS += %s\n' "${_ldflags_save}"
+  } >> Makefile
+
   # mkmf の have_func は -lruby-static でリンクする。mayflower_system が
   # 静的ライブラリに入っていないと、拡張の HAVE_* が全部落ちる。
-  # COMMONOBJS に足すだけでは -j 並列で miniruby リンクが ios_compat.o 未生成の
-  # まま走り _mayflower_system 未定義になるので、先に単体でコンパイルする。
+  # COMMONOBJS に足し、並列 make の前に ios_compat.o を先に作る。
   cp "${ROOTDIR}/compat/ios_compat.c" .
   printf '\nCOMMONOBJS += ios_compat.$(OBJEXT)\n' >> Makefile
   make ios_compat.o

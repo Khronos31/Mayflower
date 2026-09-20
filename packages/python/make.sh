@@ -69,6 +69,7 @@ build() {
   "${CONFIG_SHELL}" configure \
     --build=aarch64-apple-darwin \
     --prefix="${JB}/usr" \
+    --with-openssl="${JB}/usr" \
     --enable-shared \
     `# --with-system-expat は使わない。pyexpat.c が expat_config.h を無条件に` \
     `# include するのに、システムの expat はそれを配布せず、include パスにも` \
