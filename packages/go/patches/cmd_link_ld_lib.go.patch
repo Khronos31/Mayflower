@@ -1,24 +1,6 @@
 --- a/src/cmd/link/internal/ld/lib.go
 +++ b/src/cmd/link/internal/ld/lib.go
-@@ -1937,6 +1937,17 @@
- 		checkStatic(p)
- 	}
- 
-+	// package syscall imports ie_execve from libiosexec, because a rootless
-+	// jailbreak has no /bin/sh and the kernel will not resolve a shebang that
-+	// names an interpreter in the sealed rootfs. ios always links externally,
-+	// and some of those links run with cgo disabled (go_bootstrap is one), so
-+	// the library cannot be attached through the cgo directives of
-+	// runtime/cgo. The jailbreak prefix is not on dyld's default search path,
-+	// hence the rpath.
-+	if buildcfg.GOOS == "ios" {
-+		argv = append(argv, "-liosexec", "-Wl,-rpath,/var/jb/usr/lib")
-+	}
-+
- 	// When building a program with the default -buildmode=exe the
- 	// gc compiler generates code requires DT_TEXTREL in a
- 	// position independent executable (PIE). On systems where the
-@@ -2155,6 +2166,41 @@
+@@ -2155,6 +2155,41 @@
  			Exitf("%s: code signing failed: %v", os.Args[0], err)
  		}
  	}

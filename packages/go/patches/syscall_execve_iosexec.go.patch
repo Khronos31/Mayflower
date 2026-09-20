@@ -1,6 +1,6 @@
 --- /dev/null
 +++ b/src/syscall/execve_iosexec.go
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,72 @@
 +// Copyright 2026 The Go Authors. All rights reserved.
 +// Use of this source code is governed by a BSD-style
 +// license that can be found in the LICENSE file.
@@ -14,21 +14,43 @@
 +	"unsafe"
 +)
 +
-+// On a rootless jailbreak the sealed rootfs has no /bin/sh, and the kernel
-+// will not resolve a shebang line that names an interpreter there. libiosexec
-+// re-implements execve so that both the program path and the interpreter of a
-+// shebang script are looked up under the jailbreak prefix first. Everything
-+// that ends up in an exec, including os/exec and syscall.Exec, goes through
-+// here, so importing ie_execve in place of execve is enough.
++// jailbreakSh is /var/jb/bin/sh with a trailing NUL. Kept in BSS so the
++// retry path can run after fork without allocating.
++var jailbreakSh = [15]byte{'/', 'v', 'a', 'r', '/', 'j', 'b', '/', 'b', 'i', 'n', '/', 's', 'h', 0}
 +
 +func execve(path *byte, argv **byte, envp **byte) (err error) {
 +	_, _, e1 := rawSyscall(abi.FuncPCABI0(libc_execve_trampoline), uintptr(unsafe.Pointer(path)), uintptr(unsafe.Pointer(argv)), uintptr(unsafe.Pointer(envp)))
-+	if e1 != 0 {
-+		err = errnoErr(e1)
++	if e1 == 0 {
++		return nil
 +	}
-+	return
++	// Dopamine returns EPERM for shebang scripts; ENOEXEC is the POSIX
++	// fallback. Retry as: /var/jb/bin/sh <path> <argv[1:]...>
++	if e1 == EPERM || e1 == ENOEXEC {
++		var nargv [64]*byte
++		nargv[0] = &jailbreakSh[0]
++		nargv[1] = path
++		i := 2
++		if argv != nil {
++			p := argv
++			if *p != nil {
++				p = (**byte)(unsafe.Pointer(uintptr(unsafe.Pointer(p)) + unsafe.Sizeof(p)))
++			}
++			for *p != nil && i < len(nargv)-1 {
++				nargv[i] = *p
++				i++
++				p = (**byte)(unsafe.Pointer(uintptr(unsafe.Pointer(p)) + unsafe.Sizeof(p)))
++			}
++		}
++		nargv[i] = nil
++		_, _, e2 := rawSyscall(abi.FuncPCABI0(libc_execve_trampoline), uintptr(unsafe.Pointer(&jailbreakSh[0])), uintptr(unsafe.Pointer(&nargv[0])), uintptr(unsafe.Pointer(envp)))
++		if e2 == 0 {
++			return nil
++		}
++		e1 = e2
++	}
++	return errnoErr(e1)
 +}
 +
 +func libc_execve_trampoline()
 +
-+//go:cgo_import_dynamic libc_execve ie_execve "/var/jb/usr/lib/libiosexec.1.dylib"
++//go:cgo_import_dynamic libc_execve execve "/usr/lib/libSystem.B.dylib"

@@ -34,7 +34,7 @@
 # CFBundleCopyBundleURL に残す形。**Go1.27.2 が出たらそこへ移る。**
 pkgname=go
 pkgver=1.26.8
-pkgrel=3
+pkgrel=4
 srcname=go
 source="https://go.dev/dl/go${pkgver}.src.tar.gz"
 subpkgs=(go src bin)
@@ -103,8 +103,15 @@ func main() {
 	fmt.Println("go hello")
 	out, err := exec.Command("uname", "-m").Output()
 	fmt.Printf("exec %q err=%v\n", string(out), err)
+	out, err = exec.Command("./t.sh").CombinedOutput()
+	if err != nil || string(out) != "shebang-ok\n" {
+		panic(err)
+	}
+	fmt.Printf("shebang %q\n", string(out))
 }
 EOF
+  printf '%s\n' '#!/var/jb/bin/sh' 'echo shebang-ok' > t.sh
+  chmod 755 t.sh
   cat > go.mod <<'EOF'
 module hello
 
