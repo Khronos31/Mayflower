@@ -13,6 +13,17 @@ entitlements 無しの `ldid -S` でも足りない。`platform-application` と
 これは clang を呼んだあと出力を `ldid -S` するラッパーで、`configure` が作る
 テストバイナリのような「ビルドの途中で実行される実行ファイル」もこれで動く。
 
+Dopamine では shebang の `posix_spawn` が EPERM になる。`bin/cc`・`bin/c++`・
+`bin/make` は shebang スクリプトではなく Mach-O にする（`files/mayflower-cc.c` /
+`mayflower-make.c`、`make.sh` の `ensure_bin_wrappers`）。パッケージが PATH に
+置く起動入り口（`git-2.55` / `node-24` / `go` 等）も同じで、
+`files/mayflower-exec.c` をコンパイルする。
+
+fishhook で `posix_spawn` を張り替える案は使わない。iOS 16 の chained fixups
+上で、15 行の C から `posix_spawn("/var/jb/usr/bin/echo")` しても SIGSEGV する。
+shebang 直 exec は各処理系のソースで EPERM を Mach-O の `/var/jb/bin/sh` 経由に
+回す（Ruby の `try_with_sh`、Python の `_posixsubprocess`）。
+
 ### 自前のリンカを持つ言語では、`dsymutil` を探す
 
 Go や Rust や Nim のように**自分でリンカを起動する**処理系は、ラッパーを
