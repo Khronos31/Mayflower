@@ -69,8 +69,14 @@ ensure_bin_wrappers() {
   [ -n "${hostcc}" ] || { echo "ensure_bin_wrappers: no clang/cc" >&2; return 1; }
   compile_one() {
     local out="$1" srcname="$2"; shift 2
+    local mag
+    # bin/ のプレースホルダ（UTF-8 テキスト）は -x かつソースより新しいことがあり、
+    # 素の -nt 判定だと再コンパイルされない。Mach-O magic を見て弾く。
     if [ -x "${out}" ] && [ "${out}" -nt "${srcdir}/${srcname}" ]; then
-      return 0
+      mag="$(dd if="${out}" bs=4 count=1 2>/dev/null | od -An -tx1 | tr -d " \n")"
+      case "${mag}" in
+        cffaedfe|feedfacf|cefaedfe|feedface) return 0 ;;
+      esac
     fi
     "${hostcc}" -O2 -o "${out}" "${srcdir}/${srcname}" "$@"
     ldid -S"${ent}" "${out}"
