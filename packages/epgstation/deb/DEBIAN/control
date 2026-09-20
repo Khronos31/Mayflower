@@ -1,0 +1,17 @@
+Package: epgstation
+Name: EPGStation
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Utilities
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: nodejs-24, nodejs-sqlite3
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/l3tnun/EPGStation
+Tag: purpose::console
+Description: DTV recording manager (Mirakurun/mirakc client)
+ EPGStation 2.10.0 for rootless jailbreaks. JS payload is built on Mac.
+ Native sqlite3 comes from nodejs-sqlite3. ffmpeg is not required to
+ start; unconverted live and raw TS recording work without it.
+ Default mirakurunPath is http://127.0.0.1:40772/. Config lives in
+ /var/jb/var/lib/epgstation/config.yml.

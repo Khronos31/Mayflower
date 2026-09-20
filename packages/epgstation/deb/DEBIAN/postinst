@@ -1,0 +1,19 @@
+#!/var/jb/bin/bash
+set -e
+var=/var/jb/var/lib/epgstation
+lib=/var/jb/usr/lib/epgstation
+template="${lib}/config/config.yml.template"
+
+mkdir -p "${var}/data" "${var}/recorded" "${var}/logs" \
+  "${var}/thumbnail" "${var}/drop" \
+  "${var}/data/upload" "${var}/data/streamfiles"
+
+if [ ! -f "${var}/config.yml" ] && [ -f "${template}" ]; then
+  cp "${template}" "${var}/config.yml"
+fi
+
+if id mobile >/dev/null 2>&1; then
+  chown -R mobile:mobile "${var}"
+fi
+
+exit 0
