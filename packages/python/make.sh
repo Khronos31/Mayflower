@@ -46,6 +46,12 @@ prepare() {
 build() {
   cd "${srcdir}" || return 1
 
+  # rootless では /usr に lzma が無い。無いと _lzma が missing になり check が落ちる。
+  if [ ! -f "${JB}/usr/include/lzma.h" ]; then
+    echo "python: ${JB}/usr/include/lzma.h が無い。liblzma-dev (xz) を apt install してから再実行" >&2
+    return 1
+  fi
+
   # _scproxy は macOS の SystemConfiguration からプロキシ設定を読むモジュールで、
   # 使っている定数が全部 API_UNAVAILABLE(ios)。19 個のエラーになるので外す。
   # configure は Modules/Setup.local が既にあれば上書きしないが、ここで書くのは

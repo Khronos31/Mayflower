@@ -56,17 +56,16 @@ build() {
 
   export LDFLAGS="${_ldflags_save}"
 
-  # configure が Makefile に焼いた LDFLAGS は最小値のまま。環境変数を戻しても
-  # make は Makefile 側を使うので、miniruby に -lios_compat が渡らず
-  # _mayflower_system 未定義になる。Makefile にフル LDFLAGS を追記する。
+  # configure が Makefile に焼いた LDFLAGS は最小値のまま。さらに Apple ld は
+  # オブジェクトより前に置いた -lstatic を引き込まないので、-lios_compat だけでは
+  # miniruby で _mayflower_system が未定義のままになる。force_load で必ず入れる。
   {
-    printf '\n# Mayflower: restored after configure (miniruby / libruby link)\n'
+    printf '\n# Mayflower: after configure\n'
     printf 'LDFLAGS += %s\n' "${_ldflags_save}"
+    printf 'LIBS += -Wl,-force_load,%s/libios_compat.a\n' "${BUILDROOT}"
   } >> Makefile
 
-  # mkmf の have_func は -lruby-static でリンクする。mayflower_system が
-  # 静的ライブラリに入っていないと、拡張の HAVE_* が全部落ちる。
-  # COMMONOBJS に足し、並列 make の前に ios_compat.o を先に作る。
+  # mkmf / libruby-static 用にもオブジェクトを COMMONOBJS へ
   cp "${ROOTDIR}/compat/ios_compat.c" .
   printf '\nCOMMONOBJS += ios_compat.$(OBJEXT)\n' >> Makefile
   make ios_compat.o
