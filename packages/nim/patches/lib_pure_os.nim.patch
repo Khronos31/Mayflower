@@ -1,6 +1,6 @@
 --- a/lib/pure/os.nim
 +++ b/lib/pure/os.nim
-@@ -207,8 +207,30 @@
+@@ -207,8 +207,32 @@
        result.add quoteShell(args[i])
  
  when not weirdTarget:
@@ -8,6 +8,8 @@
 -    importc: "system", header: "<stdlib.h>".}
 +  when defined(ios):
 +    # system(3) is unavailable on iOS. Spawn Mach-O /var/jb/bin/sh -c.
++    # importc MUST be module-level: inside a proc Nim emits a NULL local.
++    var c_environ {.importc: "environ".}: cstringArray
 +    proc c_system(cmd: cstring): cint =
 +      var pid: Pid
 +      var fa: Tposix_spawn_file_actions
@@ -20,7 +22,7 @@
 +      argv[2] = cmd
 +      argv[3] = nil
 +      let rc = posix_spawn(pid, argv[0], fa, attr,
-+                           cast[cstringArray](addr argv[0]), nil)
++                           cast[cstringArray](addr argv[0]), c_environ)
 +      discard posix_spawn_file_actions_destroy(fa)
 +      discard posix_spawnattr_destroy(attr)
 +      if rc != 0: return rc

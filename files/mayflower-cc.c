@@ -46,15 +46,25 @@ main(int argc, char **argv)
 	char **cargv;
 	int i;
 
-	cargv = calloc((size_t)argc + 1, sizeof(char *));
+	cargv = calloc((size_t)argc + 2, sizeof(char *));
 	if (cargv == NULL) {
 		perror("mayflower-cc: calloc");
 		return 127;
 	}
 	cargv[0] = (char *)COMPILER;
+	cargv[1] = "-B/var/jb/usr/bin";
 	for (i = 1; i < argc; i++)
-		cargv[i] = argv[i];
-	cargv[argc] = NULL;
+		cargv[i + 1] = argv[i];
+	cargv[argc + 1] = NULL;
+
+	{
+		const char *old = getenv("PATH");
+		char npath[4096];
+
+		snprintf(npath, sizeof(npath), "/var/jb/usr/bin:/var/jb/bin:%s",
+		    old != NULL ? old : "");
+		setenv("PATH", npath, 1);
+	}
 
 	pid = fork();
 	if (pid < 0) {
@@ -62,6 +72,7 @@ main(int argc, char **argv)
 		return 127;
 	}
 	if (pid == 0) {
+		execv("/var/jb/usr/bin/" COMPILER, cargv);
 		execvp(COMPILER, cargv);
 		fprintf(stderr, "mayflower-cc: exec \"%s\": %s\n", COMPILER, strerror(errno));
 		_exit(127);
@@ -80,10 +91,8 @@ main(int argc, char **argv)
 		return 0;
 
 	ent = getenv("ENTFILE");
-	if (ent == NULL || ent[0] == '\0') {
-		fprintf(stderr, "mayflower-cc: ENTFILE is unset\n");
-		return 1;
-	}
+	if (ent == NULL || ent[0] == '\0')
+		return 0;
 
 	pid = fork();
 	if (pid < 0) {
@@ -93,6 +102,7 @@ main(int argc, char **argv)
 	if (pid == 0) {
 		char flag[4096];
 		snprintf(flag, sizeof(flag), "-S%s", ent);
+		execl("/var/jb/usr/bin/ldid", "ldid", flag, output, (char *)NULL);
 		execlp("ldid", "ldid", flag, output, (char *)NULL);
 		fprintf(stderr, "mayflower-cc: exec ldid: %s\n", strerror(errno));
 		_exit(127);

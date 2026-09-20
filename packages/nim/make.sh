@@ -62,7 +62,7 @@ build() {
 
   ./bin/nim c "${flags[@]}" koch
   ./koch boot "${flags[@]}"
-  ./koch tools -d:release --ldid.entitlements:"${ENTFILE}"
+  ./koch tools "${flags[@]}"
 }
 
 # 素の nim が使えるか（ラッパー無し・並列ビルド既定）を実際に確かめる。
