@@ -14,7 +14,7 @@
 
 pkgname=px4-userland
 pkgver=0.1.3
-pkgrel=2
+pkgrel=3
 srcname="px4-userland-${pkgver}"
 source="https://github.com/Khronos31/px4-userland/archive/refs/tags/v${pkgver}.tar.gz"
 
@@ -47,6 +47,8 @@ build() {
     -DCMAKE_MAKE_PROGRAM="${ROOTDIR}/bin/make" \
     -DCMAKE_CXX_COMPILER="${CXX}" \
     -DCMAKE_PREFIX_PATH="${JB}/usr" \
+    -DPX4_LIBUSB_INCLUDE_DIR="${JB}/usr/include/libusb-1.0" \
+    -DPX4_LIBUSB_LIBRARY="${JB}/usr/lib/libusb-1.0.dylib" \
     -DPX4_BUILD_TESTS=OFF \
     -DPX4_BUILD_TOOLS=OFF \
     -DPX4_BUILD_PCSC_IFD=ON \
@@ -81,8 +83,8 @@ package() {
   ldid -S"${ENTFILE}" "${pkgdir}${JB}/usr/lib/px4-userland/libpx4-userland-ifd.dylib"
   install -m644 packaging/pcsc/reader.conf.d/px4-userland.conf.in \
     "${pkgdir}${JB}/usr/share/px4-userland/px4-userland.conf.in"
-  install -m755 "${PROJECTROOT}/files/px4-pcsc-register" \
-    "${pkgdir}${JB}/usr/bin/px4-pcsc-register"
+  mayflower_wrapper_compile "${pkgdir}${JB}/usr/bin/px4-pcsc-register" \
+    "${ROOTDIR}/files/mayflower-px4-pcsc-register.c" -DJB="\"${JB}\""
 
   install -d "${pkgdir}${JB}/usr/share/licenses/px4-userland"
   install -m644 LICENSE "${pkgdir}${JB}/usr/share/licenses/px4-userland/"
