@@ -13,10 +13,15 @@
 # 有効にするので、明示して切る。あとで足す余地はある。
 #
 # Procursus に ruby は無いので、同名を避ける必要はない。
+#
+# palera1n と Dopamine では configure の have_func が食い違う（Dopamine は
+# shebang の posix_spawn が EPERM）。spawn の有無は検出に頼らず、脱獄では
+# fork+exec が使える前提で cache を固定する。ビルドは palera1n（ip8）、
+# 成果物の subprocess 確認は Dopamine（se3）。
 
 pkgname=ruby
 pkgver=4.0.6
-pkgrel=1
+pkgrel=3
 srcname="ruby-${pkgver}"
 source="https://cache.ruby-lang.org/pub/ruby/4.0/ruby-${pkgver}.tar.xz"
 
@@ -33,10 +38,20 @@ prepare() {
 build() {
   cd "${srcdir}" || return 1
 
-  # getentropy は iOS ヘッダで API_UNAVAILABLE。configure のリンク試験は通るが
-  # コンパイルで未宣言になる（Python と同じ）。
+  # ドライバの ios_compat.o は -target 無しで SDK 既定（16.2）になる。
+  # ruby の configure は ld の「newer iOS version」警告を LDFLAGS 不正とみなす。
+  clang -O2 ${CFLAGS} -c "${ROOTDIR}/compat/ios_compat.c" -o "${BUILDROOT}/ios_compat.o"
+  rm -f "${BUILDROOT}/libios_compat.a"
+  "${AR}" rcs "${BUILDROOT}/libios_compat.a" "${BUILDROOT}/ios_compat.o"
+
+  # getentropy / clock_settime は iOS ヘッダで API_UNAVAILABLE。
+  # fork は have_func に頼らない（Dopamine では試験バイナリの spawn が EPERM）。
   ac_cv_func_getentropy=no \
   ac_cv_func_clock_settime=no \
+  ac_cv_func_fork=yes \
+  ac_cv_func_fork_works=yes \
+  ac_cv_func_vfork=no \
+  ac_cv_func_vfork_works=no \
   "${CONFIG_SHELL}" configure \
     --build=aarch64-apple-darwin \
     --prefix="${JB}/usr" \
@@ -58,7 +73,6 @@ build() {
 
 check() {
   cd "${srcdir}" || return 1
-  # 建てた ruby が動き、シェルと Fiber が使えるかを見る。YJIT は入っていない。
   DYLD_LIBRARY_PATH="${srcdir}" ./ruby \
     -I.ext/arm64-darwin -I.ext/common -Ilib -e '
     raise "yjit" if defined?(RubyVM::YJIT) && RubyVM::YJIT.respond_to?(:enabled?) && RubyVM::YJIT.enabled?
@@ -67,11 +81,35 @@ check() {
     puts "platform #{RUBY_PLATFORM}"
     f = Fiber.new { Fiber.yield "ok" }
     puts "fiber   #{f.resume}"
-    puts "system  #{system("echo", "system-ok")}"
-    puts "shell   #{`echo shell-ok`.strip}"
+    raise "system-array" unless system("echo", "system-ok")
+    raise "system-shell" unless system("echo system-shell-ok")
+    sh = `echo shell-ok`.strip
+    raise "backtick #{sh.inspect}" unless sh == "shell-ok"
+    pid = spawn("/var/jb/bin/sh", "-c", "exit 0")
+    Process.wait(pid)
+    raise "spawn" unless $?.success?
+    require "open3"
+    o, s = Open3.capture2("/var/jb/bin/sh", "-c", "echo open3-ok")
+    raise "open3 #{o.inspect}" unless s.success? && o.strip == "open3-ok"
+    require "pty"
+    out = ""
+    PTY.spawn("/var/jb/bin/sh", "-c", "echo pty-ok") do |r, w, p|
+      out = r.gets.to_s.strip
+      w.close
+      Process.wait(p)
+    end
+    raise "pty #{out.inspect}" unless out.include?("pty-ok")
+    shbang = "/var/tmp/mayflower-rb-shebang.sh"
+    File.write(shbang, "#!/var/jb/bin/sh\necho rb-shebang-ok\n")
+    File.chmod(0755, shbang)
+    out = IO.popen([shbang], &:read)
+    File.unlink(shbang) rescue nil
+    raise "shebang #{out.inspect}" unless out.include?("rb-shebang-ok")
+    puts "shebang #{out.strip}"
     require "openssl"; puts "ssl     #{OpenSSL::OPENSSL_VERSION}"
     require "yaml";    puts "yaml    ok"
     require "zlib";    puts "zlib    ok"
+    puts "subprocess ok"
   '
 }
 
@@ -86,7 +124,6 @@ package() {
   local f
   for f in bin/ruby lib/libruby.dylib; do
     if [ ! -e "${pkgdir}${JB}/usr/${f}" ]; then
-      # 共有ライブラリの実名は libruby.4.0.dylib など。どれかがあればよい。
       case "$f" in
         lib/libruby.dylib)
           ls "${pkgdir}${JB}/usr/lib"/libruby*.dylib >/dev/null 2>&1 || {

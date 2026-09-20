@@ -1,6 +1,16 @@
 --- a/process.c
 +++ b/process.c
-@@ -1617,9 +1617,9 @@
+@@ -1612,7 +1612,8 @@
+ COMPILER_WARNING_POP
+ 
+ /* try_with_sh and exec_with_sh should be async-signal-safe. Actually it is.*/
+-#define try_with_sh(err, prog, argv, envp) ((err == ENOEXEC) ? exec_with_sh((prog), (argv), (envp)) : (void)0)
++/* Dopamine: shebang の execve/posix_spawn は EPERM。Mach-O の sh 経由でやり直す。 */
++#define try_with_sh(err, prog, argv, envp) ((err == ENOEXEC || err == EPERM) ? exec_with_sh((prog), (argv), (envp)) : (void)0)
+ static void
+ exec_with_sh(const char *prog, char **argv, char **envp)
+ {
+@@ -1617,9 +1619,9 @@
      *argv = (char *)prog;
      *--argv = (char *)"sh";
      if (envp)
