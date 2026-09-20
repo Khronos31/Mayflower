@@ -67,9 +67,11 @@ build() {
 
   export LDFLAGS="${_ldflags_save}"
 
-  # mayflower_system: main と同じ COMMONOBJS 経路（force_load / 事前 .o は使わない）
+  # mayflower_system: main と同じ COMMONOBJS 経路（force_load は使わない）。
+  # miniruby ルールは COMMONOBJS を前提に持たないので、リンク前に .o を作る。
   cp "${ROOTDIR}/compat/ios_compat.c" .
   printf '\nCOMMONOBJS += ios_compat.$(OBJEXT)\n' >> Makefile
+  make ios_compat.o
 
   # configure が焼いた LDFLAGS には spawn が無い。LIBS で一度だけ足す。
   # -target もリンク行に要るので COMMON_FLAGS だけ戻す（LDFLAGS 全体の焼き直しはしない）。
