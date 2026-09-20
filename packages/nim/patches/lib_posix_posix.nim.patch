@@ -1,42 +1,42 @@
 --- a/lib/posix/posix.nim
 +++ b/lib/posix/posix.nim
-@@ -521,14 +521,27 @@
- proc dup2*(a1, a2: cint): cint {.importc, header: "<unistd.h>".}
- proc encrypt*(a1: array[0..63, char], a2: cint) {.importc, header: "<unistd.h>".}
- 
--proc execl*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
--proc execle*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
--proc execlp*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
+@@ -524,9 +524,32 @@
+ proc execl*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
+ proc execle*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
+ proc execlp*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
 -proc execv*(a1: cstring, a2: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
 -proc execve*(a1: cstring, a2, a3: cstringArray): cint {.
 -  importc, header: "<unistd.h>", sideEffect.}
--proc execvp*(a1: cstring, a2: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
--proc execvpe*(a1: cstring, a2: cstringArray, a3: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
-+when defined(ios) and defined(libiosexec):
-+  # Rootless jailbreaks have no /bin/sh; libiosexec resolves shebangs and
-+  # interpreter paths under the jailbreak prefix.
-+  {.passL: "-liosexec".}
-+  proc execl*(a1, a2: cstring): cint {.varargs, importc: "ie_execl", sideEffect.}
-+  proc execle*(a1, a2: cstring): cint {.varargs, importc: "ie_execle", sideEffect.}
-+  proc execlp*(a1, a2: cstring): cint {.varargs, importc: "ie_execlp", sideEffect.}
-+  proc execv*(a1: cstring, a2: cstringArray): cint {.importc: "ie_execv", sideEffect.}
-+  proc execve*(a1: cstring, a2, a3: cstringArray): cint {.
-+    importc: "ie_execve", sideEffect.}
-+  proc execvp*(a1: cstring, a2: cstringArray): cint {.importc: "ie_execvp", sideEffect.}
-+  proc execvpe*(a1: cstring, a2: cstringArray, a3: cstringArray): cint {.importc: "ie_execvpe", sideEffect.}
++when defined(ios):
++  var c_environ {.importc: "environ".}: cstringArray
++  # Dopamine: shebang execve is EPERM. Retry via Mach-O /var/jb/bin/sh.
++  proc execve_raw(a1: cstring, a2, a3: cstringArray): cint {.
++    importc: "execve", header: "<unistd.h>", sideEffect.}
++  proc execve*(a1: cstring, a2, a3: cstringArray): cint {.sideEffect.} =
++    result = execve_raw(a1, a2, a3)
++    if result == -1 and (errno == EPERM or errno == ENOEXEC or errno == ENOENT):
++      var nargv: array[64, cstring]
++      nargv[0] = "/var/jb/bin/sh"
++      nargv[1] = a1
++      var i = 2
++      if a2 != nil:
++        var j = 1
++        while a2[j] != nil and i < 63:
++          nargv[i] = a2[j]
++          inc i
++          inc j
++      nargv[i] = nil
++      result = execve_raw(nargv[0], cast[cstringArray](addr nargv[0]), a3)
++  proc execv*(a1: cstring, a2: cstringArray): cint {.sideEffect.} =
++    execve(a1, a2, c_environ)
 +else:
-+  proc execl*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
-+  proc execle*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
-+  proc execlp*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
 +  proc execv*(a1: cstring, a2: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
 +  proc execve*(a1: cstring, a2, a3: cstringArray): cint {.
 +    importc, header: "<unistd.h>", sideEffect.}
-+  proc execvp*(a1: cstring, a2: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
-+  proc execvpe*(a1: cstring, a2: cstringArray, a3: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
+ proc execvp*(a1: cstring, a2: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
+ proc execvpe*(a1: cstring, a2: cstringArray, a3: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
  proc fchown*(a1: cint, a2: Uid, a3: Gid): cint {.importc, header: "<unistd.h>", sideEffect.}
- proc fchdir*(a1: cint): cint {.importc, header: "<unistd.h>", sideEffect.}
- proc fdatasync*(a1: cint): cint {.importc, header: "<unistd.h>".}
-@@ -875,10 +888,16 @@
+@@ -875,10 +897,35 @@
               importc, header: "<sys/select.h>".}
  
  when hasSpawnH:
@@ -44,11 +44,30 @@
 -            a3: var Tposix_spawn_file_actions,
 -            a4: var Tposix_spawnattr,
 -            a5, a6: cstringArray): cint {.importc, header: "<spawn.h>".}
-+  when defined(ios) and defined(libiosexec):
++  when defined(ios):
++    proc posix_spawn_raw(a1: var Pid, a2: cstring,
++              a3: var Tposix_spawn_file_actions,
++              a4: var Tposix_spawnattr,
++              a5, a6: cstringArray): cint {.importc: "posix_spawn", header: "<spawn.h>".}
 +    proc posix_spawn*(a1: var Pid, a2: cstring,
 +              a3: var Tposix_spawn_file_actions,
 +              a4: var Tposix_spawnattr,
-+              a5, a6: cstringArray): cint {.importc: "ie_posix_spawn".}
++              a5, a6: cstringArray): cint =
++      result = posix_spawn_raw(a1, a2, a3, a4, a5, a6)
++      if result == EPERM or result == ENOEXEC or result == ENOENT:
++        var nargv: array[64, cstring]
++        nargv[0] = "/var/jb/bin/sh"
++        nargv[1] = a2
++        var i = 2
++        if a5 != nil:
++          var j = 1
++          while a5[j] != nil and i < 63:
++            nargv[i] = a5[j]
++            inc i
++            inc j
++        nargv[i] = nil
++        result = posix_spawn_raw(a1, nargv[0], a3, a4,
++                                 cast[cstringArray](addr nargv[0]), a6)
 +  else:
 +    proc posix_spawn*(a1: var Pid, a2: cstring,
 +              a3: var Tposix_spawn_file_actions,
@@ -57,7 +76,7 @@
    proc posix_spawn_file_actions_addclose*(a1: var Tposix_spawn_file_actions,
              a2: cint): cint {.importc, header: "<spawn.h>".}
    proc posix_spawn_file_actions_adddup2*(a1: var Tposix_spawn_file_actions,
-@@ -921,10 +940,16 @@
+@@ -921,10 +969,35 @@
                                         importc, header: "<spawn.h>".}
    proc posix_spawnattr_setsigmask*(a1: var Tposix_spawnattr,
              a2: var Sigset): cint {.importc, header: "<spawn.h>".}
@@ -65,11 +84,30 @@
 -            a3: var Tposix_spawn_file_actions,
 -            a4: var Tposix_spawnattr,
 -            a5, a6: cstringArray): cint {.importc, header: "<spawn.h>".}
-+  when defined(ios) and defined(libiosexec):
++  when defined(ios):
++    proc posix_spawnp_raw(a1: var Pid, a2: cstring,
++              a3: var Tposix_spawn_file_actions,
++              a4: var Tposix_spawnattr,
++              a5, a6: cstringArray): cint {.importc: "posix_spawnp", header: "<spawn.h>".}
 +    proc posix_spawnp*(a1: var Pid, a2: cstring,
 +              a3: var Tposix_spawn_file_actions,
 +              a4: var Tposix_spawnattr,
-+              a5, a6: cstringArray): cint {.importc: "ie_posix_spawnp".}
++              a5, a6: cstringArray): cint =
++      result = posix_spawnp_raw(a1, a2, a3, a4, a5, a6)
++      if result == EPERM or result == ENOEXEC or result == ENOENT:
++        var nargv: array[64, cstring]
++        nargv[0] = "/var/jb/bin/sh"
++        nargv[1] = a2
++        var i = 2
++        if a5 != nil:
++          var j = 1
++          while a5[j] != nil and i < 63:
++            nargv[i] = a5[j]
++            inc i
++            inc j
++        nargv[i] = nil
++        result = posix_spawn_raw(a1, nargv[0], a3, a4,
++                                 cast[cstringArray](addr nargv[0]), a6)
 +  else:
 +    proc posix_spawnp*(a1: var Pid, a2: cstring,
 +              a3: var Tposix_spawn_file_actions,

@@ -7,19 +7,39 @@
 -        when not defined(android): "/bin/sh"
 -        else: "/system/bin/sh"
 +        when defined(android): "/system/bin/sh"
-+        elif defined(ios) and defined(libiosexec): "/var/jb/bin/sh"
++        elif defined(ios): "/var/jb/bin/sh"
 +        else: "/bin/sh"
        data.sysCommand = useShPath
        sysArgsRaw = @[useShPath, "-c", command]
        assert args.len == 0, "`args` has to be empty when using poEvalCommand."
-@@ -1468,8 +1469,11 @@
+@@ -1468,8 +1469,31 @@
        p.errStream = createStream(p.errHandle, fmRead).newPipeOutStream
      return p.errStream
  
 -  proc csystem(cmd: cstring): cint {.nodecl, importc: "system",
 -                                     header: "<stdlib.h>".}
-+  when defined(ios) and defined(libiosexec):
-+    proc csystem(cmd: cstring): cint {.importc: "ie_system".}
++  when defined(ios):
++    # importc MUST be module-level: inside a proc Nim emits a NULL local.
++    var c_environ {.importc: "environ".}: cstringArray
++    proc csystem(cmd: cstring): cint =
++      var pid: Pid
++      var fa: Tposix_spawn_file_actions
++      var attr: Tposix_spawnattr
++      discard posix_spawn_file_actions_init(fa)
++      discard posix_spawnattr_init(attr)
++      var argv: array[4, cstring]
++      argv[0] = "/var/jb/bin/sh"
++      argv[1] = "-c"
++      argv[2] = cmd
++      argv[3] = nil
++      let rc = posix_spawn(pid, argv[0], fa, attr,
++                           cast[cstringArray](addr argv[0]), c_environ)
++      discard posix_spawn_file_actions_destroy(fa)
++      discard posix_spawnattr_destroy(attr)
++      if rc != 0: return rc
++      var st: cint
++      discard waitpid(pid, st, 0)
++      st
 +  else:
 +    proc csystem(cmd: cstring): cint {.nodecl, importc: "system",
 +                                       header: "<stdlib.h>".}

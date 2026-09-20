@@ -1,15 +1,17 @@
 --- a/config/nim.cfg
 +++ b/config/nim.cfg
-@@ -377,3 +377,12 @@
+@@ -377,3 +377,15 @@
    clang.options.linker %= "${clang.options.linker} -s"
    clang.cpp.options.linker %= "${clang.cpp.options.linker} -s"
  @end
 +
-+# Rootless jailbroken iOS: route exec/system through libiosexec, find
-+# libraries under /var/jb, and sign executables with ldid.
-+@if ios:
-+  define:libiosexec
-+  clang.options.linker %= "${clang.options.linker} -Wl,-rpath,/var/jb/usr/lib"
-+  clang.cpp.options.linker %= "${clang.cpp.options.linker} -Wl,-rpath,/var/jb/usr/lib"
-+  ldid.entitlements = "/var/jb/usr/share/nim/entitlements.plist"
-+@end
++# This package is iOS-only. --os:ios must be a cfg line (not @if ios):
++# uname is Darwin, so the host looks like macOS until os is set.
++# clang-19 lives in llvm-19/bin, which has no ld; -B is argv, not PATH.
++--os:ios
++--cpu:arm64
++ldid.entitlements = "/var/jb/usr/share/nim/entitlements.plist"
++clang.options.always %= "${clang.options.always} -B/var/jb/usr/bin"
++clang.cpp.options.always %= "${clang.cpp.options.always} -B/var/jb/usr/bin"
++clang.options.linker %= "${clang.options.linker} -B/var/jb/usr/bin -Wl,-rpath,/var/jb/usr/lib"
++clang.cpp.options.linker %= "${clang.cpp.options.linker} -B/var/jb/usr/bin -Wl,-rpath,/var/jb/usr/lib"

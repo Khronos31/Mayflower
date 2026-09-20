@@ -8,14 +8,14 @@
 # 1. entitlements 付きの ldid 署名が無いと、出来た実行ファイルは起動時に
 #    SIGKILL される。パッチで nim 自身がリンク後に署名するようにし、
 #    ブートストラップ段だけは bin/cc ラッパーが肩代わりする。
-# 2. rootless に /bin/sh は無い。libiosexec の ie_system / ie_exec* /
-#    ie_posix_spawn へ差し替える（patches/）。
+# 2. rootless に /bin/sh は無い。posix_spawn/execve が EPERM なら
+#    /var/jb/bin/sh 経由でやり直す（patches/）。libiosexec はリンクしない。
 # 3. csources 版コンパイラは並列ビルドで startProcess 経由の /bin/sh を
 #    呼ぶため --parallelBuild:1 が要る。直列なら system() ＝ シム経由。
 
 pkgname=nim
 pkgver=2.2.12
-pkgrel=2
+pkgrel=3
 
 # nightly（2.2.12 は正式リリース前のため nim-lang.org/download には無い）
 source="https://github.com/nim-lang/nightlies/releases/download/2026-09-08-version-2-2-8e8fbf60693418dc95bb0d762fd660231d08a583/nim-${pkgver}.tar.xz"
@@ -62,7 +62,7 @@ build() {
 
   ./bin/nim c "${flags[@]}" koch
   ./koch boot "${flags[@]}"
-  ./koch tools -d:release --ldid.entitlements:"${ENTFILE}"
+  ./koch tools "${flags[@]}"
 }
 
 # 素の nim が使えるか（ラッパー無し・並列ビルド既定）を実際に確かめる。
