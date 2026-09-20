@@ -5,7 +5,7 @@ Architecture: @ARCH@
 Section: Development
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
-Depends: libffi8, libsqlite3-1, libreadline8, libncursesw6, liblzma5, libssl3, libgdbm6, libuuid16
+Depends: libffi8, libsqlite3-1, libreadline8, libncursesw6, liblzma5, libssl3, libgdbm6, libuuid16, libintl8
 Conflicts: python3.14-minimal
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://www.python.org/

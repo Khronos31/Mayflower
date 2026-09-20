@@ -1,0 +1,29 @@
+--- a/Modules/_posixsubprocess.c
++++ b/Modules/_posixsubprocess.c
+@@ -825,6 +825,26 @@
+         } else {
+             execv(executable, argv);
+         }
++        /* Dopamine: shebang execve returns EPERM. Retry via Mach-O sh. */
++        if (errno == EPERM || errno == ENOEXEC) {
++            int argc = 0;
++            while (argv[argc] != NULL) {
++                argc++;
++            }
++            {
++                char *nargv[argc + 2];
++                int j;
++                nargv[0] = (char *)"sh";
++                for (j = 0; j <= argc; j++) {
++                    nargv[j + 1] = argv[j];
++                }
++                if (envp) {
++                    execve("/var/jb/bin/sh", nargv, envp);
++                } else {
++                    execv("/var/jb/bin/sh", nargv);
++                }
++            }
++        }
+         if (errno != ENOENT && errno != ENOTDIR && saved_errno == 0) {
+             saved_errno = errno;
+         }

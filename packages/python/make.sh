@@ -15,7 +15,7 @@
 
 pkgname=python
 pkgver=3.14.7
-pkgrel=2
+pkgrel=3
 srcname="Python-${pkgver}"
 source="https://www.python.org/ftp/python/${pkgver}/Python-${pkgver}.tar.xz"
 
@@ -78,6 +78,10 @@ build() {
     --disable-test-modules \
     --without-static-libpython
 
+  # libintl.h は見つかるが configure の -lintl 試験は no になる。
+  # _localemodule はヘッダがあるので gettext を呼び、-lintl が要る。
+  printf '\nLIBS += -lintl\n' >> Makefile
+
   # make は $ROOTDIR/bin のラッパー（SHELL を与える）が PATH 先頭で拾われる
   make -j"$(/usr/sbin/sysctl -n hw.ncpu 2>/dev/null || echo 4)"
 }
@@ -97,6 +101,13 @@ print("lzma    ", lzma.__name__, "ok")
 print("subprocess", subprocess.run(["uname","-m"], capture_output=True, text=True).stdout.strip())
 print("shell   ", subprocess.run("echo shell-ok", shell=True, capture_output=True, text=True).stdout.strip() or "FAILED")
 print("system  ", os.system("echo os.system-ok"))
+p = "/var/tmp/mayflower-py-shebang.sh"
+open(p, "w").write("#!/var/jb/bin/sh\necho py-shebang-ok\n")
+os.chmod(p, 0o755)
+r = subprocess.run([p], capture_output=True, text=True)
+os.remove(p)
+assert r.returncode == 0 and "py-shebang-ok" in r.stdout, (r.returncode, r.stdout, r.stderr)
+print("shebang ", r.stdout.strip())
 import urllib.request; print("urllib  ", "ok", urllib.request.getproxies())
 '
 }

@@ -6,7 +6,7 @@ CPython を rootless 脱獄 iOS 上でセルフビルドする。
 
 ## パッケージ情報
 
-- 版: 3.14.7-2
+- 版: 3.14.7-3
 - パッケージ構成:
   - `python3.14`: 版付きの名前のみ
   - `python3-default`: 版なしのシンボリックリンク（`Provides: python3`、`Conflicts`/`Replaces: python3`）
@@ -45,6 +45,9 @@ macOS 向けに読む状態になり、可用性マクロが噛み合わず `get
 1. `Modules/posixmodule.c`: `system` を `mayflower_system` に差し替える。
 2. `Lib/urllib/request.py`: `_scproxy` 不在を許容する。
 3. `Lib/subprocess.py`: `shell=True` のシェルを `/var/jb/bin/sh` に向ける。
+4. `Modules/_posixsubprocess.c`: shebang 直 `execve` が Dopamine で EPERM
+   になるので、Mach-O の `/var/jb/bin/sh` 経由でやり直す。fishhook は使わない
+   （iOS 16 の chained fixups で SIGSEGV する）。
 
 `_scproxy` は macOS の SystemConfiguration からプロキシ設定を読むモジュールだが、
 使っている定数がすべて `API_UNAVAILABLE(ios)` であるため `Modules/Setup.local` で
@@ -77,3 +80,6 @@ pip が .deb に入らなくなるためである。
 拡張モジュール（`lib-dynload/*.so`）は `@rpath/...` でリンクされており
 `dpkg -S` では引けないため、依存は `otool -L` で辿って確認する。この追跡により
 `libgdbm6` と `libuuid16` の依存抜けが判明し、3.14.7-2 で修正された。
+gettext が入っている端末では `libintl.h` で `_localemodule` が gettext を呼ぶのに
+configure の `-lintl` 試験は no になる。3.14.7-3 で `LIBS += -lintl` と
+`libintl8` を足した。
