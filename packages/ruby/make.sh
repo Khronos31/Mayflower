@@ -35,11 +35,11 @@ build() {
 
   # getentropy は iOS ヘッダで API_UNAVAILABLE。configure のリンク試験は通るが
   # コンパイルで未宣言になる（Python と同じ）。
-  # Ruby の configure は LDFLAGS 内の -target を「something wrong」と拒否する。
-  # リンク時は CFLAGS 側の -target で足りるので、configure 中だけ外す。
+  # Ruby の configure は LDFLAGS をリンク試験し、-target / -Wl,-rpath /
+  # -lmayflower_spawn などが混ざると「something wrong with LDFLAGS」で落ちる。
+  # configure 中は最小の -L だけ渡し、本ビルド前にフル LDFLAGS を戻す。
   local _ldflags_save="${LDFLAGS}"
-  LDFLAGS="$(printf '%s' "${LDFLAGS}" | sed -E 's/(^|[[:space:]])-target[[:space:]]+[^[:space:]]+//g')"
-  export LDFLAGS
+  export LDFLAGS="-L${JB}/usr/lib"
 
   ac_cv_func_getentropy=no \
   ac_cv_func_clock_settime=no \
