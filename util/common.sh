@@ -51,6 +51,7 @@ applyPatch() {
 # makedeb [deb ディレクトリ]  （既定は deb）
 makedeb() {
   cp -R "${PROJECTROOT}/${1:-deb}/." "${pkgdir}"
+  find "${pkgdir}" -name '._*' -delete 2>/dev/null || true
 
   find "${pkgdir}" -type d -exec chmod 755 {} +
   find "${pkgdir}/DEBIAN" -type f -exec chmod 755 {} +

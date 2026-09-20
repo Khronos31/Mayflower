@@ -58,6 +58,46 @@ export pkgdir="${BUILDROOT}/build"
 # $ROOTDIR/bin を PATH の先頭に置く。bin/make は GNU make に SHELL を与える
 # ラッパーで、これが無いと autotools も cmake も /bin/sh を探して死ぬ。
 # bin/cc と bin/c++ も同じ場所にあるので、ビルド中に cc を直接呼ぶ類も拾える。
+#
+# PATH 先頭の bin/cc・bin/c++・bin/make は Mach-O。shebang は Dopamine で
+# posix_spawn が EPERM になる。素の clang でコンパイルする（自分自身を経由しない）。
+# fishhook は使わない（iOS 16 の chained fixups で SIGSEGV する）。
+ensure_bin_wrappers() {
+  local srcdir="${ROOTDIR}/files"
+  local ent="${ENTFILE:?ENTFILE unset}"
+  local hostcc path_wo mag p
+  path_wo=""
+  IFS=':'
+  for p in ${PATH}; do
+    [ "$p" = "${ROOTDIR}/bin" ] && continue
+    path_wo="${path_wo:+${path_wo}:}$p"
+  done
+  unset IFS
+  hostcc="$(PATH="${path_wo}" command -v clang || PATH="${path_wo}" command -v cc || true)"
+  [ -n "${hostcc}" ] || hostcc="$(command -v /var/jb/usr/bin/clang || command -v clang || true)"
+  [ -n "${hostcc}" ] || { echo "ensure_bin_wrappers: no clang/cc" >&2; return 1; }
+  compile_one() {
+    local out="$1" srcname="$2"; shift 2
+    if [ -x "${out}" ] && [ "${out}" -nt "${srcdir}/${srcname}" ]; then
+      mag="$(dd if="${out}" bs=4 count=1 2>/dev/null | od -An -tx1 | tr -d " \n")"
+      case "${mag}" in
+        cffaedfe|feedfacf|cefaedfe|feedface) return 0 ;;
+      esac
+    fi
+    "${hostcc}" -O2 -o "${out}" "${srcdir}/${srcname}" "$@"
+    ldid -S"${ent}" "${out}"
+    chmod 755 "${out}"
+  }
+  compile_one "${ROOTDIR}/bin/cc" mayflower-cc.c -DCOMPILER='"clang"'
+  compile_one "${ROOTDIR}/bin/c++" mayflower-cc.c -DCOMPILER='"clang++"'
+  compile_one "${ROOTDIR}/bin/make" mayflower-make.c \
+    -DREAL_MAKE='"/var/jb/usr/bin/make"' -DDEFAULT_SHELL='"/var/jb/bin/sh"'
+}
+ensure_bin_wrappers
+# パッケージが PATH 入り口を Mach-O にするとき使う（git / node / rust 等）。
+# shellcheck source=files/mayflower-exec.sh
+. "${ROOTDIR}/files/mayflower-exec.sh"
+
 export PATH="${ROOTDIR}/bin:${PATH}"
 
 # autoconf の configure は SHELL=${CONFIG_SHELL-/bin/sh} を先頭で焼く。
@@ -142,6 +182,7 @@ fi
 # プロトタイプを rename の前に見てしまい衝突する。実測では wait / wait3 /
 # wait4 / waitid / waitpid / realpath / getpriority / getrusage / ptsname などが
 # まとめて「無い」と判定され、os.waitpid が消えた。
+mkdir -p "${BUILDROOT}"
 if [ "${ios_compat:-0}" = 1 ]; then
   echo "==> ios_compat: system(3) を ${JB}/bin/sh 経由に差し替える"
   # オブジェクトではなく静的ライブラリで渡す。LDFLAGS はビルド系によって
@@ -195,8 +236,9 @@ if [ "${#subpkgs[@]}" -gt 1 ]; then
     for b in "${subpkgs[@]}"; do
       [[ "${a}" < "${b}" ]] || continue
       [ -d "${BUILDROOT}/pkg-${a}" ] && [ -d "${BUILDROOT}/pkg-${b}" ] || continue
-      (cd "${BUILDROOT}/pkg-${a}" && find . ! -type d ! -path './DEBIAN/*' | sort) > "${BUILDROOT}/.ov-a"
-      (cd "${BUILDROOT}/pkg-${b}" && find . ! -type d ! -path './DEBIAN/*' | sort) > "${BUILDROOT}/.ov-b"
+      find "${BUILDROOT}/pkg-${a}" "${BUILDROOT}/pkg-${b}" -name '._*' -delete 2>/dev/null || true
+      (cd "${BUILDROOT}/pkg-${a}" && find . ! -type d ! -path './DEBIAN/*' ! -name '._*' | sort) > "${BUILDROOT}/.ov-a"
+      (cd "${BUILDROOT}/pkg-${b}" && find . ! -type d ! -path './DEBIAN/*' ! -name '._*' | sort) > "${BUILDROOT}/.ov-b"
       comm -12 "${BUILDROOT}/.ov-a" "${BUILDROOT}/.ov-b" > "${BUILDROOT}/.ov-c"
       if [ -s "${BUILDROOT}/.ov-c" ]; then
         echo "    ${a} と ${b} が同じファイルを持っている:" >&2
