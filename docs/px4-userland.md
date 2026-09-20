@@ -11,7 +11,7 @@ PLEX PX-Q3U4（USB ID `0511:084a`）向けのユーザー空間ドライバ。
 - ディレクトリ / `Package:`: `px4-userland`
 - Sileo の `Name:`: PX4 Driver
 - バイナリ: `px4d` / `px4-ts` / `px4ctl`
-- 版: 0.1.3-2
+- 版: 0.1.3-3
 - Depends: `libusb-1.0-0`（Recommends: `pcscd`）
 - 置き場所: `/var/jb/usr/bin/px4d` ほか
 
