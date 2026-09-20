@@ -35,11 +35,22 @@ build() {
 
   # getentropy は iOS ヘッダで API_UNAVAILABLE。configure のリンク試験は通るが
   # コンパイルで未宣言になる（Python と同じ）。
-  # Ruby の configure は -target / -lmayflower_spawn 等が混ざると
-  # 「something wrong with LDFLAGS」で落ちる。一方 -L だけだと conftest 実行時に
-  # @rpath/libgmp が解決できず sizeof 計算が死ぬ。-L と -Wl,-rpath だけ渡す。
+  #
+  # Ruby configure は global LDFLAGS の -target / -lmayflower_spawn /
+  # -liosexec / -lios_compat を拒む。それだけ外し、-L と -rpath は残す
+  # （外すと conftest が @rpath/libgmp を解けず sizeof が死ぬ）。
   local _ldflags_save="${LDFLAGS}"
-  export LDFLAGS="-L${JB}/usr/lib -Wl,-rpath,${JB}/usr/lib"
+  local -a _keep=()
+  # shellcheck disable=SC2206  # LDFLAGS は空白区切りのフラグ列
+  set -- ${_ldflags_save}
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -lmayflower_spawn|-liosexec|-lios_compat) shift ;;
+      -target) shift; [ $# -gt 0 ] && shift ;;
+      *) _keep+=("$1"); shift ;;
+    esac
+  done
+  export LDFLAGS="${_keep[*]}"
 
   ac_cv_func_getentropy=no \
   ac_cv_func_clock_settime=no \
@@ -56,19 +67,17 @@ build() {
 
   export LDFLAGS="${_ldflags_save}"
 
-  # configure が Makefile に焼いた LDFLAGS は最小値のまま。さらに Apple ld は
-  # オブジェクトより前に置いた -lstatic を引き込まないので、-lios_compat だけでは
-  # miniruby で _mayflower_system が未定義のままになる。force_load で必ず入れる。
-  {
-    printf '\n# Mayflower: after configure\n'
-    printf 'LDFLAGS += %s\n' "${_ldflags_save}"
-    printf 'LIBS += -Wl,-force_load,%s/libios_compat.a\n' "${BUILDROOT}"
-  } >> Makefile
-
-  # mkmf / libruby-static 用にもオブジェクトを COMMONOBJS へ
+  # mayflower_system: main と同じ COMMONOBJS 経路（force_load / 事前 .o は使わない）
   cp "${ROOTDIR}/compat/ios_compat.c" .
   printf '\nCOMMONOBJS += ios_compat.$(OBJEXT)\n' >> Makefile
-  make ios_compat.o
+
+  # configure が焼いた LDFLAGS には spawn が無い。LIBS で一度だけ足す。
+  # -target もリンク行に要るので COMMON_FLAGS だけ戻す（LDFLAGS 全体の焼き直しはしない）。
+  {
+    printf '\n# Mayflower: mayflower_spawn (Dopamine shebang) + ios target\n'
+    printf 'LDFLAGS += %s\n' "${COMMON_FLAGS}"
+    printf 'LIBS += -L%s -lmayflower_spawn -liosexec\n' "${BUILDROOT}"
+  } >> Makefile
 
   make -j"$(/usr/sbin/sysctl -n hw.ncpu 2>/dev/null || echo 4)"
 }
