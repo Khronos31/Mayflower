@@ -10,8 +10,8 @@ PLEX PX-Q3U4（USB ID `0511:084a`）向けのユーザー空間ドライバ。
 
 - ディレクトリ / `Package:`: `px4-userland`
 - Sileo の `Name:`: PX4 Driver
-- バイナリ: `px4d` / `px4-ts` / `px4ctl`
-- 版: 0.1.3-3
+- バイナリ: `px4d` / `px4-ts` / `px4ctl` / `px4-usb-probe`
+- 版: 0.1.3-4
 - Depends: `libusb-1.0-0`（Recommends: `pcscd`）
 - 置き場所: `/var/jb/usr/bin/px4d` ほか
 
@@ -36,9 +36,10 @@ PX4 はデーモン（`px4d`）が筐体を所有し、`px4-ts` が IPC で選�
 user-client 列。`prepare` / `build` / `check` / `package` で `ENTFILE` を
 そこに向け直す（ルート `make.sh` が薄い方へ上書きするため）。
 
-未署名の Mach-O は起動時 SIGKILL（rc 137）。空の USB バスでは
-`libusb_init` / `get_device_list` は薄い entitlements でも 0 件で成功する。
-デバイスを **開く** ときに IOKit user-client が要る。
+未署名の Mach-O は起動時 SIGKILL（rc 137）。薄い entitlements では
+`libusb_get_device_list` がデバイス有りでも 0 件で成功する。
+シリアル確認は `px4-usb-probe`（同じ USB entitlements）。
+デバイスを **開く** ときも IOKit user-client が要る。
 
 ### libc++ `__libcpp_verbose_abort`
 
@@ -48,10 +49,10 @@ user-client 列。`prepare` / `build` / `check` / `package` で `ENTFILE` を
 
 ### CMake
 
-`PX4_BUILD_TESTS=OFF`、`PX4_BUILD_TOOLS=OFF`、`PX4_BUILD_PCSC_IFD=ON`。
+`PX4_BUILD_TESTS=OFF`、`PX4_BUILD_TOOLS=ON`、`PX4_BUILD_PCSC_IFD=ON`。
 IFD は macOS bundle ではなく `libpx4-userland-ifd.dylib`。pcsc-lite の
 `dlopen` が読む。`ifdhandler.h` はビルド時に `libpcsclite-dev` から取る。
-開発用 `px4-usb-probe` はパッケージに入れない。
+`px4-usb-probe` は USB entitlements 付きで `/var/jb/usr/bin` に入れる。
 
 リンクは `-lusb-1.0`、`-framework IOKit -framework CoreFoundation -framework Security`、
 `-Wl,-stack_size,0x800000`（Siano と同じ）。`LDFLAGS` の `-rpath ${JB}/usr/lib` は
@@ -59,16 +60,18 @@ IFD は macOS bundle ではなく `libpx4-userland-ifd.dylib`。pcsc-lite の
 
 ## 使い方（端末）
 
-iOS には `XDG_RUNTIME_DIR` が無い。必ず `--runtime-dir` を付ける。
+PATH の `px4d` / `px4-ts` / `px4ctl` は Mach-O ラッパー。`--runtime-dir` を
+省略すると `$HOME/.px4-userland` を 0700 で作り、渡す
+（validate_directory はこれ以外を INVALID_ARGUMENT にする）。
+実体は `${JB}/usr/lib/px4-userland/`。`--firmware` 省略時、
+`${JB}/usr/share/px4-userland/it930x-firmware.bin` があればそれを使う
+（パッケージはファームを同梱しない。置くのは運用側）。
 
 ```sh
-runtime_dir=$(mktemp -d /tmp/px4-XXXXXX)
-px4d --device '<14-digit-base-serial>' \
-  --firmware /path/to/firmware.bin \
-  --runtime-dir "$runtime_dir"
-
-px4ctl --device '<14-digit-base-serial>' --runtime-dir "$runtime_dir" list
-px4-ts --device '<14-digit-base-serial>' --runtime-dir "$runtime_dir" \
+px4-usb-probe
+px4d --device '<14-digit-base-serial>'
+px4ctl --device '<14-digit-base-serial>' list
+px4-ts --device '<14-digit-base-serial>' \
   --receiver 2 --system isdb-t --frequency-khz 527143 \
   --output - --duration-seconds 5
 ```

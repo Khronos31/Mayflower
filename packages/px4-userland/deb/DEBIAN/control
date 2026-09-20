@@ -13,12 +13,14 @@ Tag: purpose::console
 Description: Userland PX-Q3U4 tuner and card driver
  Owns a PLEX PX-Q3U4 (USB ID 0511:084a) from userspace via libusb:
  eight tuners plus the built-in IC card reader. Binaries are px4d,
- px4-ts, and px4ctl. Built on-device for rootless jailbreaks.
+ px4-ts, px4ctl, and px4-usb-probe. Built on-device for rootless jailbreaks.
  .
- IT930x firmware is not included. px4d requires --firmware PATH to a
- 2169-byte blob whose SHA-256 is
- 5213a5a38872661277a2cc1b2dfdfe88faf06f41205f460f3b51857f0568b484.
- iOS has no XDG_RUNTIME_DIR; pass --runtime-dir as well.
+ IT930x firmware is not included. Place the 2169-byte blob at
+ /var/jb/usr/share/px4-userland/it930x-firmware.bin (SHA-256
+ 5213a5a38872661277a2cc1b2dfdfe88faf06f41205f460f3b51857f0568b484)
+ or pass --firmware PATH. PATH wrappers default --runtime-dir to
+ $HOME/.px4-userland (mode 0700). px4-usb-probe lists the
+ Q3U4 serial with the same IOKit USB entitlements as px4d.
  .
  Ships libpx4-userland-ifd.dylib for pcscd (dlopen). Register with
  px4-pcsc-register BASE_SERIAL RUNTIME_DIR; run px4d as the same
