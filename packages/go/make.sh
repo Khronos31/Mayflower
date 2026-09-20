@@ -34,7 +34,7 @@
 # CFBundleCopyBundleURL に残す形。**Go1.27.2 が出たらそこへ移る。**
 pkgname=go
 pkgver=1.26.8
-pkgrel=2
+pkgrel=3
 srcname=go
 source="https://go.dev/dl/go${pkgver}.src.tar.gz"
 subpkgs=(go src bin)
@@ -146,12 +146,7 @@ package_bin() {
 
   local b
   for b in go gofmt; do
-    cat > "${dest}/${b}" <<EOF
-#!${JB}/bin/sh
-GOROOT="\${GOROOT:-${goroot}}"
-export GOROOT
-exec "\${GOROOT}/bin/${b}" "\$@"
-EOF
-    chmod 755 "${dest}/${b}"
+    mayflower_install_exec "${dest}/${b}" "${goroot}/bin/${b}" \
+      "GOROOT=${goroot}"
   done
 }

@@ -6,7 +6,8 @@ Go を rootless 脱獄 iOS 上でビルドする。
 
 ## パッケージ情報
 
-- 版: 1.26.8-2
+- 版: 1.26.8-3
+- PATH の `go` / `gofmt` は Mach-O ラッパー（Dopamine の shebang EPERM）。GOROOT は未設定なら焼き込む。
 - Depends（`golang-1.26-go`）: `build-essential`, `clang`, `ldid`, `libiosexec1`
 - パッケージ構成（Debian 流の分割）:
   - `golang-1.26-go`: GOROOT 本体（bin, pkg, api, go.env, entitlements.plist）
