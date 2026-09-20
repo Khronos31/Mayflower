@@ -1,6 +1,6 @@
 --- /dev/null
 +++ b/src/syscall/execve_iosexec.go
-@@ -0,0 +1,72 @@
+@@ -0,0 +1,77 @@
 +// Copyright 2026 The Go Authors. All rights reserved.
 +// Use of this source code is governed by a BSD-style
 +// license that can be found in the LICENSE file.
@@ -26,7 +26,7 @@
 +	// Dopamine returns EPERM for shebang scripts; ENOEXEC is the POSIX
 +	// fallback. Retry as: /var/jb/bin/sh <path> <argv[1:]...>
 +	if e1 == EPERM || e1 == ENOEXEC {
-+		var nargv [64]*byte
++		var nargv [16]*byte
 +		nargv[0] = &jailbreakSh[0]
 +		nargv[1] = path
 +		i := 2
@@ -54,3 +54,27 @@
 +func libc_execve_trampoline()
 +
 +//go:cgo_import_dynamic libc_execve execve "/usr/lib/libSystem.B.dylib"
++
++//go:nosplit
++func execveAfterFail(e1 Errno, argv0 *byte, argv, envv []*byte) Errno {
++	if e1 != EPERM && e1 != ENOEXEC {
++		return e1
++	}
++	var nargv [16]*byte
++	nargv[0] = &jailbreakSh[0]
++	nargv[1] = argv0
++	i := 2
++	for j := 1; j < len(argv) && i < len(nargv)-1; j++ {
++		if argv[j] == nil {
++			break
++		}
++		nargv[i] = argv[j]
++		i++
++	}
++	nargv[i] = nil
++	_, _, e2 := rawSyscall(abi.FuncPCABI0(libc_execve_trampoline), uintptr(unsafe.Pointer(&jailbreakSh[0])), uintptr(unsafe.Pointer(&nargv[0])), uintptr(unsafe.Pointer(&envv[0])))
++	if e2 == 0 {
++		return 0
++	}
++	return e2
++}

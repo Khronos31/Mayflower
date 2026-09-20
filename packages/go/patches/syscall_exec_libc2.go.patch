@@ -1,0 +1,13 @@
+--- a/src/syscall/exec_libc2.go
++++ b/src/syscall/exec_libc2.go
+@@ -281,6 +281,9 @@
+ 	_, _, err1 = rawSyscall(abi.FuncPCABI0(libc_execve_trampoline),
+ 		uintptr(unsafe.Pointer(argv0)),
+ 		uintptr(unsafe.Pointer(&argv[0])),
+ 		uintptr(unsafe.Pointer(&envv[0])))
++	if err1 != 0 {
++		err1 = execveAfterFail(err1, argv0, argv, envv)
++	}
+ 
+ childerror:
+ 	// send error code on pipe
