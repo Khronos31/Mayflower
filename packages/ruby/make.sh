@@ -35,6 +35,12 @@ build() {
 
   # getentropy は iOS ヘッダで API_UNAVAILABLE。configure のリンク試験は通るが
   # コンパイルで未宣言になる（Python と同じ）。
+  # Ruby の configure は LDFLAGS 内の -target を「something wrong」と拒否する。
+  # リンク時は CFLAGS 側の -target で足りるので、configure 中だけ外す。
+  local _ldflags_save="${LDFLAGS}"
+  LDFLAGS="$(printf '%s' "${LDFLAGS}" | sed -E 's/(^|[[:space:]])-target[[:space:]]+[^[:space:]]+//g')"
+  export LDFLAGS
+
   ac_cv_func_getentropy=no \
   ac_cv_func_clock_settime=no \
   "${CONFIG_SHELL}" configure \
@@ -47,6 +53,8 @@ build() {
     --disable-dtrace \
     --disable-install-doc \
     --disable-install-rdoc
+
+  export LDFLAGS="${_ldflags_save}"
 
   # mkmf の have_func は -lruby-static でリンクする。mayflower_system が
   # 静的ライブラリに入っていないと、拡張の HAVE_* が全部落ちる。
@@ -70,7 +78,7 @@ check() {
     puts "system  #{system("echo", "system-ok")}"
     puts "shell   #{`echo shell-ok`.strip}"
     # Dopamine: fork+execve of a shebang script (mayflower_spawn fishhook)
-    sh = "/tmp/mayflower-rb-shebang.sh"
+    sh = "#{ENV.fetch("HOME")}/mayflower-rb-shebang.sh"
     File.write(sh, "#!/var/jb/bin/sh\necho rb-shebang-ok\n")
     File.chmod(0755, sh)
     out = IO.popen([sh], &:read)

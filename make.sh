@@ -13,6 +13,8 @@
 # 呼ばれた場合だけ解決されるので、素の execve からは exec できない。
 
 set -e
+# macOS/iOS cp が DEBIAN 横に ._DEBIAN を作ると分割 deb の重なり点検で落ちる
+export COPYFILE_DISABLE=1
 
 if [ $# -lt 1 ]; then
   echo "Usage: $0 <package>" >&2
@@ -253,8 +255,10 @@ if [ "${#subpkgs[@]}" -gt 1 ]; then
     for b in "${subpkgs[@]}"; do
       [[ "${a}" < "${b}" ]] || continue
       [ -d "${BUILDROOT}/pkg-${a}" ] && [ -d "${BUILDROOT}/pkg-${b}" ] || continue
-      (cd "${BUILDROOT}/pkg-${a}" && find . ! -type d ! -path './DEBIAN/*' | sort) > "${BUILDROOT}/.ov-a"
-      (cd "${BUILDROOT}/pkg-${b}" && find . ! -type d ! -path './DEBIAN/*' | sort) > "${BUILDROOT}/.ov-b"
+      # AppleDouble (._*) は実ファイルではない。無視してから点検する。
+      find "${BUILDROOT}/pkg-${a}" "${BUILDROOT}/pkg-${b}" -name '._*' -delete 2>/dev/null || true
+      (cd "${BUILDROOT}/pkg-${a}" && find . ! -type d ! -path './DEBIAN/*' ! -name '._*' | sort) > "${BUILDROOT}/.ov-a"
+      (cd "${BUILDROOT}/pkg-${b}" && find . ! -type d ! -path './DEBIAN/*' ! -name '._*' | sort) > "${BUILDROOT}/.ov-b"
       comm -12 "${BUILDROOT}/.ov-a" "${BUILDROOT}/.ov-b" > "${BUILDROOT}/.ov-c"
       if [ -s "${BUILDROOT}/.ov-c" ]; then
         echo "    ${a} と ${b} が同じファイルを持っている:" >&2
