@@ -34,7 +34,7 @@
 # CFBundleCopyBundleURL に残す形。**Go1.27.2 が出たらそこへ移る。**
 pkgname=go
 pkgver=1.26.8
-pkgrel=2
+pkgrel=4
 srcname=go
 source="https://go.dev/dl/go${pkgver}.src.tar.gz"
 subpkgs=(go src bin)
@@ -44,6 +44,11 @@ goseries=1.26
 
 goroot_install() {
   echo "${JB}/usr/lib/go-${goseries}"
+}
+
+# 共通 entitlements.plist では Dopamine で go が SIGKILL する。
+go_entfile() {
+  echo "${PROJECTROOT}/entitlements-jit.plist"
 }
 
 prepare() {
@@ -71,7 +76,7 @@ build() {
   # 署名はリンカのパッチが行うため、ここにラッパーは要らない。
   export CC=clang CXX=clang++
   # リンカのパッチが読む。ビルド中の中間バイナリもこれで署名される。
-  export GO_LDID_ENTITLEMENTS="${ENTFILE}"
+  export GO_LDID_ENTITLEMENTS="$(go_entfile)"
   export GOTELEMETRY=off
 
   # -trimpath 相当を使わないこと。焼き込みの GOROOT と実行ファイルパスからの
@@ -98,8 +103,15 @@ func main() {
 	fmt.Println("go hello")
 	out, err := exec.Command("uname", "-m").Output()
 	fmt.Printf("exec %q err=%v\n", string(out), err)
+	out, err = exec.Command("./t.sh").CombinedOutput()
+	if err != nil || string(out) != "shebang-ok\n" {
+		panic(err)
+	}
+	fmt.Printf("shebang %q\n", string(out))
 }
 EOF
+  printf '%s\n' '#!/var/jb/bin/sh' 'echo shebang-ok' > t.sh
+  chmod 755 t.sh
   cat > go.mod <<'EOF'
 module hello
 
@@ -109,16 +121,28 @@ EOF
   GOROOT="${goroot}" "${goroot}/bin/go" build -o hello ./
   ./hello
   ldid -e hello | grep -q platform-application
+  ldid -e hello | grep -q dynamic-codesigning
 }
 
 package_go() {
   cd "${srcdir}" || return 1
   local dest
   dest="${pkgdir}$(goroot_install)"
+  local ent
+  ent="$(go_entfile)"
   install -d "${dest}"
   cp -R bin pkg api go.env VERSION "${dest}/"
-  # リンカのパッチはここを既定の entitlements として探す。
-  install -m644 "${ENTFILE}" "${dest}/entitlements.plist"
+  # リンカのパッチはここを既定の entitlements として探す（go build 成果物も同 ents）。
+  install -m644 "${ent}" "${dest}/entitlements.plist"
+  local tool
+  for tool in "${dest}/bin/go" "${dest}/bin/gofmt"; do
+    ldid -S"${ent}" "${tool}" || return 1
+  done
+  if [ -d "${dest}/pkg/tool" ]; then
+    find "${dest}/pkg/tool" -type f -perm -111 | while read -r tool; do
+      ldid -S"${ent}" "${tool}" || return 1
+    done
+  fi
   install -d "${pkgdir}${JB}/usr/share/licenses/golang-${goseries}"
   install -m644 LICENSE "${pkgdir}${JB}/usr/share/licenses/golang-${goseries}/LICENSE"
 }
@@ -146,12 +170,7 @@ package_bin() {
 
   local b
   for b in go gofmt; do
-    cat > "${dest}/${b}" <<EOF
-#!${JB}/bin/sh
-GOROOT="\${GOROOT:-${goroot}}"
-export GOROOT
-exec "\${GOROOT}/bin/${b}" "\$@"
-EOF
-    chmod 755 "${dest}/${b}"
+    mayflower_install_exec "${dest}/${b}" "${goroot}/bin/${b}" \
+      "GOROOT=${goroot}"
   done
 }
