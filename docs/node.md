@@ -6,7 +6,8 @@ Node.js をパッケージングする。
 
 ## パッケージ情報
 
-- 版: 24.21.0-1（LTS Krypton）
+- 版: 24.21.0-2（LTS Krypton）
+- PATH の `node-24` / `npm-24` / `npx-24` は Mach-O ラッパー（Dopamine の shebang EPERM）。
 - パッケージ構成:
   - `nodejs-24`: 版付きの `node-24` / `npm-24` / `npx-24`。実体は `/var/jb/usr/lib/nodejs-24/node-bin`
   - `node-default`: `/var/jb/usr/bin` の `node` / `npm` / `npx`。
