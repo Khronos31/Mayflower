@@ -15,7 +15,7 @@
 
 pkgname=claude-code
 pkgver=2.1.274
-pkgrel=2
+pkgrel=3
 srcname="claude-code-darwin-arm64-${pkgver}"
 source="https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-${pkgver}.tgz"
 export compress=xz
@@ -59,9 +59,6 @@ prepare() {
     fi
     chmod 755 "${srcdir}/claude"
   fi
-
-  cp -f "${PROJECTROOT}/files/claude" "${srcdir}/claude.wrapper"
-  chmod 755 "${srcdir}/claude.wrapper"
 }
 
 build() {
@@ -105,7 +102,12 @@ package() {
 
   install -m755 "${srcdir}/claude" "${libexec}/claude.bin"
   install -m755 "${srcdir}/libsystemshim.dylib" "${libexec}/libsystemshim.dylib"
-  install -m755 "${srcdir}/claude.wrapper" "${pkgdir}${JB}/usr/bin/claude"
+  mayflower_install_exec "${pkgdir}${JB}/usr/bin/claude" \
+    "${JB}/usr/libexec/claude-code/claude.bin" \
+    "BUN_JSC_useCodeCache=0:force" \
+    "DISABLE_UPDATES=1:force" \
+    "DISABLE_AUTOUPDATER=1:force" \
+    "DISABLE_INSTALLATION_CHECKS=1:force"
 
   install -m644 "${PROJECTROOT}/files/usr/share/doc/claude-code/README.md" \
     "${pkgdir}${JB}/usr/share/doc/claude-code/"
