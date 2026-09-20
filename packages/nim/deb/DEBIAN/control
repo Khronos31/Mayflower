@@ -5,13 +5,13 @@ Architecture: @ARCH@
 Section: Development
 Priority: optional
 Installed-Size: @INSTALLED_SIZE@
-Depends: build-essential, clang, ldid, libiosexec1 (>= 1.3.1)
+Depends: build-essential, clang, ldid
 Recommends: libpcre1
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://nim-lang.org/
 Tag: purpose::console
 Description: Nim programming language
  Statically typed compiled systems programming language. This build runs
- on-device on rootless jailbreaks: programs are linked against libiosexec
- (rootless has no /bin/sh) and signed with ldid using
+ on-device on rootless jailbreaks. posix_spawn/execve retry EPERM via
+ /var/jb/bin/sh (no libiosexec). Signed with ldid using
  /var/jb/usr/share/nim/entitlements.plist after every link.

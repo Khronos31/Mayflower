@@ -1,15 +1,12 @@
 --- a/config/nim.cfg
 +++ b/config/nim.cfg
-@@ -377,3 +377,12 @@
+@@ -377,3 +377,8 @@
    clang.options.linker %= "${clang.options.linker} -s"
    clang.cpp.options.linker %= "${clang.cpp.options.linker} -s"
  @end
 +
-+# Rootless jailbroken iOS: route exec/system through libiosexec, find
-+# libraries under /var/jb, and sign executables with ldid.
++# Rootless jailbroken iOS: sign with ldid. posix_spawn/execve retry
++# /var/jb/bin/sh on EPERM in posix.nim; no libiosexec.
 +@if ios:
-+  define:libiosexec
-+  clang.options.linker %= "${clang.options.linker} -Wl,-rpath,/var/jb/usr/lib"
-+  clang.cpp.options.linker %= "${clang.cpp.options.linker} -Wl,-rpath,/var/jb/usr/lib"
 +  ldid.entitlements = "/var/jb/usr/share/nim/entitlements.plist"
 +@end

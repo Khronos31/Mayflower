@@ -1,15 +1,32 @@
 --- a/lib/pure/os.nim
 +++ b/lib/pure/os.nim
-@@ -207,8 +207,13 @@
+@@ -207,8 +207,27 @@
        result.add quoteShell(args[i])
  
  when not weirdTarget:
 -  proc c_system(cmd: cstring): cint {.
 -    importc: "system", header: "<stdlib.h>".}
-+  when defined(ios) and defined(libiosexec):
-+    # system(3) is unavailable on iOS and would look for /bin/sh, which
-+    # rootless jailbreaks don't have. libiosexec finds the prefixed shell.
-+    proc c_system(cmd: cstring): cint {.importc: "ie_system".}
++  when defined(ios):
++    # system(3) is unavailable on iOS. Spawn Mach-O /var/jb/bin/sh -c.
++    proc c_system(cmd: cstring): cint =
++      var pid: Pid
++      var fa: Tposix_spawn_file_actions
++      var attr: Tposix_spawnattr
++      discard posix_spawn_file_actions_init(fa)
++      discard posix_spawnattr_init(attr)
++      var argv: array[4, cstring]
++      argv[0] = "/var/jb/bin/sh"
++      argv[1] = "-c"
++      argv[2] = cmd
++      argv[3] = nil
++      let rc = posix_spawn(pid, argv[0], fa, attr,
++                           cast[cstringArray](addr argv[0]), nil)
++      discard posix_spawn_file_actions_destroy(fa)
++      discard posix_spawnattr_destroy(attr)
++      if rc != 0: return rc
++      var st: cint
++      discard waitpid(pid, st, 0)
++      st
 +  else:
 +    proc c_system(cmd: cstring): cint {.
 +      importc: "system", header: "<stdlib.h>".}
