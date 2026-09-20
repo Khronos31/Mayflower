@@ -1,0 +1,18 @@
+Package: perl-default
+Name: Perl (default version)
+Version: @VERSION@
+Architecture: all
+Section: Interpreters
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: perl5.42 (>= @VERSION@)
+Provides: perl (= @VERSION@)
+Conflicts: perl
+Replaces: perl
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.perl.org/
+Tag: purpose::console
+Description: Perl 5.42 as the default perl on PATH
+ Puts perl on PATH, pointing at perl5.42. This takes over the
+ unversioned name from the bootstrap's own perl package, which ships
+ 5.32.1 linked to libiosexec.

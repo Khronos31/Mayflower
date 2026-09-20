@@ -1,0 +1,19 @@
+Package: perl5.42
+Name: Perl 5.42
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Interpreters
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libgdbm6
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://www.perl.org/
+Tag: purpose::console
+Description: Perl 5.42 interpreter
+ Built on-device for rootless jailbreaks. system, exec, backticks and
+ piped open retry shebang spawn via /var/jb/bin/sh on EPERM, ENOEXEC
+ and ENOENT. Does not link libiosexec.
+ .
+ Installs the versioned name perl5.42 only. Install perl-default to
+ make perl on PATH mean this interpreter; that package supersedes the
+ bootstrap's perl 5.32.
