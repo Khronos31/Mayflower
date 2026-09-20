@@ -12,7 +12,7 @@
        data.sysCommand = useShPath
        sysArgsRaw = @[useShPath, "-c", command]
        assert args.len == 0, "`args` has to be empty when using poEvalCommand."
-@@ -1468,8 +1469,11 @@
+@@ -1468,8 +1469,29 @@
        p.errStream = createStream(p.errHandle, fmRead).newPipeOutStream
      return p.errStream
  

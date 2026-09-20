@@ -1,20 +1,12 @@
 --- a/lib/posix/posix.nim
 +++ b/lib/posix/posix.nim
-@@ -521,14 +521,44 @@
- proc dup2*(a1, a2: cint): cint {.importc, header: "<unistd.h>".}
- proc encrypt*(a1: array[0..63, char], a2: cint) {.importc, header: "<unistd.h>".}
- 
--proc execl*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
--proc execle*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
--proc execlp*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
+@@ -524,9 +524,31 @@
+ proc execl*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
+ proc execle*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
+ proc execlp*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
 -proc execv*(a1: cstring, a2: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
 -proc execve*(a1: cstring, a2, a3: cstringArray): cint {.
 -  importc, header: "<unistd.h>", sideEffect.}
--proc execvp*(a1: cstring, a2: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
--proc execvpe*(a1: cstring, a2: cstringArray, a3: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
-+proc execl*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
-+proc execle*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
-+proc execlp*(a1, a2: cstring): cint {.varargs, importc, header: "<unistd.h>", sideEffect.}
 +when defined(ios):
 +  # Dopamine: shebang execve is EPERM. Retry via Mach-O /var/jb/bin/sh.
 +  proc execve_raw(a1: cstring, a2, a3: cstringArray): cint {.
@@ -40,13 +32,11 @@
 +  proc execv*(a1: cstring, a2: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
 +  proc execve*(a1: cstring, a2, a3: cstringArray): cint {.
 +    importc, header: "<unistd.h>", sideEffect.}
-+proc execvp*(a1: cstring, a2: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
-+proc execvpe*(a1: cstring, a2: cstringArray, a3: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
+ proc execvp*(a1: cstring, a2: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
+ proc execvpe*(a1: cstring, a2: cstringArray, a3: cstringArray): cint {.importc, header: "<unistd.h>", sideEffect.}
  proc fchown*(a1: cint, a2: Uid, a3: Gid): cint {.importc, header: "<unistd.h>", sideEffect.}
- proc fchdir*(a1: cint): cint {.importc, header: "<unistd.h>", sideEffect.}
- proc fdatasync*(a1: cint): cint {.importc, header: "<unistd.h>".}
-@@ -875,10 +905,37 @@
-               importc, header: "<sys/select.h>".}
+@@ -875,10 +897,35 @@
+              importc, header: "<sys/select.h>".}
  
  when hasSpawnH:
 -  proc posix_spawn*(a1: var Pid, a2: cstring,
@@ -85,7 +75,7 @@
    proc posix_spawn_file_actions_addclose*(a1: var Tposix_spawn_file_actions,
              a2: cint): cint {.importc, header: "<spawn.h>".}
    proc posix_spawn_file_actions_adddup2*(a1: var Tposix_spawn_file_actions,
-@@ -921,10 +978,16 @@
+@@ -921,10 +968,17 @@
                                         importc, header: "<spawn.h>".}
    proc posix_spawnattr_setsigmask*(a1: var Tposix_spawnattr,
              a2: var Sigset): cint {.importc, header: "<spawn.h>".}

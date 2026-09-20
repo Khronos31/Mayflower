@@ -1,6 +1,6 @@
 --- a/lib/pure/os.nim
 +++ b/lib/pure/os.nim
-@@ -207,8 +207,27 @@
+@@ -207,8 +207,30 @@
        result.add quoteShell(args[i])
  
  when not weirdTarget:

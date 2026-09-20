@@ -1,6 +1,6 @@
 --- a/config/nim.cfg
 +++ b/config/nim.cfg
-@@ -377,3 +377,8 @@
+@@ -377,3 +377,9 @@
    clang.options.linker %= "${clang.options.linker} -s"
    clang.cpp.options.linker %= "${clang.cpp.options.linker} -s"
  @end
