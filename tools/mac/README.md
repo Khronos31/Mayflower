@@ -92,6 +92,11 @@ env -u SDKROOT -u IPHONEOS_DEPLOYMENT_TARGET \
 | LLVM (ios) | stage2 rustc 用 | iPhone |
 | stage2 rustc | stage1 が建てる | iPhone（成果物） |
 
+パッチは `packages/rust/patches-host/` をソース木に当ててから `x.py dist` する。
+`library_std_src_sys_process_unix_unix.rs.patch` は `std::process::Command` の
+shebang 再試行。当てたあと `python3 x.py dist rust-std --stage 2` だけでも
+`rust-std` の tarball は作り直せる（LLVM / rustc は既存の stage2 を使う）。
+
 出来た tarball を端末へ渡し、`make.sh rust` の `prepare()` がそれを要求する。
 Go の `GOROOT_BOOTSTRAP` と同じ扱いで、母艦の事情を `make.sh` に持ち込まない。
 

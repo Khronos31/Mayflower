@@ -1,0 +1,93 @@
+--- a/library/std/src/sys/process/unix/unix.rs
++++ b/library/std/src/sys/process/unix/unix.rs
+@@ -51,6 +51,39 @@
+ // Command
+ ////////////////////////////////////////////////////////////////////////////////
+ 
++/// Rootless jailbreak: shebang spawn is EPERM (Dopamine) or ENOENT (no /bin/sh).
++#[cfg(target_os = "ios")]
++unsafe fn jailbreak_sh_argv(
++    program: *const libc::c_char,
++    argv: *const *const libc::c_char,
++) -> (*const libc::c_char, [*const libc::c_char; 64]) {
++    const SH: &[u8] = b"/var/jb/bin/sh\0"; // rust byte string with NUL
++    let sh = SH.as_ptr().cast::<libc::c_char>();
++    let mut nargv = [core::ptr::null(); 64];
++    nargv[0] = sh;
++    nargv[1] = program;
++    let mut i = 2;
++    if !argv.is_null() {
++        let mut j = 1;
++        loop {
++            let p = *argv.add(j);
++            if p.is_null() || i >= 63 {
++                break;
++            }
++            nargv[i] = p;
++            i += 1;
++            j += 1;
++        }
++    }
++    nargv[i] = core::ptr::null();
++    (sh, nargv)
++}
++
++#[cfg(target_os = "ios")]
++fn jailbreak_should_retry(err: i32) -> bool {
++    err == libc::EPERM || err == libc::ENOEXEC || err == libc::ENOENT
++}
++
+ impl Command {
+     pub fn spawn(
+         &mut self,
+@@ -411,6 +444,21 @@
+         }
+ 
+         libc::execvp(self.get_program_cstr().as_ptr(), self.get_argv().as_ptr());
++        #[cfg(target_os = "ios")]
++        {
++            let err = io::Error::last_os_error();
++            if let Some(raw) = err.raw_os_error() {
++                if jailbreak_should_retry(raw) {
++                    let (sh, nargv) = unsafe {
++                        jailbreak_sh_argv(
++                            self.get_program_cstr().as_ptr(),
++                            self.get_argv().as_ptr(),
++                        )
++                    };
++                    libc::execvp(sh, nargv.as_ptr());
++                }
++            }
++        }
+         Err(io::Error::last_os_error())
+     }
+ 
+@@ -831,6 +879,28 @@
+ 
+             #[cfg(any(target_os = "nto", target_os = "qnx"))]
+             let spawn_res = spawn_res?;
++
++            #[cfg(target_os = "ios")]
++            let spawn_res = {
++                if jailbreak_should_retry(spawn_res) {
++                    let (sh, nargv) = unsafe {
++                        jailbreak_sh_argv(
++                            self.get_program_cstr().as_ptr(),
++                            self.get_argv().as_ptr(),
++                        )
++                    };
++                    spawn_fn(
++                        &mut p.pid,
++                        sh,
++                        file_actions.0.as_ptr(),
++                        attrs.0.as_ptr(),
++                        nargv.as_ptr() as *const _,
++                        envp as *const _,
++                    )
++                } else {
++                    spawn_res
++                }
++            };
+ 
+             cvt_nz(spawn_res)?;
+             Ok(Some(p))
