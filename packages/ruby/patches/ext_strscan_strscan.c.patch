@@ -8,8 +8,7 @@
 +/* rb_reg_onig_match is available in Ruby 3.3 and later.
 + * In-tree builds can miss HAVE_RB_REG_ONIG_MATCH if extconf's have_func
 + * test binary dies. Force it on so the static fallback does not clash
-+ * with the non-static decl in ruby/re.h (RUBY_API_VERSION_CODE may be
-+ * invisible while compiling the extension). */
++ * with the non-static decl in ruby/re.h. */
 +#if !defined(HAVE_RB_REG_ONIG_MATCH) || !HAVE_RB_REG_ONIG_MATCH
 +# undef HAVE_RB_REG_ONIG_MATCH
 +# define HAVE_RB_REG_ONIG_MATCH 1
