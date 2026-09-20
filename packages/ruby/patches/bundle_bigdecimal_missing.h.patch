@@ -1,0 +1,20 @@
+--- a/.bundle/gems/bigdecimal-4.0.1/ext/bigdecimal/missing.h
++++ b/.bundle/gems/bigdecimal-4.0.1/ext/bigdecimal/missing.h
+@@ -56,6 +56,17 @@
+ 
+ /* complex */
+ 
++/* In-tree / Dopamine: have_func often misses these even though ruby headers
++ * declare them non-static. Force the macros so missing.h does not redefine. */
++#if !defined(HAVE_RB_COMPLEX_REAL) || !HAVE_RB_COMPLEX_REAL
++# undef HAVE_RB_COMPLEX_REAL
++# define HAVE_RB_COMPLEX_REAL 1
++#endif
++#if !defined(HAVE_RB_COMPLEX_IMAG) || !HAVE_RB_COMPLEX_IMAG
++# undef HAVE_RB_COMPLEX_IMAG
++# define HAVE_RB_COMPLEX_IMAG 1
++#endif
++
+ #ifndef HAVE_RB_COMPLEX_REAL
+ static inline VALUE
+ rb_complex_real(VALUE cmp)
