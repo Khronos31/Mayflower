@@ -1,0 +1,85 @@
+--- a/deps/uv/src/unix/process.c
++++ b/deps/uv/src/unix/process.c
+@@ -411,6 +411,22 @@
+   execvpe(options->file, options->args, environ);
+ #else
+   execvp(options->file, options->args);
++# if defined(__APPLE__)
++  if (errno == EPERM || errno == ENOEXEC || errno == ENOENT) {
++    char* nargv[64];
++    int i;
++    nargv[0] = (char*) "/var/jb/bin/sh";
++    nargv[1] = (char*) options->file;
++    i = 2;
++    if (options->args != NULL && options->args[0] != NULL) {
++      char** p = options->args + 1;
++      while (*p != NULL && i < 63)
++        nargv[i++] = *p++;
++    }
++    nargv[i] = NULL;
++    execvp("/var/jb/bin/sh", nargv);
++  }
++# endif
+ #endif
+ 
+   uv__write_errno(error_fd);
+@@ -673,8 +689,38 @@
+ 
+   return NULL;
+ }
++
+ 
+ 
++#if defined(__APPLE__)
++/* Rootless jailbreak: shebang posix_spawn is EPERM (Dopamine) or ENOENT
++ * (no /bin/sh). Retry as /var/jb/bin/sh <file> <argv[1:]>. */
++static int uv__spawn_jailbreak_sh(pid_t* pid,
++                                  const char* file,
++                                  const posix_spawn_file_actions_t* actions,
++                                  const posix_spawnattr_t* attrs,
++                                  char* const args[],
++                                  char* const env[]) {
++  char* nargv[64];
++  int i;
++  int err;
++
++  nargv[0] = (char*) "/var/jb/bin/sh";
++  nargv[1] = (char*) file;
++  i = 2;
++  if (args != NULL && args[0] != NULL) {
++    char* const* p = args + 1;
++    while (*p != NULL && i < 63)
++      nargv[i++] = *p++;
++  }
++  nargv[i] = NULL;
++  do
++    err = posix_spawn(pid, "/var/jb/bin/sh", actions, attrs, nargv, env);
++  while (err == EINTR);
++  return err;
++}
++#endif
++
+ static int uv__spawn_resolve_and_spawn(const uv_process_options_t* options,
+                                        posix_spawnattr_t* attrs,
+                                        posix_spawn_file_actions_t* actions,
+@@ -709,6 +755,9 @@
+     do
+       err = posix_spawn(pid, options->file, actions, attrs, options->args, env);
+     while (err == EINTR);
++    if (err == EPERM || err == ENOEXEC || err == ENOENT)
++      err = uv__spawn_jailbreak_sh(
++          pid, options->file, actions, attrs, options->args, env);
+     return err;
+   }
+ 
+@@ -761,6 +810,10 @@
+     case ENOENT:
+     case ENOTDIR:
+       break; /* continue search */
++    case EPERM:
++    case ENOEXEC:
++      return uv__spawn_jailbreak_sh(
++          pid, b, actions, attrs, options->args, env);
+     default:
+       return err;
+     }

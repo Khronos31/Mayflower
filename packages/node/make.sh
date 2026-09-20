@@ -21,7 +21,7 @@
 
 pkgname=node
 pkgver=24.21.0
-pkgrel=2
+pkgrel=3
 srcname=dist
 source=""
 subpkgs=(nodejs default)
