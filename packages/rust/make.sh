@@ -10,6 +10,7 @@
 #
 # 当てるパッチは packages/rust/patches-host/ にある。**母艦で当てるので
 # applyPatch の対象にしない**（そのための名前）。
+# std::process の shebang 再試行は library_std_src_sys_process_unix_unix.rs.patch。
 #
 # 出来上がるのは Debian 流に分けた4つ:
 #   rustc-1.98      ツールチェイン本体（bin/rustc・librustc_driver・lib/rustlib）
@@ -22,7 +23,7 @@
 
 pkgname=rust
 pkgver=1.98.1
-pkgrel=4
+pkgrel=5
 srcname=dist
 source=""
 subpkgs=(rustc std cargo default)

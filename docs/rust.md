@@ -6,7 +6,8 @@ Rust ツールチェインをパッケージングする。
 
 ## パッケージ情報
 
-- 版: 1.98.1-4
+- 版: 1.98.1-5
+- `std::process::Command` は libstd 内で shebang の EPERM/ENOEXEC/ENOENT を `/var/jb/bin/sh` で再試行する（libiosexec なし）。Mac で `library/std` を建て直した dist が要る。
 - PATH の `rustc` / `cargo` は Mach-O ラッパー（Dopamine の shebang EPERM）。SDKROOT は未設定なら iPhoneOS.sdk を焼く。
 - Depends（`rustc-1.98`）: `build-essential`, `clang`, `ldid`
 - パッケージ構成:
