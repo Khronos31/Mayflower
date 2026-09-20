@@ -74,7 +74,7 @@ check() {
   DYLD_LIBRARY_PATH="$(pwd)" ./lua -e "
     local h = io.popen('${BUILDROOT}/t-shebang.sh')
     local o = h:read('*a'); h:close()
-    assert(o:match('lua-shebang-ok'), o)
+    assert(o:match('lua%-shebang%-ok'), o)
     print('shebang', 'ok')
   "
 }
