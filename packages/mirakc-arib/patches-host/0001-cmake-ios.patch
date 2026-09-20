@@ -1,0 +1,55 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 5e29d1d..ios0001 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-cmake_minimum_required(VERSION 3.5.0)
++cmake_minimum_required(VERSION 3.16)
+ 
+ project(mirakc-arib)
+ 
+@@ -246,7 +246,7 @@ ExternalProject_Add(vendor-spdlog
+     -D SPDLOG_BUILD_EXAMPLE=OFF
+     -D SPDLOG_BUILD_BENCH=OFF
+     -D SPDLOG_BUILD_TESTS=${MIRAKC_ARIB_VENDOR_TEST}
+-    -D SPDLOG_FMT_EXTERNAL=ON
++    -D SPDLOG_FMT_EXTERNAL=OFF
+   EXCLUDE_FROM_ALL
+     YES
+ )
+@@ -361,10 +361,13 @@ ExternalProject_Add(vendor-aribb24
+   CONFIGURE_COMMAND
+     ./bootstrap
+   COMMAND
+-    ./configure
+-      --prefix=${MIRAKC_ARIB_VENDOR_DIR}
+-      --disable-shared --with-pic --without-libpng
+-      $<$<BOOL:CMAKE_CROSSCOMPILING>:--host=${CMAKE_C_COMPILER_TARGET}>
++    ${CMAKE_COMMAND} -E env
++      CC=${CMAKE_C_COMPILER}
++      CXX=${CMAKE_CXX_COMPILER}
++      ./configure
++        --prefix=${MIRAKC_ARIB_VENDOR_DIR}
++        --disable-shared --with-pic --without-libpng
++        --host=arm64-apple-ios
+   BUILD_COMMAND
+     make -j ${NPROC}
+   EXCLUDE_FROM_ALL
+@@ -395,7 +398,7 @@ endif()
+ 
+ # tsduck-arib
+ 
+-set(MIRAKC_ARIB_TSDUCK_DEFS ARIB=1 NOCURL=1 NODTAPI=1 NOPCSC=1 NOSRT=1)
++set(MIRAKC_ARIB_TSDUCK_DEFS ARIB=1 NOCURL=1 NODTAPI=1 NOPCSC=1 NOSRT=1 COMMON_WARNINGS=-Wall)
+ 
+ if(NOT MIRAKC_ARIB_VENDOR_TEST)
+   list(APPEND MIRAKC_ARIB_TSDUCK_DEFS NOTEST=1)
+@@ -431,6 +434,8 @@ ExternalProject_Add(vendor-tsduck-arib
+     https://github.com/masnagam/tsduck-arib.git
+   GIT_TAG
+     ${MIRAKC_ARIB_TSDUCK_ARIB_VERSION}
++  PATCH_COMMAND
++    git checkout -f && patch -p1 < ${CMAKE_SOURCE_DIR}/patches/tsduck-ios.patch
+   BUILD_IN_SOURCE
+     YES
+   CONFIGURE_COMMAND

@@ -63,6 +63,7 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 | [lua](docs/lua.md) | 5.5.1 | `lua5.5` / `liblua5.5-0` / `liblua5.5-dev` / `lua-default` |
 | [luarocks](docs/luarocks.md) | 3.13.0 | Lua 5.5 用。ユーザートリーは `~/.luarocks` |
 | [mirakc](docs/mirakc.md) | 3.4.86 | Mirakurun 互換 PVR。端末の rustc で建てる（`-p mirakc` のみ）。Procursus に無し |
+| [mirakc-arib](docs/mirakc-arib.md) | 0.9.1 | `mirakc-arib`。ARIB TS の scan/EIT/filter。**ビルドは Mac**。Procursus に無し |
 | [nim](docs/nim.md) | 2.2.12 | コンパイラ・nimble・atlas・nimsuggest・nimgrep・nimpretty・testament |
 | [node](docs/node.md) | 24.21.0 | `nodejs-24` / `node-default`。ビルドだけ Mac。`--jitless` 既定。`node-default` が Procursus の npm 8.1.1 を置換 |
 | [pcsc-lite](docs/pcsc-lite.md) | 2.5.1-4 | `libpcsclite1` / `pcscd` / `libpcsclite-dev`。端末で建てる。Procursus に無し。Dopamine 向け再署名 |

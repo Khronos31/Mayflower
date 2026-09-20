@@ -1,0 +1,81 @@
+diff --git a/Makefile.common b/Makefile.common
+index b2f279d8..6f41cf42 100644
+--- a/Makefile.common
++++ b/Makefile.common
+@@ -769,10 +769,6 @@ optsize:
+ 	+@$(MAKE) CFLAGS_OPTIMIZE="$(CFLAGS_OPTSIZE)"
+ 
+ # On macOS, HomeBrew development packages are installed in /usr/local.
+-ifdef MACOS
+-    CFLAGS_INCLUDES += -I/usr/local/include
+-    LDLIBS := -L/usr/local/lib $(LDLIBS)
+-endif
+ 
+ # Include paths for C++ also use include paths for C.
+ CXXFLAGS_INCLUDES += $(CFLAGS_INCLUDES)
+diff --git a/Makefile.tsduck b/Makefile.tsduck
+index a08be50e..fda28414 100644
+--- a/Makefile.tsduck
++++ b/Makefile.tsduck
+@@ -144,7 +144,6 @@ ifdef ARIB
+ endif
+ 
+ ifdef MACOS
+-    CFLAGS_INCLUDES += -I$(LIBTSDUCKDIR)/mac
+     LDFLAGS_EXTRA += -Wl,-rpath,@executable_path
+     SOFLAGS = -install_name '@rpath/$(notdir $@)'
+ else
+diff --git a/src/libtsduck/base/tsPlatform.h b/src/libtsduck/base/tsPlatform.h
+index 93850124..53bd5c32 100644
+--- a/src/libtsduck/base/tsPlatform.h
++++ b/src/libtsduck/base/tsPlatform.h
+@@ -862,9 +862,12 @@ TS_MSC_NOWARNING(5027)
+ #endif
+ 
+ #if defined(TS_MAC)
++#include <TargetConditionals.h>
+ #include <sys/mman.h>
++#if !TARGET_OS_IPHONE
+ #include <libproc.h>
+ #endif
++#endif
+ 
+ #if !defined(TS_NO_PCSC) // PC/SC support not inhibited by user.
+ #include <winscard.h>
+diff --git a/src/libtsduck/base/tsSysUtils.cpp b/src/libtsduck/base/tsSysUtils.cpp
+index 5737b93b..00031ec6 100644
+--- a/src/libtsduck/base/tsSysUtils.cpp
++++ b/src/libtsduck/base/tsSysUtils.cpp
+@@ -47,6 +47,8 @@ TSDUCK_SOURCE;
+ #include <mach/message.h>
+ #include <mach/kern_return.h>
+ #include <mach/task_info.h>
++#include <mach-o/dyld.h>
++#include <limits.h>
+ extern char **environ; // not defined in public headers
+ #endif
+ 
+@@ -422,18 +424,12 @@ ts::UString ts::ExecutableFile()
+ 
+ #elif defined(TS_MAC)
+ 
+-    // MacOS implementation.
+-    // The function proc_pidpath is documented as "private" and "subject to change".
+-    // Another option is _NSGetExecutablePath (not tested here yet).
+-    int length;
+-    char name[PROC_PIDPATHINFO_MAXSIZE];
+-    if ((length = ::proc_pidpath(getpid(), name, sizeof(name))) < 0) {
+-        throw ts::Exception(u"proc_pidpath error", errno);
+-    }
+-    else {
+-        assert(length <= int(sizeof(name)));
+-        return UString::FromUTF8(name, length);
++    char name[PATH_MAX];
++    uint32_t size = sizeof(name);
++    if (_NSGetExecutablePath(name, &size) != 0) {
++        throw ts::Exception(u"_NSGetExecutablePath error");
+     }
++    return UString::FromUTF8(name);
+ 
+ 
+ #else
