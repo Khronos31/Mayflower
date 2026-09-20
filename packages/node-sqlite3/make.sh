@@ -4,8 +4,8 @@
 # Mayflower | packages/node-sqlite3/make.sh
 #
 # npm の sqlite3 5.1.7（N-API の node_sqlite3.node）を梱包する。
-# Procursus の sqlite3 / libsqlite3-1 とは別物。EPGStation が require("sqlite3")
-# する拡張で、コマンドも共有ライブラリも使わない。
+# Procursus の sqlite3 / libsqlite3-1 とは別物。require("sqlite3") する
+# Node 拡張で、コマンドも共有ライブラリも使わない。
 #
 # **端末では建てない。** prebuild-install は darwin-arm64 を macOS と取り、
 # node-gyp は MACOSX_DEPLOYMENT_TARGET を焼く。Mac から ios-clang でクロスし、

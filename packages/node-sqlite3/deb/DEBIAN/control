@@ -13,5 +13,6 @@ Description: Node.js sqlite3 native addon
  npm sqlite3 5.1.7 built for Mayflower Node 24 (aarch64-apple-ios).
  Installs require("sqlite3") next to node-bin, at
  /var/jb/usr/lib/nodejs-24/node_modules/sqlite3. Not the Procursus
- sqlite3 CLI or libsqlite3-1; EPGStation loads this addon with dlopen.
+ sqlite3 CLI or libsqlite3-1. SQLite itself is the bundled 3.44.2
+ amalgamation, statically linked into node_sqlite3.node.
  Cross-built on Mac. Do not npm install sqlite3 on the device.

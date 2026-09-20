@@ -13,9 +13,9 @@ Procursus の `sqlite3`（CLI）および `libsqlite3-1` とは別物。
 - Depends: `nodejs-24`
 - PATH にコマンドは出さない（Mach-O ラッパー不要）
 
-`require("sqlite3")` は TypeORM / EPGStation が使う N-API 拡張
-（`node_sqlite3.node`）を `dlopen` する。`sqlite3` コマンドも
-`libsqlite3.dylib` も呼ばない。
+`require("sqlite3")` は N-API 拡張（`node_sqlite3.node`）を `dlopen` する。
+`sqlite3` コマンドも `libsqlite3.dylib` も呼ばない。SQLite 本体は同梱の
+amalgamation（3.44.2）を静的リンクしている。
 
 Node の `globalPaths` は `node-bin` が `.../nodejs-24/` 直下にある都合で
 `/usr/lib/lib/node` を見に行く。このパッケージは node 実体の隣の
