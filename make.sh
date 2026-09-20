@@ -13,6 +13,8 @@
 # 呼ばれた場合だけ解決されるので、素の execve からは exec できない。
 
 set -e
+# macOS/iOS の cp が DEBIAN 横に ._DEBIAN を作ると dpkg がルートへ展開しようとする
+export COPYFILE_DISABLE=1
 
 if [ $# -lt 1 ]; then
   echo "Usage: $0 <package>" >&2

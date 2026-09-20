@@ -7,15 +7,15 @@ CRuby を rootless 脱獄 iOS 上でセルフビルドする。
 ## パッケージ情報
 
 - パッケージ名: `ruby`（Procursus に同名は無い）
-- 版: 4.0.6-1
+- 版: 4.0.6-3
 - YJIT / ZJIT: **建てない**。端末に rustc があると configure が既定で有効にするので、
   `--disable-yjit --disable-zjit` を明示する。あとで足す余地はある。
 - Depends: `libssl3`, `libyaml-0-2`, `libffi8`, `libgmp10`, `libreadline8`,
   `libncursesw6`
 
-iPhone 8 / iOS 16.7.14 / palera1n rootless で `./make.sh ruby` が通り、
-`ruby_4.0.6-1_iphoneos-arm64.deb` を `dpkg -i` した。`ruby -v` は
-`ruby 4.0.6 ... +PRISM [arm64-darwin]`。YJIT は付かない。
+ビルドは palera1n（ip8）。Dopamine（se3）では configure の `have_func` が
+shebang `posix_spawn` の EPERM で落ちうるので、そこで建てない。
+成果物の `system` / バッククォート / `Process.spawn` / Open3 / PTY を se3 で確認する。
 
 ## ビルドの要点
 
@@ -45,7 +45,15 @@ rootless に `/bin/sh` は無い。パッチで次を `/var/jb/bin/sh` に向け
 - `lib/mkmf.rb` が Makefile に書く `SHELL`
 
 `Kernel#system` は Darwin では fork+exec なので `system(3)` を使わない。
-ただし `vm_dump.c` の `RUBY_ON_BUG` は `system(3)` を直呼びするので、
+`HAVE_WORKING_FORK` は have_func に頼らず configure cache で yes に固定する
+（Dopamine では試験バイナリの spawn が EPERM で no になりうる）。
+
+shebang ファイルの直 `spawn` は Dopamine では `EPERM` になる。fishhook で
+`posix_spawn` を張り替えると iOS 16 の chained fixups で SIGSEGV する
+（15 行の C でも再現）。Ruby は `try_with_sh` を EPERM でも回し、Mach-O の
+`/var/jb/bin/sh` 経由でやり直す。Mach-O PATH ラッパーは使わない。
+
+`vm_dump.c` の `RUBY_ON_BUG` は `system(3)` を直呼びするので、
 `ios_compat=1` で `mayflower_system` に差し替える。`ios_compat.c` は
 `COMMONOBJS` に入れて `libruby-static` に含める。mkmf の `have_func` が
 `-lruby-static` でリンクするため。

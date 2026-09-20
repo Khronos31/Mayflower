@@ -68,7 +68,7 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 | [px4-userland](docs/px4-userland.md) | 0.1.3 | `Name: PX4 Driver`。`px4d` / `px4-ts` / `px4ctl` + IFD dylib。ファーム非同梱 |
 | [python](docs/python.md) | 3.14.7 | `python3.14` / `python3-default` |
 | [ripgrep](docs/ripgrep.md) | 15.2.0 | `ripgrep-15` / `ripgrep-default`。端末の rustc で建てる。Procursus 12.1.1 を置換 |
-| [ruby](docs/ruby.md) | 4.0.6 | インタプリタ。YJIT / ZJIT は建てない |
+| [ruby](docs/ruby.md) | 4.0.6 | インタプリタ。YJIT / ZJIT は建てない。subprocess は palera1n で建て Dopamine で確認 |
 | [ruff](docs/ruff.md) | 0.16.7 | Python linter/formatter。端末の rustc で建てる。Procursus に無し |
 | [rust](docs/rust.md) | 1.98.1 | `rustc-1.98` / `rust-std-1.98` / `cargo-1.98` / `rust-default`。ツールチェインのビルドだけ Mac |
 | [sd](docs/sd.md) | 1.1.0 | 直感的な find & replace。端末の rustc で建てる。Procursus に無し |
