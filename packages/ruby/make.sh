@@ -67,18 +67,20 @@ build() {
 
   export LDFLAGS="${_ldflags_save}"
 
-  # mayflower_system: main と同じ COMMONOBJS 経路（force_load は使わない）。
-  # miniruby ルールは COMMONOBJS を前提に持たないので、リンク前に .o を作る。
+  # mayflower_system: miniruby は $(COMMONOBJS) $(MAINLIBS) でリンクし LIBS は見ない。
+  # COMMONOBJS += だけだと .o がリンク行に乗らないことがあるので、MAINLIBS に実ファイルを足す。
+  # force_load / LDFLAGS 丸焼きはしない。
   cp "${ROOTDIR}/compat/ios_compat.c" .
   printf '\nCOMMONOBJS += ios_compat.$(OBJEXT)\n' >> Makefile
   make ios_compat.o
+  printf '\nMAINLIBS += ios_compat.$(OBJEXT)\n' >> Makefile
 
-  # configure が焼いた LDFLAGS には spawn が無い。LIBS で一度だけ足す。
-  # -target もリンク行に要るので COMMON_FLAGS だけ戻す（LDFLAGS 全体の焼き直しはしない）。
+  # spawn も miniruby / 最終リンクに載せる（LIBS ではなく MAINLIBS）。
+  # -target は LDFLAGS に一度だけ。
   {
     printf '\n# Mayflower: mayflower_spawn (Dopamine shebang) + ios target\n'
     printf 'LDFLAGS += %s\n' "${COMMON_FLAGS}"
-    printf 'LIBS += -L%s -lmayflower_spawn -liosexec\n' "${BUILDROOT}"
+    printf 'MAINLIBS += -L%s -lmayflower_spawn -liosexec\n' "${BUILDROOT}"
   } >> Makefile
 
   make -j"$(/usr/sbin/sysctl -n hw.ncpu 2>/dev/null || echo 4)"
