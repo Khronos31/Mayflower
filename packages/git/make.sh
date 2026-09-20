@@ -13,7 +13,7 @@
 
 pkgname=git
 pkgver=2.55.0
-pkgrel=1
+pkgrel=2
 srcname="git-${pkgver}"
 source="https://www.kernel.org/pub/software/scm/git/git-${pkgver}.tar.xz"
 subpkgs=(git default)
@@ -72,6 +72,15 @@ check() {
   local bin="${srcdir}/git"
   ldid -S"${ENTFILE}" "${bin}"
   GIT_EXEC_PATH="${srcdir}" "${bin}" --version
+  local d hook
+  d="$(mktemp -d)"
+  hook="${d}/.git/hooks/post-commit"
+  GIT_EXEC_PATH="${srcdir}" "${bin}" -C "${d}" init -q
+  printf '%s\n' "#!${JB}/bin/sh" "echo git-hook-ok" > "${hook}"
+  chmod 755 "${hook}"
+  GIT_EXEC_PATH="${srcdir}" "${bin}" -C "${d}" \
+    -c user.email=a@b -c user.name=a commit --allow-empty -q -m x
+  rm -rf "${d}"
 }
 
 package_git() {
@@ -93,11 +102,7 @@ package_git() {
     esac
   done
   rm -f "${b}/git"
-  cat > "${b}/git-2.55" <<EOF
-#!${JB}/bin/sh
-exec ${JB}/usr/libexec/git-2.55/git "\$@"
-EOF
-  chmod 755 "${b}/git-2.55"
+  mayflower_install_exec "${b}/git-2.55" "${JB}/usr/libexec/git-2.55/git"
   local x
   for x in git-shell git-cvsserver scalar git-receive-pack git-upload-pack git-upload-archive; do
     if [ -L "${b}/${x}" ]; then

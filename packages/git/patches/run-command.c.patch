@@ -1,0 +1,22 @@
+--- a/run-command.c
++++ b/run-command.c
+@@ -413,8 +413,9 @@
+	BUG("command is empty");
+ 
+	/*
+-	 * Add SHELL_PATH so in the event exec fails with ENOEXEC we can
+-	 * attempt to interpret the command with 'sh'.
++	 * Add SHELL_PATH so in the event exec fails with ENOEXEC or EPERM
++	 * (Dopamine shebang posix_spawn/execve) we can attempt to interpret
++	 * the command with 'sh'.
+	 */
+	strvec_push(out, SHELL_PATH);
+ 
+@@ -868,7 +869,7 @@
+		execve(argv.v[1], (char *const *) argv.v + 1,
+		       (char *const *) childenv);
+-		if (errno == ENOEXEC)
++		if (errno == ENOEXEC || errno == EPERM)
+			execve(argv.v[0], (char *const *) argv.v,
+			       (char *const *) childenv);
+ 
