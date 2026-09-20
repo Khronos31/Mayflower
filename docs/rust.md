@@ -6,7 +6,8 @@ Rust ツールチェインをパッケージングする。
 
 ## パッケージ情報
 
-- 版: 1.98.1-3
+- 版: 1.98.1-4
+- PATH の `rustc` / `cargo` は Mach-O ラッパー（Dopamine の shebang EPERM）。SDKROOT は未設定なら iPhoneOS.sdk を焼く。
 - Depends（`rustc-1.98`）: `build-essential`, `clang`, `ldid`
 - パッケージ構成:
   - `rustc-1.98`: ツールチェイン本体（`bin/rustc`、`librustc_driver`、`lib/rustlib`）
