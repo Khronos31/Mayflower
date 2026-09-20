@@ -78,6 +78,11 @@ build() {
     --disable-test-modules \
     --without-static-libpython
 
+  # _localemodule が libintl を使う。Programs/_freeze_module のリンク行は
+  # configure が見つけた LIBS を十分に継がないことがあり、-lintl が抜ける。
+  export LDFLAGS="${LDFLAGS} -lintl"
+  export LIBS="${LIBS:+${LIBS} }-lintl"
+
   # make は $ROOTDIR/bin のラッパー（SHELL を与える）が PATH 先頭で拾われる
   make -j"$(/usr/sbin/sysctl -n hw.ncpu 2>/dev/null || echo 4)"
 }
@@ -99,9 +104,9 @@ print("shell   ", subprocess.run("echo shell-ok", shell=True, capture_output=Tru
 print("system  ", os.system("echo os.system-ok"))
 # Dopamine: posix_spawn of a shebang script (mayflower_spawn fishhook)
 sh = """#!/var/jb/bin/sh\necho py-shebang-ok\n"""
-open("/tmp/mayflower-py-shebang.sh", "w").write(sh)
-os.chmod("/tmp/mayflower-py-shebang.sh", 0o755)
-r = subprocess.run(["/tmp/mayflower-py-shebang.sh"], capture_output=True, text=True)
+p = __import__("os").path.join(__import__("os").environ["HOME"], "mayflower-py-shebang.sh"); open(p, "w").write(sh)
+os.chmod(p, 0o755)
+r = subprocess.run([p], capture_output=True, text=True)
 assert r.returncode == 0 and "py-shebang-ok" in r.stdout, (r.returncode, r.stdout, r.stderr)
 print("shebang ", r.stdout.strip())
 import urllib.request; print("urllib  ", "ok", urllib.request.getproxies())

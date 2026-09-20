@@ -58,8 +58,11 @@ build() {
 
   # mkmf の have_func は -lruby-static でリンクする。mayflower_system が
   # 静的ライブラリに入っていないと、拡張の HAVE_* が全部落ちる。
+  # COMMONOBJS に足すだけでは -j 並列で miniruby リンクが ios_compat.o 未生成の
+  # まま走り _mayflower_system 未定義になるので、先に単体でコンパイルする。
   cp "${ROOTDIR}/compat/ios_compat.c" .
   printf '\nCOMMONOBJS += ios_compat.$(OBJEXT)\n' >> Makefile
+  make ios_compat.o
 
   make -j"$(/usr/sbin/sysctl -n hw.ncpu 2>/dev/null || echo 4)"
 }
