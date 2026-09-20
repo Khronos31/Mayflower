@@ -46,6 +46,11 @@ goroot_install() {
   echo "${JB}/usr/lib/go-${goseries}"
 }
 
+# 共通 entitlements.plist では Dopamine で go が SIGKILL する。
+go_entfile() {
+  echo "${PROJECTROOT}/entitlements-jit.plist"
+}
+
 prepare() {
   : "${GOROOT_BOOTSTRAP:?クロスビルドした bootstrap ツールチェインのパスを渡すこと}"
   if ! "${GOROOT_BOOTSTRAP}/bin/go" version >/dev/null 2>&1; then
@@ -71,7 +76,7 @@ build() {
   # 署名はリンカのパッチが行うため、ここにラッパーは要らない。
   export CC=clang CXX=clang++
   # リンカのパッチが読む。ビルド中の中間バイナリもこれで署名される。
-  export GO_LDID_ENTITLEMENTS="${ENTFILE}"
+  export GO_LDID_ENTITLEMENTS="$(go_entfile)"
   export GOTELEMETRY=off
 
   # -trimpath 相当を使わないこと。焼き込みの GOROOT と実行ファイルパスからの
@@ -109,16 +114,28 @@ EOF
   GOROOT="${goroot}" "${goroot}/bin/go" build -o hello ./
   ./hello
   ldid -e hello | grep -q platform-application
+  ldid -e hello | grep -q dynamic-codesigning
 }
 
 package_go() {
   cd "${srcdir}" || return 1
   local dest
   dest="${pkgdir}$(goroot_install)"
+  local ent
+  ent="$(go_entfile)"
   install -d "${dest}"
   cp -R bin pkg api go.env VERSION "${dest}/"
-  # リンカのパッチはここを既定の entitlements として探す。
-  install -m644 "${ENTFILE}" "${dest}/entitlements.plist"
+  # リンカのパッチはここを既定の entitlements として探す（go build 成果物も同 ents）。
+  install -m644 "${ent}" "${dest}/entitlements.plist"
+  local tool
+  for tool in "${dest}/bin/go" "${dest}/bin/gofmt"; do
+    ldid -S"${ent}" "${tool}" || return 1
+  done
+  if [ -d "${dest}/pkg/tool" ]; then
+    find "${dest}/pkg/tool" -type f -perm -111 | while read -r tool; do
+      ldid -S"${ent}" "${tool}" || return 1
+    done
+  fi
   install -d "${pkgdir}${JB}/usr/share/licenses/golang-${goseries}"
   install -m644 LICENSE "${pkgdir}${JB}/usr/share/licenses/golang-${goseries}/LICENSE"
 }
