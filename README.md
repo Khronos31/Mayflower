@@ -65,6 +65,7 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 | [mirakc](docs/mirakc.md) | 3.4.86 | Mirakurun 互換 PVR。端末の rustc で建てる（`-p mirakc` のみ）。Procursus に無し |
 | [nim](docs/nim.md) | 2.2.12 | コンパイラ・nimble・atlas・nimsuggest・nimgrep・nimpretty・testament |
 | [node](docs/node.md) | 24.21.0 | `nodejs-24` / `node-default`。ビルドだけ Mac。`--jitless` 既定。`node-default` が Procursus の npm 8.1.1 を置換 |
+| [node-sqlite3](docs/node-sqlite3.md) | 5.1.7 | `nodejs-sqlite3`。npm の sqlite3 を Mac からクロス。Procursus の sqlite3 CLI とは別。PATH にコマンドは出さない |
 | [pcsc-lite](docs/pcsc-lite.md) | 2.5.1-4 | `libpcsclite1` / `pcscd` / `libpcsclite-dev`。端末で建てる。Procursus に無し。Dopamine 向け再署名 |
 | [px4-userland](docs/px4-userland.md) | 0.1.3 | `Name: PX4 Driver`。`px4d` / `px4-ts` / `px4ctl` + IFD dylib。ファーム非同梱 |
 | [python](docs/python.md) | 3.14.7 | `python3.14` / `python3-default` |
