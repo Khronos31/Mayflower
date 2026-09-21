@@ -1,0 +1,15 @@
+Package: mirakc-arib
+Name: mirakc-arib
+Version: @VERSION@
+Architecture: @ARCH@
+Section: Utilities
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
+Homepage: https://github.com/mirakc/mirakc-arib
+Tag: purpose::console, role::program
+Description: ARIB MPEG-TS utilities for mirakc
+ Tools to scan services, collect EITs, and filter ARIB TS
+ streams. Binary is /var/jb/usr/bin/mirakc-arib. Cross-built
+ on Mac with tsduck-arib and aribb24 linked in. Not in
+ Procursus. Does not include mirakc itself.

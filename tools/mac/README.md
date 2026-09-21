@@ -112,6 +112,18 @@ caffeinate -i nohup "$MAYFLOWER/tools/mac/node/build.sh" > ~/node-ios/build.log 
 成果は `~/node-ios/dist/node-24.21.0-aarch64-apple-ios.tar.xz`。端末では
 `NODE_DIST_DIR` にその `dist` を渡す。
 
+## mirakc-arib
+
+```sh
+export MAYFLOWER=~/dev/Mayflower
+export PATH=~/ios-tools:$PATH
+caffeinate -i "$MAYFLOWER/tools/mac/mirakc-arib/build.sh"
+```
+
+成果は `~/mirakc-arib-ios/dist/mirakc-arib-0.9.1-aarch64-apple-ios.tar.xz`。
+端末では `MIRAKC_ARIB_DIST_DIR` にその `dist` を渡す。tsduck は Darwin を
+macOS と取るので、パッチは `packages/mirakc-arib/patches-host/`。
+
 ## llvm-swift
 
 Clang 19 / Swift 6.1 クロス。詳細は [llvm-swift/README.md](llvm-swift/README.md)。
