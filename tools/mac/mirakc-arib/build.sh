@@ -66,6 +66,9 @@ fi
 if ! grep -q 'SPDLOG_FMT_EXTERNAL=OFF' "${SRC}/CMakeLists.txt"; then
   patch -p1 -d "${SRC}" < "${PATCHDIR}/0001-cmake-ios.patch"
 fi
+if ! grep -q 'LanguageCodeU32' "${SRC}/src/eit_collector.hh"; then
+  patch -p1 -d "${SRC}" < "${PATCHDIR}/0003-eit-component-json.patch"
+fi
 cp "${PATCHDIR}/0002-tsduck-ios.patch" "${SRC}/patches/tsduck-ios.patch"
 
 cat > "${TOOLCHAIN}" <<EOF

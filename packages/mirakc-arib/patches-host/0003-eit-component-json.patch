@@ -1,0 +1,59 @@
+diff --git a/src/eit_collector.hh b/src/eit_collector.hh
+index 73d0528..369cbe5 100644
+--- a/src/eit_collector.hh
++++ b/src/eit_collector.hh
+@@ -761,6 +761,18 @@ class EitCollector final : public PacketSink,
+     return json;
+   }
+ 
++  static uint32_t LanguageCodeU32(const ts::UString& code) {
++    const std::string s = code.toUTF8();
++    uint32_t n = 0;
++    for (size_t i = 0; i < 3; ++i) {
++      n <<= 8;
++      if (i < s.size()) {
++        n |= static_cast<uint8_t>(s[i]);
++      }
++    }
++    return n;
++  }
++
+   rapidjson::Value MakeJsonValue(
+       const ts::ComponentDescriptor& desc,
+       rapidjson::Document::AllocatorType& allocator) const {
+@@ -768,6 +780,12 @@ class EitCollector final : public PacketSink,
+     json.AddMember("$type", "Component", allocator);
+     json.AddMember("streamContent", desc.stream_content, allocator);
+     json.AddMember("componentType", desc.component_type, allocator);
++    json.AddMember("componentTag", desc.component_tag, allocator);
++    json.AddMember("languageCode", LanguageCodeU32(desc.language_code), allocator);
++    const std::string text = desc.text.toUTF8();
++    if (!text.empty()) {
++      json.AddMember("text", rapidjson::Value().SetString(text, allocator), allocator);
++    }
+     return json;
+   }
+ 
+@@ -794,8 +812,22 @@ class EitCollector final : public PacketSink,
+       rapidjson::Document::AllocatorType& allocator) const {
+     rapidjson::Value json(rapidjson::kObjectType);
+     json.AddMember("$type", "AudioComponent", allocator);
++    json.AddMember("streamContent", desc.stream_content, allocator);
+     json.AddMember("componentType", desc.component_type, allocator);
++    json.AddMember("componentTag", desc.component_tag, allocator);
++    json.AddMember("simulcastGroupTag", desc.simulcast_group_tag, allocator);
++    json.AddMember("esMultiLingualFlag", desc.es_multi_lingual, allocator);
++    json.AddMember("mainComponentFlag", desc.main_component, allocator);
++    json.AddMember("qualityIndicator", desc.quality_indicator, allocator);
+     json.AddMember("samplingRate", desc.sampling_rate, allocator);
++    json.AddMember("languageCode", LanguageCodeU32(desc.language_code), allocator);
++    if (!desc.language_code2.empty()) {
++      json.AddMember("languageCode2", LanguageCodeU32(desc.language_code2), allocator);
++    }
++    const std::string text = desc.text.toUTF8();
++    if (!text.empty()) {
++      json.AddMember("text", rapidjson::Value().SetString(text, allocator), allocator);
++    }
+     return json;
+   }
+ 

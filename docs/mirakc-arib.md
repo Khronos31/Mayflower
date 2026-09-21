@@ -8,7 +8,7 @@
 
 ## パッケージ情報
 
-- 版: 0.9.1-1
+- 版: 0.9.1-2
 - パッケージ: `mirakc-arib`
 - PATH: `/var/jb/usr/bin/mirakc-arib`（Mach-O。ラッパ無し）
 - ビルド: **Mac**（`tools/mac/mirakc-arib/build.sh`）
@@ -41,6 +41,9 @@ mirakc-arib --version
   （`-Werror` の reserved-id で tsduck が落ちる）
 - tsduck-arib: macOS 専用の `/usr/local/include` と `libtsduck/mac` を外す。
   iPhone では `libproc.h` が無いので `_NSGetExecutablePath` を使う
+- collect-eits の Component / AudioComponent JSON に mirakc 3.4.86 が
+  要求するフィールドを足す（欠けていると serde がセクションごと捨て、
+  番組名が空になる）
 
 SDK は Node と同じく Xcode の iPhoneOS（`ios-clang`）。triple は
 `arm64-apple-ios16.0`。
