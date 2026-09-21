@@ -13,7 +13,7 @@
 
 pkgname=mirakc-arib
 pkgver=0.9.1
-pkgrel=2
+pkgrel=3
 srcname=dist
 source=""
 export compress=xz

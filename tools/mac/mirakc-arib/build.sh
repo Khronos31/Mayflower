@@ -69,6 +69,9 @@ fi
 if ! grep -q 'LanguageCodeU32' "${SRC}/src/eit_collector.hh"; then
   patch -p1 -d "${SRC}" < "${PATCHDIR}/0003-eit-component-json.patch"
 fi
+if ! grep -q 'Keep the previous 3-hour slot' "${SRC}/src/eit_collector.hh"; then
+  patch -p1 -d "${SRC}" < "${PATCHDIR}/0004-eit-current-onair.patch"
+fi
 cp "${PATCHDIR}/0002-tsduck-ios.patch" "${SRC}/patches/tsduck-ios.patch"
 
 cat > "${TOOLCHAIN}" <<EOF

@@ -8,7 +8,7 @@
 
 ## パッケージ情報
 
-- 版: 0.9.1-2
+- 版: 0.9.1-3
 - パッケージ: `mirakc-arib`
 - PATH: `/var/jb/usr/bin/mirakc-arib`（Mach-O。ラッパ無し）
 - ビルド: **Mac**（`tools/mac/mirakc-arib/build.sh`）
@@ -44,6 +44,7 @@ mirakc-arib --version
 - collect-eits の Component / AudioComponent JSON に mirakc 3.4.86 が
   要求するフィールドを足す（欠けていると serde がセクションごと捨て、
   番組名が空になる）
+- 直前の3時間 EIT セグメントは捨てない（8時開始の番組が9時台に消える）
 
 SDK は Node と同じく Xcode の iPhoneOS（`ios-clang`）。triple は
 `arm64-apple-ios16.0`。
