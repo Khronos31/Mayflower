@@ -10,7 +10,7 @@
 
 pkgname=epgstation
 pkgver=2.10.0
-pkgrel=1
+pkgrel=2
 srcname=dist
 source=""
 export compress=xz

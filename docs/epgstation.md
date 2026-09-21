@@ -6,7 +6,7 @@
 
 ## パッケージ情報
 
-- 版: 2.10.0-1
+- 版: 2.10.0-2
 - パッケージ: `epgstation`
 - コード: `/var/jb/usr/lib/epgstation`
 - データ: `/var/jb/var/lib/epgstation`（`data` / `recorded` / `logs` / `thumbnail` / `drop` / `config.yml`）
@@ -36,6 +36,9 @@ sudo dpkg -i packages/epgstation/arm64/epgstation_*.deb
 sqlite3 の `.node` は payload に入れない。`nodejs-sqlite3` へのリンク。
 
 子プロセス（Service / EPG updater）は `process.execPath`（`node-bin`）へ `--jitless` 付きで spawn する。`argv[0]` のラッパを spawn すると、IPC の相手が Node になる前に切れる。
+
+`--jitless` では undici の `fetch` が WebAssembly を要求して落ちる。mirakc 向けの
+`/api/services/:id/programs` は `http.get` に差し替えてある。
 
 ## 端末上での実行
 

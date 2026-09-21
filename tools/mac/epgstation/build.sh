@@ -57,6 +57,9 @@ for rel in ('dist/index.js', 'dist/model/epgUpdater/EPGUpdateExecutorManageModel
     p.write_text(t.replace(old, new, 1))
     print('patched', rel)
 "
+# Node --jitless には WebAssembly が無く undici fetch が即死する。
+python3 "${MAYFLOWER}/packages/epgstation/patches-host/patch-fetch.py" \
+  "${SRC}/dist/model/epgUpdater/EPGUpdateManageModel.js"
 
 if [ ! -f "${SRC}/client/dist/index.html" ]; then
   (cd "${SRC}/client" && "${HOST_NPM}" ci --ignore-scripts --no-audit --no-fund)
