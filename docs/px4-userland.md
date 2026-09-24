@@ -2,16 +2,21 @@
 
 ソースツリー: [`packages/px4-userland`](../packages/px4-userland)
 
-[px4-userland](https://github.com/Khronos31/px4-userland) v0.1.3。
-PLEX PX-Q3U4（USB ID `0511:084a`）向けのユーザー空間ドライバ。
-カーネルモジュールは使わず、libusb で 8 チューナーと内蔵 IC カードリーダーを制御する。
+[px4-userland](https://github.com/Khronos31/px4-userland) v0.1.4。
+PLEX PX-Q3U4、PLEX PX-MLT5PE、e-Better DTV02A-5TS-P 向けのユーザー空間ドライバ。
+カーネルモジュールは使わず、libusb でチューナーと内蔵 IC カードリーダーを制御する。
+
+対応機種:
+- PLEX PX-Q3U4: USB ID `0511:084a`、8 チューナーと内蔵 IC カードリーダー
+- PLEX PX-MLT5PE: USB ID `0511:024e`、5 チューナーと内蔵 IC カードリーダー
+- e-Better DTV02A-5TS-P: USB ID `0511:924e`（PX-MLT5PE のリブランドで、USB Product ID だけが違う）
 
 ## パッケージ情報
 
 - ディレクトリ / `Package:`: `px4-userland`
 - Sileo の `Name:`: PX4 Driver
 - バイナリ: `px4d` / `px4-ts` / `px4ctl` / `px4-usb-probe`
-- 版: 0.1.3-4
+- 版: 0.1.4-1
 - Depends: `libusb-1.0-0`（Recommends: `pcscd`）
 - 置き場所: `/var/jb/usr/bin/px4d` ほか
 
@@ -64,14 +69,17 @@ PATH の `px4d` / `px4-ts` / `px4ctl` は Mach-O ラッパー。`--runtime-dir` 
 省略すると `$HOME/.px4-userland` を 0700 で作り、渡す
 （validate_directory はこれ以外を INVALID_ARGUMENT にする）。
 実体は `${JB}/usr/lib/px4-userland/`。`--firmware` 省略時、
-`${JB}/usr/share/px4-userland/it930x-firmware.bin` があればそれを使う
+`${JB}/usr/share/px4-userland/it930x-firmware.bin` があれば px4d だけが使う
 （パッケージはファームを同梱しない。置くのは運用側）。
+
+シリアルは Q3U4 の 14 桁 base serial、または MLT5 系の 15 桁 USB serial。
+`px4-usb-probe` は PX-Q3U4 のシリアルを出す（それ以外の機種は上流が UNSUPPORTED で拒否する）。
 
 ```sh
 px4-usb-probe
-px4d --device '<14-digit-base-serial>'
-px4ctl --device '<14-digit-base-serial>' list
-px4-ts --device '<14-digit-base-serial>' \
+px4d --device '<serial>'
+px4ctl --device '<serial>' list
+px4-ts --device '<serial>' \
   --receiver 2 --system isdb-t --frequency-khz 527143 \
   --output - --duration-seconds 5
 ```
