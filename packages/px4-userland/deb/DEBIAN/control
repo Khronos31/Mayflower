@@ -10,10 +10,12 @@ Recommends: pcscd
 Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://github.com/Khronos31/px4-userland
 Tag: purpose::console
-Description: Userland PX-Q3U4 tuner and card driver
- Owns a PLEX PX-Q3U4 (USB ID 0511:084a) from userspace via libusb:
- eight tuners plus the built-in IC card reader. Binaries are px4d,
- px4-ts, px4ctl, and px4-usb-probe. Built on-device for rootless jailbreaks.
+Description: Userland PX-Q3U4 / PX-MLT5PE / DTV02A-5TS-P tuner and card driver
+ Owns PLEX PX-Q3U4 (USB ID 0511:084a), PLEX PX-MLT5PE (USB ID 0511:024e),
+ or e-Better DTV02A-5TS-P (USB ID 0511:924e, rebranded PX-MLT5PE) from
+ userspace via libusb: eight or five tuners plus the built-in IC card reader.
+ Binaries are px4d, px4-ts, px4ctl, and px4-usb-probe. Built on-device for
+ rootless jailbreaks.
  .
  IT930x firmware is not included. Place the 2169-byte blob at
  /var/jb/usr/share/px4-userland/it930x-firmware.bin (SHA-256
@@ -23,7 +25,7 @@ Description: Userland PX-Q3U4 tuner and card driver
  Q3U4 serial with the same IOKit USB entitlements as px4d.
  .
  Ships libpx4-userland-ifd.dylib for pcscd (dlopen). Register with
- px4-pcsc-register BASE_SERIAL RUNTIME_DIR; run px4d as the same
+ px4-pcsc-register SERIAL RUNTIME_DIR; run px4d as the same
  user as pcscd (root on launchd).
  .
  Signed with IOKit USB entitlements (same set as Siano Driver).
