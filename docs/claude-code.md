@@ -12,7 +12,7 @@ Anthropic Claude Code を、脱獄 iOS（iphoneos-arm64）向けに非公式移�
 
 ## パッケージ情報
 
-- 版: 2.1.274-1
+- 版: 2.1.282-1
 - `Package:` `claude-code` / Sileo `Name:` `Claude Code`
 - `Depends:` `libiosexec1 (>= 1.2.2)`, `apple-a14`
 - `Recommends:` `git-2.55 | git-default | git`
@@ -28,7 +28,7 @@ Anthropic Claude Code を、脱獄 iOS（iphoneos-arm64）向けに非公式移�
 ```sh
 # Mac（bash 5+。Homebrew の bash 可）
 ./make.sh claude-code
-# => packages/claude-code/arm64/claude-code_2.1.274-1_iphoneos-arm64.deb
+# => packages/claude-code/arm64/claude-code_2.1.282-1_iphoneos-arm64.deb
 ```
 
 `scripts/patch-ios.sh` がまとめて当てる内容の概略:
@@ -45,10 +45,10 @@ Anthropic Claude Code を、脱獄 iOS（iphoneos-arm64）向けに非公式移�
 上流は原子待ち `Atomics.wait` で短い sleep をしている。iOS では
 `SharedArrayBuffer` が使えないため、同じ長さの busy-wait に差し替えている。
 
-2.1.274 ではこの sleep 関数（`mt`）の呼び出しは、同期 rename のリトライ
-（定数 `j=50` = 50ms）だけ。しかもリトライ判定 `H()` が常に `false` のため、
+2.1.282 ではこの sleep 関数（`Ae`）を呼ぶのは同期リトライ `EFr` の catch
+（定数 `se=50` = 50ms）だけ。しかもリトライ判定 `ce` が常に `false` のため、
 現行ビルドではその経路自体が死んでおり、実運用で CPU を回し続ける心配は
-ほぼ無い。上流が `H` を戻したり呼び出しを増やしたりしたら要再確認。
+ほぼ無い。上流が `ce` を戻したり呼び出しを増やしたりしたら要再確認。
 
 ## ラッパーと自動更新
 

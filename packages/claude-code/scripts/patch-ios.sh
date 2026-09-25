@@ -44,9 +44,9 @@ def replace_padded(old: bytes, new: bytes, label: str, min_count: int = 1):
 
 # 1) SharedArrayBuffer sleep → busy-wait (exact length)
 replace_exact(
-    # 2.1.274 renamed locals (st/X/ct/ut → lt/j/dt/mt); keep exact-length busy-wait.
-    b"var lt=4,j=50,dt=new Int32Array(new SharedArrayBuffer(4));function mt(t){Atomics.wait(dt,0,0,t)}",
-    b"var lt=4,j=50,dt=0;function mt(t){for(var e=Date.now();Date.now()-e<t;);}/*xxxxxxxxxxxxxxxxxxx*/",
+    # 2.1.282 renamed locals again (lt/j/dt/mt → ke/se/xe/Ae); keep exact-length busy-wait.
+    b"var ke=4,se=50,xe=new Int32Array(new SharedArrayBuffer(4));function Ae(e){Atomics.wait(xe,0,0,e)}",
+    b"var ke=4,se=50,xe=0;function Ae(e){for(var n=Date.now();Date.now()-n<e;);}/*xxxxxxxxxxxxxxxxxxx*/",
     "sab-sleep",
 )
 # Remaining SharedArrayBuffer sites left intact (NUL-pad inside JS breaks parse).
@@ -66,9 +66,9 @@ replace_padded(
 
 # 3) Force plaintext credential store (skip broken Darwin Keychain composer)
 replace_exact(
-    # 2.1.274: getSecureStorage is In(); composer is k(T,R) not v(E,_).
-    b"function In(){if(U)return U;return k(T,R)}",
-    b"function In(){if(U)return U;return R/*T*/}",
+    # 2.1.282: getSecureStorage is Gn(); composer is Ns(On,Dr) not k(T,R).
+    b"function Gn(){if(Bs)return Bs;return Ns(On,Dr)}",
+    b"function Gn(){if(Bs)return Bs;return Dr/*OnN*/}",
     "plaintext-store",
 )
 
