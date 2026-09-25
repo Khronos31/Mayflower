@@ -13,10 +13,8 @@
 `apt-ftparchive` や `dpkg-scanpackages` は使わない。要るのは `dpkg-deb` と
 coreutils だけである。
 
-- **`Packages.xz` の圧縮は `make-apt-repo` が lazy に解決する。** 圧縮できる `xz` が
-  無くても `7zz` → `python3`(lzma) → `apt-get install xz-utils` の順で落ちるので、
-  busybox xz（展開専用）しか無い母艦でも生成できる。端末で回すのが原則だが、母艦
-  （HAOS）で生成してもよい。
+- **端末で回すこと。** `Packages.xz` を作るのに圧縮できる `xz` が必要。別の機械の
+  busybox xz は展開専用の場合があるため、端末上で生成する。
 - `Architectures` に `all` を並べない。flat なリポジトリ（`deb <URL> ./`）では
   購読側が `Packages` を1つ読むだけで、この欄をアーキテクチャごとのファイル
   選択に使わないため。
