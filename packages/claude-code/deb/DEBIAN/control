@@ -11,7 +11,7 @@ Maintainer: Khronos31 <39792509+Khronos31@users.noreply.github.com>
 Homepage: https://github.com/anthropics/claude-code
 Tag: role::developer
 Description: Claude Code for jailbroken iOS (unofficial)
- Patched Anthropic Claude Code 2.1.274 for iphoneos-arm64.
+ Patched Anthropic Claude Code 2.1.282 for iphoneos-arm64.
  Wrapper sets BUN_JSC_useCodeCache=0 and disables native
  auto-update / ~/.local install heal. Binary under libexec.
  Unofficial; not affiliated with Anthropic. See NOTICE.
