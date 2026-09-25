@@ -11,11 +11,75 @@
 # 購読側は `deb <URL> ./` の形になる。署名はしない（脱獄リポジトリは無署名が
 # 通例で、Sileo も警告を出さない）。
 #
-# apt-ftparchive や dpkg-scanpackages は使わない。母艦の HAOS ではアドオンを
-# 再起動すると apt で入れたものが消えるため、publish のたびに入れ直す前提に
-# したくない。必要なのは dpkg-deb と coreutils だけ。
+# apt-ftparchive や dpkg-scanpackages は使わない。必要なのは dpkg-deb と
+# coreutils だけ。Packages.xz の圧縮は _xz_compress() が「あるもの」で lazy に
+# 済ませる（圧縮できる xz → 7zz → python3(lzma) → apt で xz-utils）。
 
 set -eu
+
+# 圧縮できる xz を lazy に探す。見つかればパスを出力して 0。
+# busybox の xz は展開専用（-9 が unrecognized option）なので、-9c を試して判定する。
+_xz_find() {
+  local c
+  for c in "${XZ:-}" xz /usr/bin/xz /opt/homebrew/bin/xz; do
+    [ -n "$c" ] || continue
+    if command -v "$c" >/dev/null 2>&1 && printf '' | "$c" -9c >/dev/null 2>&1; then
+      printf '%s\n' "$c"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# どの binary も見つからなければ apt-get install <pkg> を lazy に試す。
+#   0 = どれか使える（もとから有るか、今入れた）
+#   1 = 使えない
+_apt_ensure() {
+  local pkg=$1 bin
+  shift
+  for bin in "$@"; do
+    command -v "$bin" >/dev/null 2>&1 && return 0
+  done
+  [ -n "$(command -v apt-get)" ] || return 1
+  echo "${0##*/}: ${pkg} が見つからないので apt-get install します" >&2
+  apt-get install -y "$pkg" >/dev/null 2>&1 || return 1
+  for bin in "$@"; do
+    command -v "$bin" >/dev/null 2>&1 && return 0
+  done
+  return 1
+}
+
+# Packages.xz を作る。HAOS は PATH 先頭の /config/.tools/bin/xz が 7zz 委譲
+# ラッパー（圧縮は busybox 落ち）のため、通常は 7zz 直呼びで成立し apt には
+# 触らない。apt は「圧縮できるものが何も無いが apt だけはある」環境向けの最後の手段。
+_xz_compress() {
+  local f=$1 xz_bin
+  if xz_bin="$(_xz_find)"; then
+    "$xz_bin" -9kf "$f"
+    return 0
+  fi
+  if command -v 7zz >/dev/null 2>&1; then
+    7zz a -txz -mx=9 "$f.xz" "$f" >/dev/null
+    return 0
+  fi
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - "$f" <<'PY'
+import lzma
+import sys
+src = sys.argv[1]
+open(src + '.xz', 'wb').write(lzma.compress(open(src, 'rb').read(), preset=9))
+PY
+    return 0
+  fi
+  if _apt_ensure xz-utils /usr/bin/xz; then
+    if xz_bin="$(_xz_find)"; then
+      "$xz_bin" -9kf "$f"
+      return 0
+    fi
+  fi
+  echo "${0##*/}: 圧縮できる xz / 7zz / python3(lzma) が見つかりません" >&2
+  return 1
+}
 
 ORIGIN="${ORIGIN:-Mayflower}"
 LABEL="${LABEL:-Khronos31}"
@@ -59,7 +123,7 @@ done
 printf '\n' >> Packages
 
 gzip -9kf Packages
-xz -9kf Packages
+_xz_compress Packages
 
 # Release。Architectures は収録した deb から拾う（all は購読側の判定に使われない）。
 archs="$(awk '/^Architecture: /{print $2}' Packages | grep -v '^all$' | sort -u | tr '\n' ' ')"
