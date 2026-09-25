@@ -41,9 +41,9 @@ _ensure_firmware() {
   tmp="$(mktemp)"
   curl -fsSL -o "${tmp}" "${_FIRMWARE_URL}"
   if command -v sha256sum >/dev/null 2>&1; then
-    echo "${_FIRMWARE_SHA256}  ${tmp}" | sha256sum -c -
+    echo "${_FIRMWARE_SHA256}  ${tmp}" | sha256sum -c - >&2
   else
-    echo "${_FIRMWARE_SHA256}  ${tmp}" | shasum -a 256 -c -
+    echo "${_FIRMWARE_SHA256}  ${tmp}" | shasum -a 256 -c - >&2
   fi
   mv "${tmp}" "${dest}"
   echo "${dest}"
