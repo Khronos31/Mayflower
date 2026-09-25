@@ -2,7 +2,7 @@
 
 ソースツリー: [`packages/siano-userland`](../packages/siano-userland)
 
-[siano-userland](https://github.com/Khronos31/siano-userland) v0.1.5。
+[siano-userland](https://github.com/Khronos31/siano-userland) v0.1.6。
 Siano RIO 系 USB チューナー（PLEX PX-S1UD など）向けのユーザー空間 ISDB-T
 選局・MPEG-TS 出力。
 
@@ -11,7 +11,7 @@ Siano RIO 系 USB チューナー（PLEX PX-S1UD など）向けのユーザー�
 - ディレクトリ / `Package:`: `siano-userland`
 - Sileo の `Name:`: Siano Driver
 - バイナリ: `siano-ts`
-- 版: 0.1.5-2
+- 版: 0.1.6-1
 - Depends: `libusb-1.0-0`
 - バイナリ: `/var/jb/usr/bin/siano-ts`
 - ファームウェア: `/var/jb/usr/share/siano-ts/isdbt_rio.inp`（および `/var/jb/lib/firmware/isdbt_rio.inp`）
@@ -89,4 +89,12 @@ cp ~/dev/siano-ts/firmware/isdbt_rio.inp packages/siano-userland/firmware/
 ```sh
 siano-ts --list
 siano-ts -c 27 -t 30 -o /tmp/ch27.ts
+```
+
+`--control` モード（v0.1.6 以降）はデバイスを開いたまま標準入力の行で
+再選局できる。`channel N`（物理チャンネル 13..62）/ `tune HZ`（周波数直接）/
+`quit` を受け付け、成功時は `tuned <Hz>` を出力する。TS は stdout のまま。
+
+```sh
+siano-ts --control
 ```
