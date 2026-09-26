@@ -76,7 +76,7 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 | [ruff](docs/ruff.md) | 0.16.7 | Python linter/formatter。端末の rustc で建てる。Procursus に無し |
 | [rust](docs/rust.md) | 1.98.1 | `rustc-1.98` / `rust-std-1.98` / `cargo-1.98` / `rust-default`。ツールチェインのビルドだけ Mac |
 | [sd](docs/sd.md) | 1.1.0 | 直感的な find & replace。端末の rustc で建てる。Procursus に無し |
-| [siano-userland](docs/siano-userland.md) | 0.1.6 | `Name: Siano Driver`。バイナリは `siano-ts`。Siano RIO (PX-S1UD) の ISDB-T |
+| [siano-userland](docs/siano-userland.md) | 0.1.8 | `Name: Siano Driver`。バイナリは `siano-ts`。Siano RIO (PX-S1UD) の ISDB-T |
 | [swiftformat](docs/swiftformat.md) | 0.63.0 | 端末の `swiftc-6.1` で建てる（SPM 無し・直 `swiftc`）。Procursus に無し |
 | [swift](docs/swift.md) | 6.1.1 | `swift-6.1`。**ビルドは Mac**。Depends `clang-19`。Procursus swift は当面並立 |
 | [tmux](docs/tmux.md) | 3.7c | `tmux-3.7` / `tmux-default`。端末で建てる。Procursus 3.4 を置換 |

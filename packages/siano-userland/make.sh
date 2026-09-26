@@ -3,7 +3,7 @@
 #
 # Mayflower | packages/siano-userland/make.sh
 #
-# siano-userland v0.1.6 → Package: siano-userland / Name: Siano Driver / バイナリ: siano-ts
+# siano-userland v0.1.8 → Package: siano-userland / Name: Siano Driver / バイナリ: siano-ts
 # USB 受信のため packages/siano-userland/entitlements.plist（IOKit USB）を使う。
 # ルートの薄い entitlements.plist では libusb が開けない。
 #
@@ -12,7 +12,7 @@
 # linux-firmware の固定 revision から取得して SHA-256 を検証する。
 
 pkgname=siano-userland
-pkgver=0.1.6
+pkgver=0.1.8
 pkgrel=1
 srcname="siano-userland-${pkgver}"
 source="https://github.com/Khronos31/siano-userland/archive/refs/tags/v${pkgver}.tar.gz"
@@ -69,10 +69,10 @@ build() {
   "${CC}" ${CFLAGS} ${CPPFLAGS} ${usb_cflags} \
     -std=c11 -Wall -Wextra -Wpedantic \
     -D_POSIX_C_SOURCE=200809L -D_FILE_OFFSET_BITS=64 \
-    -c siano-ts.c protocol.c stream-state.c control-parse.c
+    -c siano-ts.c protocol.c stream-state.c control-parse.c device-selector.c exit-codes.c
 
   "${CC}" ${CFLAGS} ${LDFLAGS} ${usb_cflags} \
-    -o siano-ts siano-ts.o protocol.o stream-state.o control-parse.o \
+    -o siano-ts siano-ts.o protocol.o stream-state.o control-parse.o device-selector.o exit-codes.o \
     ${usb_libs} \
     -framework IOKit -framework CoreFoundation -framework Security \
     -Wl,-stack_size,0x800000
