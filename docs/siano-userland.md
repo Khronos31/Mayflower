@@ -2,7 +2,7 @@
 
 ソースツリー: [`packages/siano-userland`](../packages/siano-userland)
 
-[siano-userland](https://github.com/Khronos31/siano-userland) v0.1.6。
+[siano-userland](https://github.com/Khronos31/siano-userland) v0.1.8。
 Siano RIO 系 USB チューナー（PLEX PX-S1UD など）向けのユーザー空間 ISDB-T
 選局・MPEG-TS 出力。
 
@@ -11,7 +11,7 @@ Siano RIO 系 USB チューナー（PLEX PX-S1UD など）向けのユーザー�
 - ディレクトリ / `Package:`: `siano-userland`
 - Sileo の `Name:`: Siano Driver
 - バイナリ: `siano-ts`
-- 版: 0.1.6-1
+- 版: 0.1.8-1
 - Depends: `libusb-1.0-0`
 - バイナリ: `/var/jb/usr/bin/siano-ts`
 - ファームウェア: `/var/jb/usr/share/siano-ts/isdbt_rio.inp`（および `/var/jb/lib/firmware/isdbt_rio.inp`）
@@ -98,3 +98,21 @@ siano-ts -c 27 -t 30 -o /tmp/ch27.ts
 ```sh
 siano-ts --control
 ```
+
+v0.1.7 以降は `--list` が `px4d --list` と同じ `key=value` 形式になり、
+`bus=` / `address=` / `port=` を含む（シリアル番号を持たない PX-S1UD は
+`port=` で見分ける）。
+
+```sh
+siano-ts --list
+# model=PX-S1UD usb=3275:0080 bus=1 address=3 port=1-4.3 status=ready receivers=1
+# receiver=0 device=1 local=0 system=ISDB-T
+```
+
+v0.1.8 以降は、カーネルドライバ（smsusb 等）が bind 中のデバイスを
+既定では奪わず理由を表示して終了する。切り離して使う場合は
+`--detach-kernel-driver` を付ける。`--device` には数値インデックスに加えて
+USB ポートパス（`--device 1-4.3`）や `bus:address`（`--device 1:4`）を
+指定でき、複数チューナーを物理ポートで固定できる。終了コードは
+0=正常 / 2=引数不正 / 3=未検出 / 4=ビジー / 5=選局タイムアウト /
+7=USB 切断 / 8=TS バックプレッシャー / 10=ファームウェア異常 / 70=内部リソース。
