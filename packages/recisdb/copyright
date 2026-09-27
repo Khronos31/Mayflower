@@ -1,0 +1,13 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: recisdb-rs
+Source: https://github.com/kazuki0824/recisdb-rs
+Comment: Mayflower pin is Khronos31/recisdb-rs commit
+ badc171f15bb010b972740c17a92cfe0cbfe8584 (decode-only macOS PR)
+ until the next official tag after that lands.
+
+Files: *
+Copyright: maleicacid and contributors
+License: GPL-3.0
+ The recisdb application is licensed under GPL-3.0.
+ See /var/jb/usr/share/licenses/recisdb/LICENSE if shipped, otherwise
+ the upstream LICENSE in the source tree.
