@@ -12,9 +12,8 @@ Homepage: https://github.com/kazuki0824/recisdb-rs
 Tag: purpose::console
 Description: ARIB STD-B25 decoder (decode-only on iOS)
  Built on-device. iOS ships the decode subcommand only and links
- libpcsclite (not PCSC.framework). Source is pinned to
- Khronos31/recisdb-rs (PR kazuki0824/recisdb-rs#188) until the next
- upstream release after that merge.
+ libpcsclite (not PCSC.framework). Source is the official 1.3.0 release,
+ including kazuki0824/recisdb-rs#188.
  .
  Pipe MPEG-TS into recisdb decode. Needs pcscd plus a reader
  (px4-userland IFD for the Q3U4 internal card).

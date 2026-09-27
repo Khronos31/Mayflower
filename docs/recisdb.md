@@ -5,25 +5,16 @@
 [recisdb-rs](https://github.com/kazuki0824/recisdb-rs) の decode を、rootless
 脱獄 iOS 上でセルフビルドする。
 
-## ピン留め
+## ソース
 
-いまの `source` は **Khronos31/recisdb-rs**
-`badc171f15bb010b972740c17a92cfe0cbfe8584`（上流
-[PR #188](https://github.com/kazuki0824/recisdb-rs/pull/188) の fork）。
-Cargo の版表示は 1.2.4 のまま。
-
-公式がその PR をマージして **次のリリースタグ** を出したら、`make.sh` の
-`source` を
-
-```
-https://github.com/kazuki0824/recisdb-rs/archive/refs/tags/vX.Y.Z.tar.gz
-```
-
-に差し替える。iOS 向けパッチ（decode-only、`libpcsclite`、`LPTSTR`）は残す。
+`kazuki0824/recisdb-rs` の公式 `1.3.0` タグを使う。上流
+[PR #188](https://github.com/kazuki0824/recisdb-rs/pull/188) の macOS decode-only
+対応がこの版に含まれる。iOS 向けの decode-only、`libpcsclite`、`LPTSTR` 対応は
+Mayflower 側で引き続き適用する。
 
 ## パッケージ情報
 
-- `Package:` `recisdb` / 版 1.2.4-1
+- `Package:` `recisdb` / 版 1.3.0-1
 - Depends: `libpcsclite1`
 - Recommends: `pcscd`, `px4-userland`
 - バイナリ: `/var/jb/usr/bin/recisdb`（サブコマンドは `decode` のみ）

@@ -3,22 +3,19 @@
 #
 # Mayflower | packages/recisdb/make.sh
 #
-# recisdb 1.2.4 を decode-only + libpcsclite で端末 rustc 建て。
+# recisdb 1.3.0 を decode-only + libpcsclite で端末 rustc 建て。
 #
-# ソースは Khronos31/recisdb-rs @ REC_COMMIT（kazuki0824#188 の fork）。
-# 公式がマージして次のタグを出したら source を
-#   https://github.com/kazuki0824/recisdb-rs/archive/refs/tags/vX.Y.Z.tar.gz
-# に差し替える。iOS パッチ（decode-only / libpcsclite / LPTSTR）は残す。
+# ソースは kazuki0824/recisdb-rs の 1.3.0 タグ。
+# iOS 向けパッチ（decode-only / libpcsclite / LPTSTR）は残す。
 #
 # vendor.tar.gz は git 外（packages/*/*.tar.*）。crates.io が 403 になるため。
 
 pkgname=recisdb
-pkgver=1.2.4
+pkgver=1.3.0
 pkgrel=1
-REC_COMMIT=badc171f15bb010b972740c17a92cfe0cbfe8584
 ARIBB25_COMMIT=12213899010738acaadd7fd945c9e25d35561af7
-srcname="recisdb-rs-${REC_COMMIT}"
-source="https://github.com/Khronos31/recisdb-rs/archive/${REC_COMMIT}.tar.gz"
+srcname="recisdb-rs-${pkgver}"
+source="https://github.com/kazuki0824/recisdb-rs/archive/refs/tags/${pkgver}.tar.gz"
 export compress="${compress:-xz}"
 
 prepare() {
@@ -68,12 +65,20 @@ new = '''    if target.ends_with("-gnullvm")
         || target.ends_with("-apple-ios")
     {'''
 if old not in t:
-    raise SystemExit("prepare: b25-sys apple-darwin link not found")
+    raise SystemExit("prepare: b25-sys Apple link branch not found")
 t = t.replace(old, new, 1)
-old = '''        println!("cargo:rustc-link-lib=framework=PCSC");
+old = '''    } else if cx.os.as_deref() == Some("macos") {
+        let res = prep_cmake(cx).build();
+        println!("cargo:rustc-link-search=native={}/lib", res.display());
+        println!("cargo:rustc-link-search=native={}/lib64", res.display());
+        println!("cargo:rustc-link-lib=framework=PCSC");
     }
 }'''
-new = '''        println!("cargo:rustc-link-lib=framework=PCSC");
+new = '''    } else if cx.os.as_deref() == Some("macos") {
+        let res = prep_cmake(cx).build();
+        println!("cargo:rustc-link-search=native={}/lib", res.display());
+        println!("cargo:rustc-link-search=native={}/lib64", res.display());
+        println!("cargo:rustc-link-lib=framework=PCSC");
     } else if cx.os.as_deref() == Some("ios") {
         if pc.probe("libpcsclite").is_err() {
             panic!("libpcsclite not found.");
@@ -84,7 +89,7 @@ new = '''        println!("cargo:rustc-link-lib=framework=PCSC");
     }
 }'''
 if old not in t:
-    raise SystemExit("prepare: b25-sys macos PCSC branch not found")
+    raise SystemExit("prepare: b25-sys macOS PCSC branch not found")
 p.write_text(t.replace(old, new, 1))
 PY
 }
