@@ -7,7 +7,7 @@ CRuby を rootless 脱獄 iOS 上でセルフビルドする。
 ## パッケージ情報
 
 - パッケージ名: `ruby`（Procursus に同名は無い）
-- 版: 4.0.6-3
+- 版: 4.0.7-1
 - YJIT / ZJIT: **建てない**。端末に rustc があると configure が既定で有効にするので、
   `--disable-yjit --disable-zjit` を明示する。あとで足す余地はある。
 - Depends: `libssl3`, `libyaml-0-2`, `libffi8`, `libgmp10`, `libreadline8`,
