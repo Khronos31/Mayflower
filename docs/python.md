@@ -6,7 +6,7 @@ CPython を rootless 脱獄 iOS 上でセルフビルドする。
 
 ## パッケージ情報
 
-- 版: 3.14.7-3
+- 版: 3.14.8-1
 - パッケージ構成:
   - `python3.14`: 版付きの名前のみ
   - `python3-default`: 版なしのシンボリックリンク（`Provides: python3`、`Conflicts`/`Replaces: python3`）
