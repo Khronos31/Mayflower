@@ -3,15 +3,15 @@
 #
 # Mayflower | packages/recisdb/make.sh
 #
-# recisdb 1.3.0 を decode-only + libpcsclite で端末 rustc 建て。
+# recisdb 1.3.1 を decode-only + libpcsclite で端末 rustc 建て。
 #
-# ソースは kazuki0824/recisdb-rs の 1.3.0 タグ。
+# ソースは kazuki0824/recisdb-rs の 1.3.1 タグ。
 # iOS 向けパッチ（decode-only / libpcsclite / LPTSTR）は残す。
 #
 # vendor.tar.gz は git 外（packages/*/*.tar.*）。crates.io が 403 になるため。
 
 pkgname=recisdb
-pkgver=1.3.0
+pkgver=1.3.1
 pkgrel=1
 ARIBB25_COMMIT=12213899010738acaadd7fd945c9e25d35561af7
 srcname="recisdb-rs-${pkgver}"
