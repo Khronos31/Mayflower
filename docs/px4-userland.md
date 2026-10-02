@@ -2,7 +2,7 @@
 
 ソースツリー: [`packages/px4-userland`](../packages/px4-userland)
 
-[px4-userland](https://github.com/Khronos31/px4-userland) v0.1.6。
+[px4-userland](https://github.com/Khronos31/px4-userland) v0.1.9。
 PLEX PX-Q3U4、PLEX PX-MLT5PE、e-Better DTV02A-5TS-P 向けのユーザー空間ドライバ。
 カーネルモジュールは使わず、libusb でチューナーと内蔵 IC カードリーダーを制御する。
 
@@ -11,18 +11,17 @@ PLEX PX-Q3U4、PLEX PX-MLT5PE、e-Better DTV02A-5TS-P 向けのユーザー空�
 - PLEX PX-MLT5PE: USB ID `0511:024e`、5 チューナーと内蔵 IC カードリーダー
 - e-Better DTV02A-5TS-P: USB ID `0511:924e`（PX-MLT5PE のリブランドで、USB Product ID だけが違う）
 
-v0.1.6 では PX-W3U4 / PX-W3PE4 / PX-Q3PE4 / PX-W3PE5 / PX-Q3PE5 /
-PX-MLT8PE3 / PX-MLT8PE5 / PX-M1UR / PX-S1UR / DTV02-1T1S-U /
-DTV02A-1T1S-U / DTV02A-4TS-P / DTV03A-1TU を識別対象に追加した
-（いずれも実機未検証）。同一 lease 内の再選局と、px4d 不在・切断時の
-IFD 耐性も入る。
+v0.1.9 では、USB位置と `--instance` を指定した複数daemon運用、serial衝突時の
+曖昧な機器選択の拒否、`--list-json`、機種ごとのLNB 15V能力確認が追加された。
+実機検証の範囲は上流の機種・環境ごとの検証表に従う。列挙対象でも未検証の機種は
+検証済みとして扱わない。
 
 ## パッケージ情報
 
 - ディレクトリ / `Package:`: `px4-userland`
 - Sileo の `Name:`: PX4 Driver
 - バイナリ: `px4d` / `px4-ts` / `px4ctl` / `px4-usb-probe`
-- 版: 0.1.6-1
+- 版: 0.1.9-1
 - Depends: `libusb-1.0-0`（Recommends: `pcscd`）
 - 置き場所: `/var/jb/usr/bin/px4d` ほか
 
