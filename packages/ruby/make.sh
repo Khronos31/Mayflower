@@ -3,7 +3,7 @@
 #
 # Mayflower | packages/ruby/make.sh
 #
-# CRuby 4.0.6 を rootless 脱獄 iOS 上でセルフビルドする。
+# CRuby 4.0.7 を rootless 脱獄 iOS 上でセルフビルドする。
 #
 # **darwin として建てる。** `uname -m` が iPhone10,1 を返すので config.guess
 # は当てにならない。--build を明示する。coroutine は arm64 アセンブリ
@@ -20,8 +20,8 @@
 # 成果物の subprocess 確認は Dopamine（se3）。
 
 pkgname=ruby
-pkgver=4.0.6
-pkgrel=3
+pkgver=4.0.7
+pkgrel=1
 srcname="ruby-${pkgver}"
 source="https://cache.ruby-lang.org/pub/ruby/4.0/ruby-${pkgver}.tar.xz"
 
