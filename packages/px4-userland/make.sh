@@ -1,9 +1,9 @@
 # shellcheck shell=bash
-# shellcheck disable=SC2154,SC2034
+# shellcheck disable=SC2086,SC2154,SC2034
 #
 # Mayflower | packages/px4-userland/make.sh
 #
-# px4-userland v0.1.6 → Package: px4-userland / Name: PX4 Driver
+# px4-userland v0.1.9 → Package: px4-userland / Name: PX4 Driver
 # バイナリ: px4d / px4-ts / px4ctl
 #
 # USB のため packages/px4-userland/entitlements.plist（IOKit USB）を使う。
@@ -18,7 +18,7 @@
 # PATH の px4d/px4-ts/px4ctl はラッパーで ${JB}/var/run/px4-userland を足す。
 
 pkgname=px4-userland
-pkgver=0.1.6
+pkgver=0.1.9
 pkgrel=1
 srcname="px4-userland-${pkgver}"
 source="https://github.com/Khronos31/px4-userland/archive/refs/tags/v${pkgver}.tar.gz"
