@@ -7,14 +7,16 @@
 
 ## ソース
 
-`kazuki0824/recisdb-rs` の公式 `1.3.0` タグを使う。上流
+`kazuki0824/recisdb-rs` の公式 `1.3.1` タグを使う。上流
 [PR #188](https://github.com/kazuki0824/recisdb-rs/pull/188) の macOS decode-only
-対応がこの版に含まれる。iOS 向けの decode-only、`libpcsclite`、`LPTSTR` 対応は
+対応が含まれるほか、macOS ARM64 リリースビルドが追加された。iOS 向けの
+decode-only、`libpcsclite`、`LPTSTR` 対応は
 Mayflower 側で引き続き適用する。
 
 ## パッケージ情報
 
-- `Package:` `recisdb` / 版 1.3.0-1
+- `Package:` `recisdb` / 版 1.3.1-1
+- 上流の Cargo manifest は 1.3.0 のままのため、`recisdb --version` は 1.3.0 と表示する。
 - Depends: `libpcsclite1`
 - Recommends: `pcscd`, `px4-userland`
 - バイナリ: `/var/jb/usr/bin/recisdb`（サブコマンドは `decode` のみ）
