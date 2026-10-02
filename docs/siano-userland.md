@@ -2,7 +2,7 @@
 
 ソースツリー: [`packages/siano-userland`](../packages/siano-userland)
 
-[siano-userland](https://github.com/Khronos31/siano-userland) v0.1.8。
+[siano-userland](https://github.com/Khronos31/siano-userland) v0.1.9。
 Siano RIO 系 USB チューナー（PLEX PX-S1UD など）向けのユーザー空間 ISDB-T
 選局・MPEG-TS 出力。
 
@@ -11,7 +11,7 @@ Siano RIO 系 USB チューナー（PLEX PX-S1UD など）向けのユーザー�
 - ディレクトリ / `Package:`: `siano-userland`
 - Sileo の `Name:`: Siano Driver
 - バイナリ: `siano-ts`
-- 版: 0.1.8-1
+- 版: 0.1.9-1
 - Depends: `libusb-1.0-0`
 - バイナリ: `/var/jb/usr/bin/siano-ts`
 - ファームウェア: `/var/jb/usr/share/siano-ts/isdbt_rio.inp`（および `/var/jb/lib/firmware/isdbt_rio.inp`）
@@ -116,3 +116,7 @@ USB ポートパス（`--device 1-4.3`）や `bus:address`（`--device 1:4`）�
 指定でき、複数チューナーを物理ポートで固定できる。終了コードは
 0=正常 / 2=引数不正 / 3=未検出 / 4=ビジー / 5=選局タイムアウト /
 7=USB 切断 / 8=TS バックプレッシャー / 10=ファームウェア異常 / 70=内部リソース。
+
+v0.1.9 では標準入力の制御行処理とTSキューのretune・overflow policyが独立した
+ソースになった。Mayflowerの単一バイナリには `control-input.c` と `queue-policy.c`
+も含める。
