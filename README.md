@@ -54,7 +54,7 @@ rootless の脱獄のみ（palera1n / Dopamine などの Procursus ブートス�
 | [claude-code](docs/claude-code.md) | 2.1.282 | 非公式。**ビルドは Mac**。darwin-arm64 をパッチ。Depends `apple-a14`。ラッパーで自動更新と ~/.local 再生成を抑止 |
 | [epgstation](docs/epgstation.md) | 2.10.0 | `epgstation`。JS は Mac。sqlite3 は nodejs-sqlite3。PATH は Mach-O。 |
 | [fd](docs/fd.md) | 10.5.0 | `fd-10` / `fd-default`。端末の rustc で建てる。Procursus 8.6.0 を置換 |
-| [git](docs/git.md) | 2.55.0 | `git-2.55` / `git-default`。端末で建てる。Procursus 2.39.1 を置換 |
+| [git](docs/git.md) | 2.56.0 | `git-2.56` / `git-default`。端末で建てる。Procursus 2.39.1 を置換 |
 | [git-delta](docs/git-delta.md) | 0.19.2 | バイナリ `delta`。端末の rustc で建てる。Procursus に無し |
 | [glow](docs/glow.md) | 3.0.0 | 端末の Go で建てる。Procursus に無し |
 | [go](docs/go.md) | 1.26.8 | `golang-1.26-go` / `golang-1.26-src` / `golang-default` |
