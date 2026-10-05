@@ -3,13 +3,13 @@
 #
 # Mayflower | packages/mirakc/make.sh
 #
-# mirakc 3.4.86 — Mirakurun-compatible PVR backend. Binary: mirakc.
+# mirakc 3.4.88 — Mirakurun-compatible PVR backend. Binary: mirakc.
 # Build -p mirakc only (skip mirakc-timeshift-fs / FUSE).
 # Not in Procursus. On-device rustc + vendor.tar.gz --offline.
 # Tarball has no .git → set VERGEN_DEFAULT_ON_ERROR for vergen-gitcl.
 
 pkgname=mirakc
-pkgver=3.4.86
+pkgver=3.4.88
 pkgrel=1
 srcname="mirakc-${pkgver}"
 source="https://github.com/mirakc/mirakc/archive/refs/tags/${pkgver}.tar.gz"
