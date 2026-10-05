@@ -6,10 +6,10 @@
 
 ## パッケージ情報
 
-- 版: 3.4.86
+- 版: 3.4.88
 - パッケージ: `mirakc`
 - ビルド: **端末**（Mayflower `rustc` 1.98 / `cargo`、`vendor.tar.gz` で `--offline`）
-- ソース: GitHub タグ tarball（`mirakc/mirakc` `3.4.86`）
+- ソース: GitHub タグ tarball（`mirakc/mirakc` `3.4.88`）
 - ビルド対象: `-p mirakc` のみ（`mirakc-timeshift-fs` / FUSE は建てない）
 - vergen: tarball に `.git` が無いので `VERGEN_DEFAULT_ON_ERROR=1`、および
   `patches/0001-vergen-default-on-error.patch`（`Emitter::default_on_error()`）
@@ -32,6 +32,7 @@ mirakc --version
 
 - チューナー用ヘルパー（`recpt1` 等）は同梱しない。別途用意すること。
 - timeshift FUSE（`mirakc-timeshift-fs`）は iOS 向けに建てていない。
+- 3.4.87 で IPv6 ULA（`fc00::/7`）がプライベートアドレス扱いに変更された。
 
 ## 端末ツールチェーン注意
 
