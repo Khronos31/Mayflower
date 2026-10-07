@@ -23,31 +23,33 @@ from pathlib import Path
 path = Path(sys.argv[1])
 data = bytearray(path.read_bytes())
 
-def replace_exact(old: bytes, new: bytes, label: str, min_count: int = 1):
+def replace_exact(old: bytes, new: bytes, label: str, expected_count: int = 1):
     if len(old) != len(new):
         raise SystemExit(f"{label}: length mismatch {len(old)} != {len(new)}")
     c = data.count(old)
-    if c < min_count:
-        raise SystemExit(f"{label}: expected >= {min_count} occurrence(s), found {c}")
+    if c != expected_count:
+        raise SystemExit(f"{label}: expected exactly {expected_count} occurrence(s), found {c}")
     data[:] = data.replace(old, new)
     print(f"{label}: replaced {c}")
 
-def replace_padded(old: bytes, new: bytes, label: str, min_count: int = 1):
+def replace_padded(old: bytes, new: bytes, label: str, expected_count: int = 1):
     if len(new) > len(old):
         raise SystemExit(f"{label}: new longer than old")
     padded = new + b"\x00" * (len(old) - len(new))
     c = data.count(old)
-    if c < min_count:
-        raise SystemExit(f"{label}: expected >= {min_count} occurrence(s), found {c}")
+    if c != expected_count:
+        raise SystemExit(f"{label}: expected exactly {expected_count} occurrence(s), found {c}")
     data[:] = data.replace(old, padded)
     print(f"{label}: replaced {c}")
 
 # 1) SharedArrayBuffer sleep → busy-wait (exact length)
 replace_exact(
-    # 2.1.282 renamed locals again (lt/j/dt/mt → ke/se/xe/Ae); keep exact-length busy-wait.
-    b"var ke=4,se=50,xe=new Int32Array(new SharedArrayBuffer(4));function Ae(e){Atomics.wait(xe,0,0,e)}",
-    b"var ke=4,se=50,xe=0;function Ae(e){for(var n=Date.now();Date.now()-n<e;);}/*xxxxxxxxxxxxxxxxxxx*/",
+    # 2.1.293 renamed locals again (ke/se/xe/Ae → se/ce/Ae/Le); the wait Int32Array
+    # is Ae and the sleep function is Le. Keep exact-length busy-wait.
+    b"Ae=new Int32Array(new SharedArrayBuffer(4));function Le(e){Atomics.wait(Ae,0,0,e)}",
+    b"Ae=0;function Le(e){for(var n=Date.now();Date.now()-n<e;);}/*xxxxxxxxxxxxxxxxxxx*/",
     "sab-sleep",
+    1,
 )
 # Remaining SharedArrayBuffer sites left intact (NUL-pad inside JS breaks parse).
 # Startup crash is covered by sab-sleep above; revisit per-version if needed.
@@ -57,19 +59,22 @@ replace_padded(
     b"/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
     b"/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
     "cf-path",
+    6,
 )
 replace_padded(
     b"/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
     b"/System/Library/Frameworks/CoreServices.framework/CoreServices",
     "cs-path",
+    3,
 )
 
 # 3) Force plaintext credential store (skip broken Darwin Keychain composer)
 replace_exact(
-    # 2.1.282: getSecureStorage is Gn(); composer is Ns(On,Dr) not k(T,R).
-    b"function Gn(){if(Bs)return Bs;return Ns(On,Dr)}",
-    b"function Gn(){if(Bs)return Bs;return Dr/*OnN*/}",
+    # 2.1.293: getSecureStorage is zn(); composer is M(b,T); T is the plaintext store.
+    b"function zn(){if(K)return K;return M(b,T)}",
+    b"function zn(){if(K)return K;return T/*M*/}",
     "plaintext-store",
+    1,
 )
 
 path.write_bytes(data)

@@ -14,7 +14,7 @@
 # Optional: CLAUDE_CODE_DARWIN_BIN=/path/to/claude to skip npm download.
 
 pkgname=claude-code
-pkgver=2.1.282
+pkgver=2.1.293
 pkgrel=1
 srcname="claude-code-darwin-arm64-${pkgver}"
 source="https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-${pkgver}.tgz"
@@ -83,7 +83,7 @@ check() {
   }
   test -f "${srcdir}/libsystemshim.dylib"
   otool -L "${srcdir}/claude" | grep -q 'libsystemshim.dylib'
-  python3 -c "import pathlib; d=pathlib.Path(r'${srcdir}/claude').read_bytes(); assert b'return Dr/*OnN*/' in d; assert b'xe=0;function Ae(e){for(var n=Date.now()' in d; assert b'/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation' in d; assert b'/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation' not in d"
+  python3 -c "import pathlib; d=pathlib.Path(r'${srcdir}/claude').read_bytes(); assert d.count(b'return T/*M*/')==1; assert d.count(b'function zn(){if(K)return K;return M(b,T)}')==0; assert d.count(b'Ae=0;function Le(e){for(var n=Date.now()')==1; assert d.count(b'Ae=new Int32Array(new SharedArrayBuffer(4));function Le(e){Atomics.wait(Ae,0,0,e)}')==0; assert b'/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation' in d; assert b'/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation' not in d"
   # shim minos should be ios 15.x-aligned, not host SDK 18.x
   vtool -show-build "${srcdir}/libsystemshim.dylib" 2>/dev/null | grep -E 'minos|sdk' | head -5 || true
   if vtool -show-build "${srcdir}/libsystemshim.dylib" 2>/dev/null | grep -q 'minos 18\.'; then
